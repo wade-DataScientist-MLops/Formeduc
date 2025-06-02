@@ -65,7 +65,11 @@ Réservé aux admins :
 * Journalisation des activités
 * Gestion des utilisateurs, agents, documents
 
----
+
+
+
+![5 - Coeur d'Elavira](https://github.com/user-attachments/assets/65a719cf-5c70-4e03-a242-0a1823cd3595)
+
 
 ## 🐳 2. Déploiement local (Docker)
 
