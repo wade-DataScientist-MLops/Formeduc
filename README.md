@@ -1,5 +1,7 @@
 
 # 🤖 Elavira – Plateforme d’agents intelligents personnalisés
+![4 - Elavira](https://github.com/user-attachments/assets/9c924868-7310-48c4-882a-e2038e3195e3)
+
 
 Elavira est une plateforme modulaire et auto-hébergée permettant de créer, configurer et exploiter des agents intelligents pour l’éducation et la formation. Elle repose sur une architecture moderne en Python (FastAPI), PostgreSQL, et des moteurs LLM locaux comme **Ollama**.  
 
@@ -193,7 +195,8 @@ elavira/
 │       ├── security.py          # Hash, JWT
 │       └── file_handler.py      # Upload/Download de fichiers
 │
-├── frontend/
+├── frontend/![5 - Coeur d'Elavira](https://github.com/user-attachments/assets/c91d2201-d5b0-4fdb-a030-caf7d86f7dbd)
+
 │   ├── app.py                   # (optionnel) Interface Python (Streamlit, Gradio…)
 │   └── web/                     # Ou React / Vue si projet web
 │       ├── public/
