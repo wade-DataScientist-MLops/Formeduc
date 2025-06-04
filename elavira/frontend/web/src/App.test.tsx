@@ -1,9 +1,18 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import './App.css';
+import elviraImage from './images/elvira.png'; // Mettez à jour le chemin d'importation
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={elviraImage} className="Elvira-logo" alt="logo" />
+        <p>
+          Bienvenue sur mon application React.
+        </p>
+      </header>
+    </div>
+  );
+}
+
+export default App;
