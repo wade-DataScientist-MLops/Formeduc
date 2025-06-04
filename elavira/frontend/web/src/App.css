@@ -1,38 +1,19 @@
-.App {
-  text-align: center;
+import React from 'react';
+import './App.css'; 
+// Assurez-vous d'avoir un fichier CSS pour le style
+import elviraImage from './assets/images/elvira.png'; // Remplacez par le chemin correct de votre image
+
+function App() {
+  return (
+    <div className="App">
+      <header className="App-header">
+        <img src={elviraImage} className="Elvira-logo" alt="logo" />
+        <p>
+          Bienvenue sur mon application React.
+        </p>
+      </header>
+    </div>
+  );
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
+export default App;
