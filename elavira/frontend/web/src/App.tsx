@@ -1,12 +1,13 @@
+import imagePng from './images/image.png';
 import React from 'react';
-import logo from './logo.svg';
+import imagePng from './images/image.png'; // Remplace par le chemin exact
 import './App.css';
 
 function App() {
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        <img src={imagePng} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.tsx</code> and save to reload.
         </p>
