@@ -1,21 +1,17 @@
 # docker-compose.yml
-
-version: '3.8' # Version de la syntaxe Docker Compose
+version: '3.8' # Optionnel, peut être supprimé pour les versions récentes de Docker Compose
 
 services:
-  db: # Nom du service de votre base de données. C'est ce nom ('db') que vous utiliserez si votre application est dans un autre conteneur Docker.
-      # Cependant, puisque votre application tourne sur votre Mac, vous utilisez 'localhost'.
-    image: postgres:16-alpine # Image PostgreSQL. '16-alpine' est une version légère de PostgreSQL 16.
+  db:
+    image: postgres:16-alpine
     environment:
-      POSTGRES_DB: elaviradb # Nom de la base de données qui sera créée automatiquement au démarrage du conteneur.
-      POSTGRES_USER: admin # Nom d'utilisateur de la base de données.
-      POSTGRES_PASSWORD: mon_password # Mot de passe de l'utilisateur de la base de données.
+      POSTGRES_DB: elaviradb
+      POSTGRES_USER: mon_user     # Assurez-vous que c'est bien 'mon_user'
+      POSTGRES_PASSWORD: mon_password # Assurez-vous que c'est bien 'mon_password'
     ports:
-      - "5432:5432" # Mappe le port 5432 du conteneur au port 5432 de votre machine (Mac).
-                   # C'est pourquoi votre application se connecte à 'localhost:5432'.
+      - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data # Volume pour persister les données de la base de données.
-                                                # Cela garantit que vos données ne sont pas perdues si le conteneur est supprimé.
+      - postgres_data:/var/lib/postgresql/data # Fait référence au volume nommé défini ci-dessous
 
-volumes:
-  postgres_data: # Déclaration du volume nommé utilisé ci-dessus.
+volumes: # <-- CETTE SECTION ÉTAIT MANQUANTE !
+  postgres_data: # <-- Définition du volume nommé 'postgres_data'

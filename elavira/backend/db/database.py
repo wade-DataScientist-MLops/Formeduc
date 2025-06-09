@@ -1,44 +1,45 @@
-
 # backend/db/database.py
 
+# ... (vos imports, par exemple de dotenv, os, sqlalchemy)
+
+
+# Ancienne ligne pour PostgreSQL :
+# engine = create_engine(SQLALCHEMY_DATABASE_URL)
+
+# ... (le reste du code)
+# backend/db/database.py
+
+# ... (vos imports, assurez-vous que 'os' et 'create_engine' sont importés)
+from dotenv import load_dotenv
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from dotenv import load_dotenv
 
-# Charger les variables d'environnement depuis le fichier .env
 load_dotenv()
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Récupérer l'URL de la base de données depuis les variables d'environnement
-# Assurez-vous d'avoir une variable DATABASE_URL dans votre .env
-DATABASE_URL = os.getenv("DATABASE_URL")
+# --- DÉBUT DE LA MODIFICATION ICI ---
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
+    # Pour SQLite, nous devons ajouter connect_args={"check_same_thread": False}
+    # car SQLite n'est pas conçu pour l'accès multithread par défaut.
+    engine = create_engine(
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+    )
+elif SQLALCHEMY_DATABASE_URL: # Si c'est autre chose que SQLite (ex: PostgreSQL)
+    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+else:
+    # Gérer le cas où DATABASE_URL n'est pas défini (cela ne devrait pas arriver avec load_dotenv)
+    raise ValueError("DATABASE_URL non défini dans le fichier .env")
+# --- FIN DE LA MODIFICATION ICI ---
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL environment variable not set. Please check your .env file.")
-
-# Créer le moteur de la base de données
-# echo=True affichera les requêtes SQL générées dans la console (utile pour le débogage)
-engine = create_engine(DATABASE_URL, echo=True)
-
-# Créer une fabrique de sessions pour interagir avec la base de données
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Base déclarative qui sera héritée par tous vos modèles SQLAlchemy
 Base = declarative_base()
 
-# Dépendance pour obtenir une session de base de données
-# C'est une fonction génératrice qui fournira une session à chaque requête FastAPI
-# et la fermera automatiquement après.
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Fonction pour initialiser la base de données (créer les tables)
-# Vous appellerez cette fonction au démarrage de l'application ou via un script
 def init_db():
+    # Cette ligne créera les tables dans votre fichier sqlite.db
     Base.metadata.create_all(bind=engine)
-    print("Tables de la base de données créées ou déjà existantes.")
+    print("Base de données initialisée.")
+
+# ... (le reste de votre code, par exemple, la fonction get_db)
