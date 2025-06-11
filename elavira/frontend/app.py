@@ -1,9 +1,7 @@
-# app.py (Votre script Streamlit complet et corrigé - Version 3)
-
 import streamlit as st
 import base64
 import os
-import requests # Assurez-vous que requests est importé
+import requests
 
 # --- Configuration du chemin de l'image de fond ---
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -41,7 +39,6 @@ if 'access_token' not in st.session_state:
     st.session_state.access_token = None
 if 'logged_in_user' not in st.session_state:
     st.session_state.logged_in_user = None
-
 
 # --- Fonctions pour interagir avec l'API de chat ---
 def send_message_to_api(message_text, user_id=1):
@@ -90,7 +87,6 @@ with tab_register:
                 st.session_state.new_password_input = ""
             except requests.exceptions.HTTPError as e:
                 if e.response.status_code == 400:
-                    # CORRECTION APPLIQUÉE ICI : Utilisation de triples guillemets pour la chaîne interne
                     st.error(f"Erreur d'inscription : {e.response.json().get('detail', '''Nom d'utilisateur déjà pris ou autre erreur.''')}")
                 else:
                     st.error(f"Erreur lors de l'inscription : {e}")
@@ -133,7 +129,7 @@ if st.session_state.logged_in_user:
         st.session_state.access_token = None
         st.session_state.logged_in_user = None
         st.success("Vous êtes déconnecté.")
-        st.rerun() # Rafraîchit l'application pour mettre à jour l'interface
+        st.rerun()
 
 st.write("---")
 
@@ -152,20 +148,26 @@ if st.button("Obtenir le statut du chat de l'API"):
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors de la requête API : {e}")
 
+# Champ de message
 message_input = st.text_input("Tapez votre message ici :", key="chat_message_input")
 
+# Bouton pour envoyer
 if st.button("Envoyer le message", key="send_chat_button"):
-    if message_input:
-        send_message_to_api(message_input, user_id=1)
-        st.session_state.chat_message_input = ""
+    if st.session_state.chat_message_input:
+        success = send_message_to_api(st.session_state.chat_message_input, user_id=1)
+        if success:
+            del st.session_state["chat_message_input"]  # Supprime proprement la clé
+            st.rerun   # Recharge la page pour réinitialiser le champ
     else:
         st.warning("Veuillez taper un message.")
 
+# Bouton pour actualiser l'historique
 if st.button("Actualiser l'historique du chat", key="refresh_chat_button"):
     fetch_chat_history_from_api()
 
 st.write("---")
 
+# Historique des messages
 st.subheader("Historique des conversations")
 
 if not st.session_state.messages:

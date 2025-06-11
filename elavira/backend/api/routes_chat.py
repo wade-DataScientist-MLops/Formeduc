@@ -1,72 +1,90 @@
-# backend/api/routes_chat.py
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import List, Dict
+from datetime import datetime
+import requests
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel # Pour définir le modèle de données du message
-from typing import List, Dict # Pour les types de données
-
-# Importez vos modèles et schémas nécessaires ici si vous les utilisez
-# from backend.db import models, schemas
-# from backend.db.database import get_db
-
-# Crée une instance de APIRouter pour les routes de chat
+# Création du routeur FastAPI
 router = APIRouter(
-    prefix="/chat",  # Toutes les routes ici commenceront par /chat
-    tags=["Chat"]    # Pour l'organisation dans la documentation Swagger/OpenAPI
+    prefix="/chat",
+    tags=["Chat"]
 )
 
-# --- Modèles Pydantic pour les données du chat ---
-# Ce modèle définit la structure d'un message entrant
+# --- Modèles Pydantic ---
 class MessageCreate(BaseModel):
     text: str
-    user_id: int = 1 # Pour l'exemple, nous allons fixer l'user_id à 1 pour l'instant
+    user_id: int = 1
 
-# Ce modèle pourrait définir la structure d'un message stocké ou retourné
 class MessageDisplay(BaseModel):
     id: int
     text: str
     user_id: int
-    timestamp: str # Ou datetime.datetime si vous gérez les dates réelles
+    timestamp: str
 
-# --- Simulation d'une base de données de chat (en mémoire) ---
-# Cette liste simule l'historique des messages. Elle sera effacée à chaque redémarrage du serveur.
+# --- Simulation d'une base en mémoire ---
 fake_db_messages: List[Dict] = []
 message_id_counter = 0
+
+# --- Fonction utilitaire pour générer une réponse via Ollama ---
+def generate_ai_response(prompt: str, model: str = "llama3") -> str:
+    try:
+        response = requests.post(
+            "http://localhost:11434/api/generate",
+            json={"model": model, "prompt": prompt, "stream": False}
+        )
+        response.raise_for_status()
+        return response.json().get("response", "Désolé, je n'ai pas compris.")
+    except Exception as e:
+        print(f"[Ollama] Erreur : {e}")
+        return "Erreur lors de la génération de la réponse IA."
+
+# --- Routes ---
 
 @router.get("/")
 async def read_chat_status():
     """
-    Endpoint de test pour vérifier que les routes de chat fonctionnent.
+    Endpoint de test de statut.
     """
     return {"message": "Chat routes are working!", "status": "active"}
 
 @router.post("/send_message/", response_model=MessageDisplay)
 async def send_message(message: MessageCreate):
     """
-    Endpoint pour envoyer un nouveau message.
+    Envoie un message utilisateur et génère une réponse IA via Ollama.
     """
     global message_id_counter
+
+    # 1. Enregistrement du message utilisateur
     message_id_counter += 1
-    new_message = {
+    user_msg = {
         "id": message_id_counter,
         "text": message.text,
         "user_id": message.user_id,
-        "timestamp": "2025-06-11 T10:00:00Z" # Date/heure fixe pour l'instant
+        "timestamp": datetime.utcnow().isoformat()
     }
-    fake_db_messages.append(new_message)
-    print(f"Nouveau message reçu : {new_message}") # Pour voir dans le terminal FastAPI
-    return new_message
+    fake_db_messages.append(user_msg)
+    print(f"[USER] {user_msg}")
+
+    # 2. Génération de la réponse IA
+    ai_response = generate_ai_response(message.text)
+
+    # 3. Enregistrement du message IA
+    message_id_counter += 1
+    bot_msg = {
+        "id": message_id_counter,
+        "text": ai_response,
+        "user_id": 0,  # 0 = l’IA
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    fake_db_messages.append(bot_msg)
+    print(f"[BOT] {bot_msg}")
+
+    # 4. Retour du message utilisateur uniquement (ou bot_msg si tu préfères)
+    return user_msg
 
 @router.get("/history/", response_model=List[MessageDisplay])
 async def get_chat_history():
     """
-    Endpoint pour récupérer l'historique complet des messages.
+    Récupère l'historique complet des messages.
     """
     return fake_db_messages
-
-# @router.get("/history/{user_id}", response_model=List[MessageDisplay])
-# async def get_user_chat_history(user_id: int):
-#     """
-#     Endpoint pour récupérer l'historique des messages d'un utilisateur spécifique.
-#     """
-#     user_messages = [msg for msg in fake_db_messages if msg["user_id"] == user_id]
-#     return user_messages
