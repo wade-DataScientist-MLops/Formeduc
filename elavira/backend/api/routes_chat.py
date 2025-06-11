@@ -1,28 +1,36 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional
+# backend/api/routes_chat.py
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel # Pour définir le modèle de données du message
+from typing import List, Dict # Pour les types de données
+
+# Importez vos modèles et schémas nécessaires ici si vous les utilisez
+# from backend.db import models, schemas
+# from backend.db.database import get_db
 
 # Crée une instance de APIRouter pour les routes de chat
 router = APIRouter(
-    prefix="/chat",
-    tags=["Chat"]
+    prefix="/chat",  # Toutes les routes ici commenceront par /chat
+    tags=["Chat"]    # Pour l'organisation dans la documentation Swagger/OpenAPI
 )
 
-# ========================
-# 🚀 SCHEMAS / MODELS
-# ========================
+# --- Modèles Pydantic pour les données du chat ---
+# Ce modèle définit la structure d'un message entrant
+class MessageCreate(BaseModel):
+    text: str
+    user_id: int = 1 # Pour l'exemple, nous allons fixer l'user_id à 1 pour l'instant
 
-class ChatRequest(BaseModel):
-    user_id: str  # ou int selon ton système
-    message: str
+# Ce modèle pourrait définir la structure d'un message stocké ou retourné
+class MessageDisplay(BaseModel):
+    id: int
+    text: str
+    user_id: int
+    timestamp: str # Ou datetime.datetime si vous gérez les dates réelles
 
-class ChatResponse(BaseModel):
-    reply: str
-    user_id: str
-
-# ========================
-# ✅ ROUTES
-# ========================
+# --- Simulation d'une base de données de chat (en mémoire) ---
+# Cette liste simule l'historique des messages. Elle sera effacée à chaque redémarrage du serveur.
+fake_db_messages: List[Dict] = []
+message_id_counter = 0
 
 @router.get("/")
 async def read_chat_status():
@@ -31,31 +39,34 @@ async def read_chat_status():
     """
     return {"message": "Chat routes are working!", "status": "active"}
 
-@router.post("/ask", response_model=ChatResponse)
-async def ask_chat(request: ChatRequest):
+@router.post("/send_message/", response_model=MessageDisplay)
+async def send_message(message: MessageCreate):
     """
-    Envoie une question de l'utilisateur et retourne une réponse simulée.
-    À connecter à LocalAI ou Ollama par la suite.
+    Endpoint pour envoyer un nouveau message.
     """
-    user_message = request.message
+    global message_id_counter
+    message_id_counter += 1
+    new_message = {
+        "id": message_id_counter,
+        "text": message.text,
+        "user_id": message.user_id,
+        "timestamp": "2025-06-11 T10:00:00Z" # Date/heure fixe pour l'instant
+    }
+    fake_db_messages.append(new_message)
+    print(f"Nouveau message reçu : {new_message}") # Pour voir dans le terminal FastAPI
+    return new_message
 
-    # 🧠 Simulation IA (à remplacer par appel réel)
-    response_text = f"Tu as dit : '{user_message}'. Je suis une IA en cours d'intégration."
+@router.get("/history/", response_model=List[MessageDisplay])
+async def get_chat_history():
+    """
+    Endpoint pour récupérer l'historique complet des messages.
+    """
+    return fake_db_messages
 
-    return ChatResponse(reply=response_text, user_id=request.user_id)
-
-# ========================
-# (Optionnel) Historique
-# ========================
-
-# @router.get("/history/{user_id}")
-# async def get_chat_history(user_id: str):
+# @router.get("/history/{user_id}", response_model=List[MessageDisplay])
+# async def get_user_chat_history(user_id: int):
 #     """
-#     (Optionnel) Récupère l'historique des messages d'un utilisateur.
+#     Endpoint pour récupérer l'historique des messages d'un utilisateur spécifique.
 #     """
-#     # Exemple de réponse simulée
-#     history = [
-#         {"message": "Bonjour", "reply": "Salut !"},
-#         {"message": "Quel temps fait-il ?", "reply": "Je ne suis pas encore connecté à la météo..."}
-#     ]
-#     return {"user_id": user_id, "history": history}
+#     user_messages = [msg for msg in fake_db_messages if msg["user_id"] == user_id]
+#     return user_messages
