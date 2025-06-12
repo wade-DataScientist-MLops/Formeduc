@@ -1,10 +1,11 @@
+# elavira/backend/api/routes_chat.py
+
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict
 from datetime import datetime
 import requests
 
-# Création du routeur FastAPI
 router = APIRouter(
     prefix="/chat",
     tags=["Chat"]
@@ -13,19 +14,19 @@ router = APIRouter(
 # --- Modèles Pydantic ---
 class MessageCreate(BaseModel):
     text: str
-    user_id: int = 1
+    user_id: str = "Guest" # <-- CHANGEMENT ICI : user_id est maintenant de type str
 
 class MessageDisplay(BaseModel):
     id: int
     text: str
-    user_id: int
+    user_id: str # <-- CHANGEMENT ICI : user_id est maintenant de type str
     timestamp: str
 
 # --- Simulation d'une base en mémoire ---
 fake_db_messages: List[Dict] = []
 message_id_counter = 0
 
-# --- Fonction utilitaire pour générer une réponse via Ollama ---
+# --- Fonction utilitaire pour générer une réponse via Ollama (inchangée) ---
 def generate_ai_response(prompt: str, model: str = "llama3") -> str:
     try:
         response = requests.post(
@@ -42,16 +43,10 @@ def generate_ai_response(prompt: str, model: str = "llama3") -> str:
 
 @router.get("/")
 async def read_chat_status():
-    """
-    Endpoint de test de statut.
-    """
     return {"message": "Chat routes are working!", "status": "active"}
 
 @router.post("/send_message/", response_model=MessageDisplay)
 async def send_message(message: MessageCreate):
-    """
-    Envoie un message utilisateur et génère une réponse IA via Ollama.
-    """
     global message_id_counter
 
     # 1. Enregistrement du message utilisateur
@@ -59,7 +54,7 @@ async def send_message(message: MessageCreate):
     user_msg = {
         "id": message_id_counter,
         "text": message.text,
-        "user_id": message.user_id,
+        "user_id": message.user_id, # C'est déjà une str grâce au modèle
         "timestamp": datetime.utcnow().isoformat()
     }
     fake_db_messages.append(user_msg)
@@ -73,7 +68,7 @@ async def send_message(message: MessageCreate):
     bot_msg = {
         "id": message_id_counter,
         "text": ai_response,
-        "user_id": 0,  # 0 = l’IA
+        "user_id": "Elavira Assistant",  # <-- CHANGEMENT ICI : L'IA est maintenant une chaîne
         "timestamp": datetime.utcnow().isoformat()
     }
     fake_db_messages.append(bot_msg)
@@ -84,7 +79,4 @@ async def send_message(message: MessageCreate):
 
 @router.get("/history/", response_model=List[MessageDisplay])
 async def get_chat_history():
-    """
-    Récupère l'historique complet des messages.
-    """
     return fake_db_messages
