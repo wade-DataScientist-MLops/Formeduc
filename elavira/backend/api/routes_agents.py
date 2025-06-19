@@ -1,107 +1,172 @@
-# backend/api/routes_agents.py
-
-from fastapi import APIRouter, HTTPException, status
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Dict, Optional
-import requests # Assurez-vous que requests est importé pour les appels API à Ollama
-import json # Pour gérer les JSON
+from typing import List
+import os
 
-# Crée une instance de APIRouter pour les routes des agents
-router = APIRouter(
-    prefix="/agents",
-    tags=["Agents"]
+# --- Import des routeurs (si tu veux les activer plus tard) ---
+from backend.api import routes_users
+from backend.api import routes_chat
+# from backend.api import routes_agents
+
+# --- ChromaDB ---
+import chromadb
+
+# --- Initialisation FastAPI ---
+app = FastAPI(
+    title="API Elavira",
+    description="Une API pour l'assistant intelligent Elavira",
+    version="0.0.1",
 )
 
-# --- Modèle Pydantic pour un Agent ---
-class Agent(BaseModel):
-    id: str
-    name: str
-    description: Optional[str] = None
-    status: str = "active"
+# --- CORS ---
+origins = [
+    "http://localhost",
+    "http://127.0.0.1:8000",
+    "http://localhost:3000",   # React
+    "http://localhost:8501",   # Streamlit
+]
 
-# --- Simulation d'une base de données d'agents (en mémoire) ---
-fake_agents_db: Dict[str, Agent] = {
-    "agent-001": Agent(id="agent-001", name="Elavira Assistant", description="Un assistant généraliste utilisant Ollama."),
-    "agent-002": Agent(id="agent-002", name="Fact Checker Bot", description="Vérifie les faits et les sources d'information."),
-    "agent-003": Agent(id="agent-003", name="Code Generator", description="Génère des extraits de code dans divers langages.", status="inactive"),
-}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# --- Fonction pour appeler un modèle Ollama ---
-async def call_ollama_model(prompt: str, model_name: str = "llama2"):
-    ollama_url = "http://localhost:11434/api/generate" # URL par défaut d'Ollama
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "model": model_name,
-        "prompt": prompt,
-        "stream": False # Nous voulons la réponse complète d'un coup
-    }
-    try:
-        response = requests.post(ollama_url, headers=headers, data=json.dumps(data))
-        response.raise_for_status() # Lève une exception pour les erreurs HTTP
-        result = response.json()
-        return result.get("response", "Aucune réponse d'Ollama.")
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Impossible de se connecter au service Ollama. Assurez-vous qu'il est en cours d'exécution sur http://localhost:11434."
-        )
-    except requests.exceptions.RequestException as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Erreur lors de l'appel à Ollama : {e}"
-        )
+# --- Routeurs utilisateurs/chat ---
+app.include_router(routes_users.router)
+app.include_router(routes_chat.router)
+# app.include_router(routes_agents.router)  # À activer plus tard
 
-# --- Routes des Agents ---
-
-@router.get("/", response_model=List[Agent])
-async def get_all_agents():
-    return list(fake_agents_db.values())
-
-@router.get("/{agent_id}", response_model=Agent)
-async def get_agent_by_id(agent_id: str):
-    agent = fake_agents_db.get(agent_id)
-    if not agent:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Agent avec l'ID '{agent_id}' introuvable."
-        )
-    return agent
-
-@router.post("/interact/{agent_id}")
-async def interact_with_agent(agent_id: str, message: Dict[str, str]):
-    """
-    Interagit avec un agent spécifique, en utilisant Ollama pour l'agent-001.
-    """
-    agent = fake_agents_db.get(agent_id)
-    if not agent:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Agent avec l'ID '{agent_id}' introuvable."
-        )
-    if agent.status == "inactive":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"L'agent '{agent.name}' est inactif et ne peut pas interagir."
-        )
-
-    user_message = message.get("text", "Pas de message fourni.")
-    agent_response = ""
-
-    if agent_id == "agent-001":
-        # Appel à Ollama pour Elavira Assistant
-        try:
-            ollama_response = await call_ollama_model(user_message, model_name="llama2") # Utilisez le modèle que vous avez téléchargé
-            agent_response = f"Réponse d'Elavira (via Ollama) : {ollama_response}"
-        except HTTPException as e:
-            raise e # Relève l'erreur si la connexion à Ollama a échoué
-        except Exception as e:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Une erreur inattendue est survenue lors de l'appel à Ollama : {e}"
-            )
-    elif agent_id == "agent-002":
-        agent_response = f"Fact Checker Bot analyse votre requête : '{user_message}'. Réponse simulée."
+# --- ChromaDB Setup ---
+def get_chroma_client(persistent: bool = True, path: str = "./chroma_data"):
+    if persistent:
+        os.makedirs(path, exist_ok=True)
+        print(f"✅ ChromaDB persistant à : {os.path.abspath(path)}")
+        return chromadb.PersistentClient(path=path)
     else:
-        agent_response = f"L'agent {agent.name} a reçu : '{user_message}'. Réponse générique simulée."
+        print("🧪 Client ChromaDB en mémoire")
+        return chromadb.Client()
 
-    return {"agent_id": agent_id, "agent_name": agent.name, "response": agent_response}
+def get_chroma_collection(client, name="elavira_collection"):
+    return client.get_or_create_collection(name)
+
+# --- Initialisation ChromaDB ---
+script_dir = os.path.dirname(__file__)
+chroma_db_path = os.path.join(script_dir, "chroma_data")
+
+chroma_client = get_chroma_client(persistent=True, path=chroma_db_path)
+collection = get_chroma_collection(chroma_client, "elavira_collection")
+
+# --- Modèles ---
+class AddDocumentsRequest(BaseModel):
+    texts: List[str]
+
+class EmbeddingItem(BaseModel):
+    id: str
+    embedding: List[float]
+    document: str
+
+class QueryRequest(BaseModel):
+    query_embedding: List[float]
+    n_results: int = 5
+
+# --- Endpoints ---
+@app.get("/")
+async def read_root():
+    return {"message": "Bienvenue sur l'API Elavira!"}
+
+@app.post("/add_documents/")
+async def add_documents(request: AddDocumentsRequest):
+    try:
+        print(f"📥 Documents reçus : {request.texts}")
+        ids = [f"doc_{i}" for i in range(collection.count(), collection.count() + len(request.texts))]
+        collection.add(documents=request.texts, ids=ids)
+        print(f"✅ {len(request.texts)} documents ajoutés.")
+        return {"message": "Documents ajoutés", "ids": ids}
+    except Exception as e:
+        print(f"❌ Erreur ajout documents : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur ajout documents : {str(e)}")
+
+@app.post("/chroma/add_embedding/")
+async def add_embedding(item: EmbeddingItem):
+    try:
+        collection.add(
+            ids=[item.id],
+            embeddings=[item.embedding],
+            documents=[item.document]
+        )
+        return {"status": "embedding added", "id": item.id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur ajout embedding : {str(e)}")
+
+@app.post("/chroma/query/")
+async def query_embedding(request: QueryRequest):
+    try:
+        results = collection.query(
+            query_embeddings=[request.query_embedding],
+            n_results=request.n_results,
+            include=['documents', 'distances', 'metadatas']
+        )
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur requête embeddings : {str(e)}")
+
+# --- Endpoints du routeur chat (assurez-vous qu'ils existent et sont conformes) ---
+# Si vous avez un fichier 'backend/api/routes_chat.py' qui gère le chat,
+# voici un rappel de ce à quoi il pourrait ressembler pour l'historique :
+
+# Contenu possible de backend/api/routes_chat.py
+# (Ce n'est qu'un exemple, assurez-vous que votre fichier réel est comme ceci ou adapté)
+
+# from fastapi import APIRouter, HTTPException
+# from pydantic import BaseModel
+# from typing import List, Dict
+
+# router = APIRouter(
+#     prefix="/chat",
+#     tags=["Chat"],
+# )
+
+# # Modèles de Pydantic pour les messages
+# class ChatMessage(BaseModel):
+#     user_id: str
+#     text: str
+#     timestamp: str # Ou datetime.datetime si vous voulez une vraie date
+
+# class SendMessageRequest(BaseModel):
+#     user_id: str
+#     text: str
+
+# class ChatHistoryResponse(BaseModel):
+#     history: List[ChatMessage] # <--- C'est cette structure qui est attendue si vous utilisez .get('history')
+
+# # Historique de chat en mémoire (pour les tests)
+# chat_history_db: List[ChatMessage] = []
+
+# @router.post("/send_message/")
+# async def send_message(message: SendMessageRequest):
+#     """Envoie un message au système de chat."""
+#     # Ici, vous traiteriez le message (par exemple, l'envoyer à un LLM, etc.)
+#     # Pour l'instant, on l'ajoute simplement à l'historique
+#     new_message = ChatMessage(
+#         user_id=message.user_id,
+#         text=message.text,
+#         timestamp=datetime.datetime.now().isoformat() + "Z"
+#     )
+#     chat_history_db.append(new_message)
+#     print(f"📥 Message reçu de {message.user_id}: {message.text}")
+#     return {"status": "Message received", "message": new_message}
+
+# @router.get("/history/", response_model=ChatHistoryResponse) # <-- Cette ligne indique que la réponse doit être un ChatHistoryResponse
+# async def get_chat_history():
+#     """Récupère l'historique des conversations."""
+#     print("🔄 Requête reçue pour l'historique du chat.")
+#     # Assurez-vous que le "return" correspond à ChatHistoryResponse
+#     return {"history": chat_history_db} # <--- Votre main.py attend que vous renvoyiez un dictionnaire ici
+
+# @router.get("/")
+# async def get_chat_status():
+#     return {"message": "Chat API is running", "status": "ok"}

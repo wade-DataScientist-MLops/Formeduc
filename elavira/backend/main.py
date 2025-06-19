@@ -1,58 +1,30 @@
-# backend/main.py
-
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-# from sqlalchemy.orm import Session # Si vous utilisez une base de données avec SQLAlchemy
-# from typing import Annotated # Si vous utilisez des annotations pour les dépendances
+from pydantic import BaseModel
+from typing import List
+import os
 
-# Importez vos routeurs ici
-# Assurez-vous que ces fichiers existent dans backend/api/
-# Décommentez les lignes correspondantes si vous avez ces fichiers et que vous voulez les inclure
+# --- Import des routeurs (si tu veux les activer plus tard) ---
 from backend.api import routes_users
 from backend.api import routes_chat
-# from backend.api import routes_agents # Décommentez si vous avez ce routeur et qu'il est corrigé
+# from backend.api import routes_agents
 
-# =======================================================
-# CODE SUPPRIMÉ : C'est le code Streamlit qui était là par erreur
-# import base64
-# import os
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# image_path = os.path.join(current_dir, "images", "4 - Elavira (1).png")
-# def add_bg_from_local(image_file):
-#     with open(image_file, "rb") as file:
-#         encoded = base64.b64encode(file.read()).decode()
-#     css = f"""
-#     <style>
-#     .stApp {{
-#         background-image: url("data:image/png;base64,{encoded}");
-#         background-size: 47% auto;
-#         background-position: center;
-#         background-repeat: no-repeat;
-#         background-attachment: fixed;
-#     }}
-#     </style>
-#     """
-#     # st.markdown(css, unsafe_allow_html=True) # Streamlit n'est pas importé ici
-# =======================================================
+# --- ChromaDB ---
+import chromadb
 
-
+# --- Initialisation FastAPI ---
 app = FastAPI(
     title="API Elavira",
-    description="Une API pour l'assistant Elavira",
+    description="Une API pour l'assistant intelligent Elavira",
     version="0.0.1",
 )
 
-# --- Configuration CORS ---
+# --- CORS ---
 origins = [
     "http://localhost",
-    "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://localhost:3000",
-    "http://localhost:8080",
-    "http://localhost:4200",
-    "http://localhost:8501", # Le port par défaut de Streamlit
-    # Ajoutez ici l'URL de votre frontend en production lorsque vous la déployerez
-    # "https://votre-domaine-frontend.com",
+    "http://localhost:3000",   # React
+    "http://localhost:8501",   # Streamlit
 ]
 
 app.add_middleware(
@@ -62,22 +34,82 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# --- Fin de la configuration CORS ---
 
-
-# --- Inclure vos routeurs d'API ---
+# --- Routeurs utilisateurs/chat ---
 app.include_router(routes_users.router)
 app.include_router(routes_chat.router)
-# app.include_router(routes_agents.router) # Décommentez ceci quand vous aurez corrigé routes_agents.py
+# app.include_router(routes_agents.router)  # À activer plus tard
 
+# --- ChromaDB Setup ---
+def get_chroma_client(persistent: bool = True, path: str = "./chroma_data"):
+    if persistent:
+        os.makedirs(path, exist_ok=True)
+        print(f"✅ ChromaDB persistant à : {os.path.abspath(path)}")
+        return chromadb.PersistentClient(path=path)
+    else:
+        print("🧪 Client ChromaDB en mémoire")
+        return chromadb.Client()
 
-# --- Routes de base de l'application ---
+def get_chroma_collection(client, name="elavira_collection"):
+    return client.get_or_create_collection(name)
+
+# --- Initialisation ChromaDB ---
+script_dir = os.path.dirname(__file__)
+chroma_db_path = os.path.join(script_dir, "chroma_data")
+
+chroma_client = get_chroma_client(persistent=True, path=chroma_db_path)
+collection = get_chroma_collection(chroma_client, "elavira_collection")
+
+# --- Modèles ---
+class AddDocumentsRequest(BaseModel):
+    texts: List[str]
+
+class EmbeddingItem(BaseModel):
+    id: str
+    embedding: List[float]
+    document: str
+
+class QueryRequest(BaseModel):
+    query_embedding: List[float]
+    n_results: int = 5
+
+# --- Endpoints ---
 @app.get("/")
 async def read_root():
-    """
-    Point d'accès racine de l'API.
-    Retourne un message de bienvenue.
-    """
     return {"message": "Bienvenue sur l'API Elavira!"}
 
-# Ajoutez d'autres routes de haut niveau ici si nécessaire
+@app.post("/add_documents/")
+async def add_documents(request: AddDocumentsRequest):
+    try:
+        print(f"📥 Documents reçus : {request.texts}")
+        ids = [f"doc_{i}" for i in range(collection.count(), collection.count() + len(request.texts))]
+        collection.add(documents=request.texts, ids=ids)
+        print(f"✅ {len(request.texts)} documents ajoutés.")
+        return {"message": "Documents ajoutés", "ids": ids}
+    except Exception as e:
+        print(f"❌ Erreur ajout documents : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur ajout documents : {str(e)}")
+
+@app.post("/chroma/add_embedding/")
+async def add_embedding(item: EmbeddingItem):
+    try:
+        collection.add(
+            ids=[item.id],
+            embeddings=[item.embedding],
+            documents=[item.document]
+        )
+        return {"status": "embedding added", "id": item.id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur ajout embedding : {str(e)}")
+
+@app.post("/chroma/query/")
+async def query_embedding(request: QueryRequest):
+    try:
+        results = collection.query(
+            query_embeddings=[request.query_embedding],
+            n_results=request.n_results,
+            include=['documents', 'distances', 'metadatas']
+        )
+        return results
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur requête embeddings : {str(e)}")

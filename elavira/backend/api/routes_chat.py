@@ -79,4 +79,4 @@ async def send_message(message: MessageCreate):
 
 @router.get("/history/", response_model=List[MessageDisplay])
 async def get_chat_history():
-    return fake_db_messages
+    return fake_db_messages 
