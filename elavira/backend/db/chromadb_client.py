@@ -88,3 +88,5 @@ if __name__ == "__main__":
     # if os.path.exists(persistent_db_path):
     #     print(f"\nNettoyage des données persistantes à : {persistent_db_path}")
     #     shutil.rmtree(persistent_db_path)
+    
+    
