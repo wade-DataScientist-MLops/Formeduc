@@ -61,7 +61,8 @@ def test_index_multiple_documents(collection, model):
         "Cours de premiers soins adaptés à la petite enfance.",
         "Renouvellement de secourisme en milieu scolaire.",
         "Prévention de la maltraitance des enfants."
-    ]
+        
+        ]
     embeddings = model.encode(texts).tolist()
     metadatas = [{"source": f"doc{i+1}"} for i in range(len(texts))]
     ids = [f"id{i+1}" for i in range(len(texts))]
