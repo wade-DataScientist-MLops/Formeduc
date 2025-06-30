@@ -4,6 +4,8 @@ from typing import List, Dict
 from datetime import datetime
 import requests
 import base64
+import io
+from gtts import gTTS
 from backend.core.chroma_client import collection, embedder
 
 router = APIRouter(
@@ -22,9 +24,7 @@ class MessageDisplay(BaseModel):
     text: str
     user_id: str
     timestamp: str
-    audio_base64: str = None  # Champ pour l'audio TTS en base64
-
-# --- Mémoire (temporaire) ---
+    audio_base64: str = None
 
 fake_db_messages: List[Dict] = []
 message_id_counter = 0
@@ -32,13 +32,26 @@ message_id_counter = 0
 # --- Fonction génération réponse IA via Ollama ---
 
 def generate_ai_response(prompt: str, context: str = "", model: str = "llama3") -> str:
-    SYSTEM_PROMPT = """Tu es Elavira Assistant, un assistant IA utile et amical.
-Ton rôle est de répondre aux questions des utilisateurs en te basant sur les informations fournies dans les documents de référence.
-Si la question porte sur ton identité (par exemple, "qui es-tu ?", "comment t'appelles-tu ?"), réponds que tu es Elavira Assistant et que tu es là pour aider.
-Si la question ne peut pas être répondue avec les informations fournies dans le contexte, indique poliment que tu n'as pas l'information.
-Réponds de manière concise et pertinente.
-"""
-    full_prompt = f"{SYSTEM_PROMPT}\n\nContexte : {context}\nQuestion : {prompt}\nRéponds précisément."
+    base_system_prompt = (
+        "Tu es une assistante IA bienveillante et chaleureuse, appelée Elavira. "
+        "Tu travailles pour Formeduc, une plateforme qui propose des cours de secourisme. "
+        "Tu réponds de manière concise, utile et uniquement si le contexte le permet. "
+        "Tu n'as pas besoin de commenter des éléments hors sujet comme 'le chat dort' ou 'le chien aboie'. "
+        "Si une question n'est pas claire ou ne contient pas d'information pertinente, demande une précision."
+    )
+
+    greetings = ["salut", "bonjour", "coucou"]
+    if prompt.lower().strip() in greetings:
+        system_prompt = base_system_prompt + (
+            " Quand quelqu'un te salue, tu réponds avec douceur : \"Bonjour, je suis Elavira, votre éducatrice en secourisme.\""
+        )
+    else:
+        system_prompt = base_system_prompt + (
+            " Ne te présente pas dans cette réponse."
+        )
+
+    full_prompt = f"{system_prompt}\n\nContexte : {context}\nQuestion : {prompt}\nRéponds précisément."
+
     try:
         response = requests.post(
             "http://localhost:11434/api/generate",
@@ -50,14 +63,10 @@ Réponds de manière concise et pertinente.
         print(f"[Ollama] Erreur : {e}")
         return "Erreur lors de la génération de la réponse IA."
 
-# --- TTS : Transformer réponse texte en audio MP3 (base64) ---
+# --- TTS ---
 
 def synthesize_speech(text: str) -> str:
     try:
-        # Envoie à une route de TTS locale si tu as une API dédiée.
-        # Sinon, gTTS ou moteur local peut être utilisé ici.
-        from gtts import gTTS
-        import io
         mp3_fp = io.BytesIO()
         tts = gTTS(text, lang="fr")
         tts.write_to_fp(mp3_fp)
@@ -68,8 +77,6 @@ def synthesize_speech(text: str) -> str:
         print(f"[TTS] Erreur synthèse vocale : {e}")
         return None
 
-# --- Routes ---
-
 @router.get("/")
 async def read_chat_status():
     return {"message": "Chat routes are working!", "status": "active"}
@@ -78,7 +85,7 @@ async def read_chat_status():
 async def send_message(message: MessageCreate):
     global message_id_counter
 
-    # Enregistrer message utilisateur
+    # Sauvegarde message utilisateur
     message_id_counter += 1
     user_msg = {
         "id": message_id_counter,
@@ -88,28 +95,32 @@ async def send_message(message: MessageCreate):
     }
     fake_db_messages.append(user_msg)
 
-    # Embedding + Recherche Chroma
+    # Recherche contextuelle
     question_embedding = embedder.encode(message.text).tolist()
     results = collection.query(query_embeddings=[question_embedding], n_results=3)
     docs_found = results['documents'][0] if results['documents'] else []
     context = "\n\n".join(docs_found)
 
-    # Réponse IA
+    # Génération réponse IA
     ai_response = generate_ai_response(message.text, context)
 
-    # TTS (base64)
+    # Synthèse vocale
     audio_base64 = synthesize_speech(ai_response)
 
-    # Enregistrer réponse bot
-    message_id_counter += 1
-    bot_msg = {
-        "id": message_id_counter,
-        "text": ai_response,
-        "user_id": "Elavira Assistant",
-        "timestamp": datetime.utcnow().isoformat(),
-        "audio_base64": audio_base64
-    }
-    fake_db_messages.append(bot_msg)
+    # Sauvegarde réponse bot sans duplication consécutive
+    if not fake_db_messages or fake_db_messages[-1]["text"] != ai_response:
+        message_id_counter += 1
+        bot_msg = {
+            "id": message_id_counter,
+            "text": ai_response,
+            "user_id": "Elavira Assistant",
+            "timestamp": datetime.utcnow().isoformat(),
+            "audio_base64": audio_base64
+        }
+        fake_db_messages.append(bot_msg)
+    else:
+        bot_msg = fake_db_messages[-1]
+
     return bot_msg
 
 @router.get("/history/", response_model=List[MessageDisplay])
@@ -119,10 +130,7 @@ async def get_chat_history():
 @router.post("/transcribe_audio/")
 async def transcribe_audio(file: UploadFile = File(...)):
     try:
-        # Lecture du fichier audio
         audio_bytes = await file.read()
-
-        # Appel à Ollama Whisper local
         response = requests.post(
             "http://localhost:11434/api/transcribe",
             files={"audio": ("audio.wav", audio_bytes, "audio/wav")}
@@ -130,7 +138,6 @@ async def transcribe_audio(file: UploadFile = File(...)):
         response.raise_for_status()
         data = response.json()
         text = data.get("text", "")
-
         return {"transcribed_text": text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur de transcription : {e}")
