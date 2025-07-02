@@ -2,25 +2,30 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
-from passlib.context import CryptContext # Pour le hachage de mot de passe
+from passlib.context import CryptContext
 from typing import Dict
+from datetime import datetime, timedelta
+from jose import JWTError, jwt
+from fastapi.security import OAuth2PasswordBearer
 
-# Crée une instance de APIRouter pour les routes des utilisateurs
+# Router FastAPI
 router = APIRouter(
-    prefix="/users", # Toutes les routes ici commenceront par /users
-    tags=["Users"]   # Pour l'organisation dans la documentation Swagger/OpenAPI
+    prefix="/users",
+    tags=["Users"]
 )
 
-# --- Configuration du hachage de mot de passe ---
+# --- Sécurité & config JWT ---
+SECRET_KEY = "une_clef_ultra_secrete_a_changer"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+# Password Hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+# OAuth2 pour lecture du token
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login/")
 
-def get_password_hash(password):
-    return pwd_context.hash(password)
-
-# --- Modèles Pydantic pour les utilisateurs ---
+# --- Models Pydantic ---
 class UserCreate(BaseModel):
     username: str
     password: str
@@ -29,58 +34,73 @@ class UserInDB(BaseModel):
     username: str
     hashed_password: str
 
-class Token(BaseModel): # Pour la réponse de connexion (sans JWT pour l'instant)
+class Token(BaseModel):
     access_token: str
     token_type: str
 
-# --- Simulation d'une base de données d'utilisateurs (en mémoire) ---
-# Cette approche n'est PAS persistante et sera effacée à chaque redémarrage du serveur.
-# Pour la persistance, nous utiliserons une vraie base de données plus tard.
+# --- Base simulée ---
 fake_users_db: Dict[str, UserInDB] = {}
 
-# --- Routes des utilisateurs ---
+# --- Fonctions Auth ---
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+def get_user(username: str):
+    return fake_users_db.get(username)
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=401, detail="Token invalide")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token invalide")
+
+    user = get_user(username)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Utilisateur non trouvé")
+    return user
+
+# --- ROUTES ---
 
 @router.get("/")
 async def read_users_status():
-    """
-    Endpoint de test pour vérifier que les routes utilisateurs fonctionnent.
-    """
     return {"message": "Users routes are working!", "status": "active"}
 
 @router.post("/register/", response_model=UserCreate, status_code=status.HTTP_201_CREATED)
 async def register_user(user: UserCreate):
-    """
-    Enregistre un nouvel utilisateur.
-    """
     if user.username in fake_users_db:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Le nom d'utilisateur existe déjà."
-        )
+        raise HTTPException(status_code=400, detail="Nom d'utilisateur déjà pris")
+    
     hashed_password = get_password_hash(user.password)
-    fake_users_db[user.username] = UserInDB(username=user.username, hashed_password=hashed_password)
-    return user # Retourne le username sans le mot de passe haché
+    fake_users_db[user.username] = UserInDB(
+        username=user.username,
+        hashed_password=hashed_password
+    )
+    return user
 
 @router.post("/login/", response_model=Token)
-async def login_for_access_token(user: UserCreate): # Utilise le même modèle pour l'entrée de login
-    """
-    Connecte un utilisateur et retourne un token (simulation).
-    """
-    db_user = fake_users_db.get(user.username)
+async def login_for_access_token(user: UserCreate):
+    db_user = get_user(user.username)
     if not db_user or not verify_password(user.password, db_user.hashed_password):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=401,
             detail="Nom d'utilisateur ou mot de passe incorrect",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    # Pour l'instant, nous retournons un token bidon.
-    # Plus tard, ce sera un JWT réel.
-    return {"access_token": "fake-access-token", "token_type": "bearer"}
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token, "token_type": "bearer"}
 
-# @router.get("/me/")
-# async def read_users_me():
-#     """
-#     Endpoint pour récupérer l'utilisateur connecté (requiert authentification).
-#     Sera implémenté avec JWT dans une étape ultérieure.
-#     """
-#     return {"username": "current_user"} # Placeholder
+@router.get("/me/")
+async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
+    return {"username": current_user.username}
