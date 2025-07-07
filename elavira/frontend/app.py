@@ -5,9 +5,56 @@ import requests
 from streamlit_mic_recorder import mic_recorder
 
 # --- Configuration ---
-st.set_page_config(layout="wide")
+st.set_page_config(page_title="Elavira - Formations", layout="wide")
 
-# --- Arrière-plan ---
+# --- CSS pour style esthétique ---
+st.markdown("""
+    <style>
+    .stApp {
+        font-family: 'Segoe UI', sans-serif;
+        background-color: #fefefe;
+    }
+    .chat-message {
+        background-color: #f9f9f9;
+        border-radius: 20px;
+        padding: 10px 20px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        max-width: 90%;
+        word-wrap: break-word;
+    }
+    .assistant-message {
+        background-color: #e1f0ff;
+        align-self: flex-start;
+    }
+    .user-message {
+        background-color: #dcfce7;
+        align-self: flex-end;
+    }
+    .typing-indicator {
+        font-style: italic;
+        color: #666;
+        margin: 8px 0 14px 0;
+        padding-left: 8px;
+    }
+    .stTextInput > div > input {
+        border-radius: 20px;
+        padding: 12px;
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+    }
+    .stButton button {
+        border-radius: 20px;
+        padding: 8px 20px;
+        background-color: #3b82f6;
+        color: white;
+        border: none;
+        margin-top: 8px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# --- Arrière-plan image (optionnel) ---
 def add_bg(image_file):
     if os.path.exists(image_file):
         with open(image_file, "rb") as f:
@@ -16,8 +63,8 @@ def add_bg(image_file):
             <style>
             .stApp {{
                 background-image: url("data:image/png;base64,{encoded}");
-                background-size: 47% auto;
-                background-position: center;
+                background-size: contain;
+                background-position: center top;
                 background-repeat: no-repeat;
                 background-attachment: fixed;
             }}
@@ -37,9 +84,9 @@ def init_session():
         "register_new_password": "",
         "login_input_username": "",
         "login_input_password": "",
-        "agent_message_input": "",
         "selected_agent_id": "agent-001",
-        "transcribing": False
+        "transcribing": False,
+        "thinking": False
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -55,11 +102,14 @@ def send_message_to_api(text):
         "agent_id": st.session_state.selected_agent_id
     }
     try:
+        st.session_state.thinking = True
         r = requests.post(f"{FASTAPI_BASE_URL}/chat/send_message/", json=payload)
         r.raise_for_status()
         return r.json()
     except:
         return None
+    finally:
+        st.session_state.thinking = False
 
 def fetch_chat_history():
     try:
@@ -94,7 +144,6 @@ def auth_ui():
                     "username": st.session_state.register_new_username,
                     "password": st.session_state.register_new_password
                 })
-
                 if response.status_code == 201:
                     st.success("Compte créé !")
                     st.session_state.page = "chat"
@@ -114,7 +163,6 @@ def auth_ui():
                     "username": st.session_state.login_input_username,
                     "password": st.session_state.login_input_password
                 })
-
                 if response.status_code == 200:
                     token = response.json().get("access_token")
                     st.session_state.access_token = token
@@ -143,6 +191,27 @@ def chat_ui():
         st.session_state.messages = []
         st.rerun()
 
+    st.write("---")
+
+    # Historique messages
+    for msg in st.session_state.messages:
+        role = "assistant" if msg["user_id"] in ["Elavira Assistant", "Solenys"] else "user"
+        style_class = "assistant-message" if role == "assistant" else "user-message"
+        with st.chat_message(role):
+            st.markdown(
+                f'<div class="chat-message {style_class}"><b>{msg["user_id"]}</b> ({msg["timestamp"]})<br>{msg["text"]}</div>',
+                unsafe_allow_html=True
+            )
+            if role == "assistant" and msg.get("audio_base64"):
+                audio_bytes = base64.b64decode(msg['audio_base64'])
+                st.audio(audio_bytes, format="audio/mp3")
+
+    # ⏳ Indicateur de réflexion
+    if st.session_state.thinking:
+        with st.chat_message("assistant"):
+            st.markdown('<div class="typing-indicator">⏳ Elavira réfléchit...</div>', unsafe_allow_html=True)
+
+    # 🎤 Micro
     mic_data = mic_recorder("🎧 Démarrer", "🔝 Stop", key="mic")
     if mic_data and "bytes" in mic_data and not st.session_state.transcribing:
         st.session_state.transcribing = True
@@ -154,23 +223,14 @@ def chat_ui():
         st.session_state.transcribing = False
         st.rerun()
 
-    st.text_input("Message", key="chat_message_input_final", value=st.session_state.chat_input, on_change=lambda: setattr(st.session_state, "chat_input", st.session_state.chat_message_input_final))
+    # Champ de message
+    st.text_input("Votre message ici...", key="chat_message_input_final", value=st.session_state.chat_input, on_change=lambda: setattr(st.session_state, "chat_input", st.session_state.chat_message_input_final))
     if st.button("Envoyer"):
         if st.session_state.chat_input:
             send_message_to_api(st.session_state.chat_input)
             st.session_state.chat_input = ""
             fetch_chat_history()
             st.rerun()
-
-    st.write("---")
-    for msg in st.session_state.messages:
-        role = "assistant" if msg["user_id"] in ["Elavira Assistant", "Solenys"] else "user"
-        with st.chat_message(role):
-            st.write(f"**{msg['user_id']}** ({msg['timestamp']}):")
-            st.write(msg['text'])
-            if role == "assistant" and msg.get("audio_base64"):
-                audio_bytes = base64.b64decode(msg['audio_base64'])
-                st.audio(audio_bytes, format="audio/mp3")
 
 # --- Main ---
 init_session()
