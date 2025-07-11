@@ -8,6 +8,7 @@ import io
 from gtts import gTTS
 from backend.core.chroma_client import collection, embedder
 
+# ✅ Routeur principal
 router = APIRouter(
     prefix="/chat",
     tags=["Chat"]
@@ -26,11 +27,11 @@ class MessageDisplay(BaseModel):
     timestamp: str
     audio_base64: str = None
 
+# --- "Fake DB" locale ---
 fake_db_messages: List[Dict] = []
 message_id_counter = 0
 
-# --- Fonction génération réponse IA via Ollama ---
-
+# --- Génération de réponse IA via Ollama ---
 def generate_ai_response(prompt: str, context: str = "", model: str = "llama3") -> str:
     base_system_prompt = (
         "Tu es une assistante IA bienveillante et chaleureuse, appelée Elavira. "
@@ -43,12 +44,11 @@ def generate_ai_response(prompt: str, context: str = "", model: str = "llama3") 
     greetings = ["salut", "bonjour", "coucou"]
     if prompt.lower().strip() in greetings:
         system_prompt = base_system_prompt + (
-            " Quand quelqu'un te salue, tu réponds avec douceur : \"Bonjour, je suis Elavira, votre éducatrice en secourisme.\""
+            " Quand quelqu’un te salue, tu réponds avec douceur : "
+            "\"Bonjour, je suis Elavira, votre éducatrice en secourisme.\""
         )
     else:
-        system_prompt = base_system_prompt + (
-            " Ne te présente pas dans cette réponse."
-        )
+        system_prompt = base_system_prompt + " Ne te présente pas dans cette réponse."
 
     full_prompt = f"{system_prompt}\n\nContexte : {context}\nQuestion : {prompt}\nRéponds précisément."
 
@@ -58,13 +58,12 @@ def generate_ai_response(prompt: str, context: str = "", model: str = "llama3") 
             json={"model": model, "prompt": full_prompt, "stream": False}
         )
         response.raise_for_status()
-        return response.json().get("response", "Désolé, je n'ai pas compris.")
+        return response.json().get("response", "Désolé, je n’ai pas compris.")
     except Exception as e:
         print(f"[Ollama] Erreur : {e}")
         return "Erreur lors de la génération de la réponse IA."
 
-# --- TTS ---
-
+# --- Synthèse vocale (TTS avec gTTS) ---
 def synthesize_speech(text: str) -> str:
     try:
         mp3_fp = io.BytesIO()
@@ -77,6 +76,8 @@ def synthesize_speech(text: str) -> str:
         print(f"[TTS] Erreur synthèse vocale : {e}")
         return None
 
+# --- Routes FastAPI ---
+
 @router.get("/")
 async def read_chat_status():
     return {"message": "Chat routes are working!", "status": "active"}
@@ -85,7 +86,7 @@ async def read_chat_status():
 async def send_message(message: MessageCreate):
     global message_id_counter
 
-    # Sauvegarde message utilisateur
+    # Sauvegarde du message utilisateur
     message_id_counter += 1
     user_msg = {
         "id": message_id_counter,
@@ -104,10 +105,10 @@ async def send_message(message: MessageCreate):
     # Génération réponse IA
     ai_response = generate_ai_response(message.text, context)
 
-    # Synthèse vocale
+    # Synthèse vocale de la réponse
     audio_base64 = synthesize_speech(ai_response)
 
-    # Sauvegarde réponse bot sans duplication consécutive
+    # Sauvegarde de la réponse IA
     if not fake_db_messages or fake_db_messages[-1]["text"] != ai_response:
         message_id_counter += 1
         bot_msg = {
@@ -130,6 +131,8 @@ async def get_chat_history():
 @router.post("/transcribe_audio/")
 async def transcribe_audio(file: UploadFile = File(...)):
     try:
+        if not file:
+            raise HTTPException(status_code=400, detail="Aucun fichier n’a été fourni.")
         audio_bytes = await file.read()
         response = requests.post(
             "http://localhost:11434/api/transcribe",

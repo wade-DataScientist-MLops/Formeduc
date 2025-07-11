@@ -1,3 +1,4 @@
+
 import streamlit as st
 import base64
 import os
@@ -24,7 +25,7 @@ st.markdown("""
 
     /* Target the main content area of Streamlit */
     /* This class might change with Streamlit versions, inspect browser if needed */
-    .main .block-container { 
+    .main .block-container {
         flex: 1; /* Allow this container to grow and take available vertical space */
         display: flex;
         flex-direction: column;
@@ -37,7 +38,7 @@ st.markdown("""
         padding-left: 1rem;
         padding-right: 1rem;
     }
-    
+
     h1, h2, h3, h4, h5, h6 {
         color: #2c3e50; /* Darker text for headers */
         font-weight: 600;
@@ -185,10 +186,10 @@ st.markdown("""
     /* Container for chat messages with scroll */
     /* Applied to the st.container itself using `st.container(height=..., )` */
     .st-emotion-cache-1q1n031.e1pxm3cf4 { /* This is a common class for st.container, check in browser if needed */
-        border-radius: 15px; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1); 
-        background-color: #ffffff; 
-        padding: 15px; 
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        background-color: #ffffff;
+        padding: 15px;
         flex-grow: 1; /* Allow it to take available space */
         overflow-y: auto; /* Enable vertical scrolling */
         min-height: 200px; /* Minimum height */
@@ -208,13 +209,13 @@ st.markdown("""
         z-index: 100; /* Ensure it stays on top */
         width: 100%; /* Take full width of its parent column */
     }
-    
+
     /* Remove default gaps between Streamlit elements */
-    .stVerticalBlock { 
-        gap: 0px; 
+    .stVerticalBlock {
+        gap: 0px;
     }
-    .stButton { 
-        width: 100%; 
+    .stButton {
+        width: 100%;
     }
     .stButton > button {
         width: 100%;
@@ -241,7 +242,7 @@ def get_image_base64(path):
 def add_bg(image_file_name):
     script_dir = os.path.dirname(__file__)
     image_file_path = os.path.join(script_dir, "images", image_file_name)
-    
+
     if os.path.exists(image_file_path):
         try:
             with open(image_file_path, "rb") as f:
@@ -349,14 +350,46 @@ def transcribe_audio(audio_bytes):
 # --- Auth UI ---
 def auth_ui():
     st.title("Bienvenue sur Elavira 🤖")
-    
-    st.subheader("Connexion ou inscription")
-    col1, col2 = st.columns(2)
 
-    with col1:
-        st.text_input("Nom d'utilisateur", key="register_new_username", placeholder="Nouveau nom d'utilisateur")
-        st.text_input("Mot de passe", type="password", key="register_new_password", placeholder="Nouveau mot de passe")
-        if st.button("S'inscrire", key="register_button"):
+    # Primary Login Section
+    st.subheader("Connectez-vous")
+    st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur")
+    st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe")
+    if st.button("Se connecter", key="login_button"):
+        if st.session_state.login_input_username and st.session_state.login_input_password:
+            # --- Debugging line for troubleshooting login 401 Unauthorized ---
+            # print(f"Attempting login to FastAPI with: User={st.session_state.login_input_username}, Pass={st.session_state.login_input_password}")
+            # st.write(f"Login attempt: User='{st.session_state.login_input_username}', Pass='{'*' * len(st.session_state.login_input_password)}'")
+            # --- End Debugging ---
+
+            response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
+                "username": st.session_state.login_input_username,
+                "password": st.session_state.login_input_password
+            })
+            if response.status_code == 200:
+                token = response.json().get("access_token")
+                st.session_state.access_token = token
+                st.session_state.logged_in_user = st.session_state.login_input_username
+                st.session_state.page = "chat"
+                fetch_chat_history()
+                st.rerun()
+            elif response.status_code == 401:
+                st.error("Nom d'utilisateur ou mot de passe incorrect.")
+            else:
+                st.error(f"Erreur de connexion: {response.status_code} - {response.text}")
+        else:
+            st.warning("Veuillez remplir tous les champs pour la connexion.")
+
+    st.markdown("---") # Separator
+
+    # Secondary Registration Section (as a distinct option, less prominent)
+    st.subheader("Nouvel utilisateur ?")
+    st.write("Créez un compte pour accéder à toutes les fonctionnalités.")
+
+    with st.expander("S'inscrire", expanded=False): # Use an expander for less prominence
+        st.text_input("Nouveau nom d'utilisateur", key="register_new_username", placeholder="Choisissez un nom d'utilisateur")
+        st.text_input("Nouveau mot de passe", type="password", key="register_new_password", placeholder="Choisissez un mot de passe")
+        if st.button("Créer mon compte", key="register_button_expander"): # Changed button text to be more specific
             if st.session_state.register_new_username and st.session_state.register_new_password:
                 response = requests.post(f"{FASTAPI_BASE_URL}/users/register/", json={
                     "username": st.session_state.register_new_username,
@@ -364,8 +397,10 @@ def auth_ui():
                 })
                 if response.status_code == 201:
                     st.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.")
+                    # Optionally pre-fill login fields after successful registration
                     st.session_state.login_input_username = st.session_state.register_new_username
                     st.session_state.login_input_password = st.session_state.register_new_password
+                    # Force a rerun to show success message and potentially pre-fill login fields
                     st.rerun()
                 elif response.status_code == 400:
                     st.warning("Ce nom d'utilisateur est déjà pris.")
@@ -374,34 +409,12 @@ def auth_ui():
             else:
                 st.warning("Veuillez remplir tous les champs pour l'inscription.")
 
-    with col2:
-        st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur")
-        st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe")
-        if st.button("Se connecter", key="login_button"):
-            if st.session_state.login_input_username and st.session_state.login_input_password:
-                response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
-                    "username": st.session_state.login_input_username,
-                    "password": st.session_state.login_input_password
-                })
-                if response.status_code == 200:
-                    token = response.json().get("access_token")
-                    st.session_state.access_token = token
-                    st.session_state.logged_in_user = st.session_state.login_input_username
-                    st.session_state.page = "chat"
-                    fetch_chat_history()
-                    st.rerun()
-                elif response.status_code == 401:
-                    st.error("Nom d'utilisateur ou mot de passe incorrect.")
-                else:
-                    st.error(f"Erreur de connexion: {response.status_code} - {response.text}")
-            else:
-                st.warning("Veuillez remplir tous les champs pour la connexion.")
 
 # --- Chat UI ---
 def chat_ui():
     # --- TOP SECTION (HEADER) ---
     st.title("Messagerie intelligente 💬")
-    
+
     col_header_left, col_header_right = st.columns([3, 1])
     with col_header_left:
         st.write(f"Connecté en tant que **{st.session_state.logged_in_user}**")
@@ -422,13 +435,13 @@ def chat_ui():
         if id == st.session_state.selected_agent_id:
             current_agent_index = i
             break
-            
+
     selected_agent_display, selected_agent_id = st.selectbox(
-        "Choisissez votre assistant :", 
-        options=agent_options, 
+        "Choisissez votre assistant :",
+        options=agent_options,
         format_func=lambda x: x[0],
         index=current_agent_index,
-        key="agent_selector" 
+        key="agent_selector"
     )
 
     if st.session_state.selected_agent_id != selected_agent_id:
@@ -444,35 +457,35 @@ def chat_ui():
     # This container will hold all the chat messages and be scrollable
     # The 'height' parameter automatically enables scrolling
     # Streamlit automatically adds classes to this container; we target them in CSS
-    chat_history_display_container = st.container(height=500, border=False) 
-    
+    chat_history_display_container = st.container(height=500, border=False)
+
     with chat_history_display_container:
         # We don't need a custom markdown div here anymore, as st.container itself
         # gets the relevant classes for styling (like overflow-y: auto)
         for msg in st.session_state.messages:
             is_assistant_message = msg.get("user_id") in ["Elavira Assistant", "Solenys"]
             style_class = "assistant-message" if is_assistant_message else "user-message"
-            
+
             timestamp_raw = msg.get("timestamp", "")
             timestamp = ""
             if timestamp_raw:
                 try:
-                    dt_obj = datetime.fromisoformat(timestamp_raw.replace('Z', '+00:00')) 
-                    timestamp = dt_obj.strftime("%H:%M") 
+                    dt_obj = datetime.fromisoformat(timestamp_raw.replace('Z', '+00:00'))
+                    timestamp = dt_obj.strftime("%H:%M")
                 except ValueError:
-                    timestamp = timestamp_raw[11:16] if len(timestamp_raw) >= 16 else timestamp_raw 
+                    timestamp = timestamp_raw[11:16] if len(timestamp_raw) >= 16 else timestamp_raw
             else:
                 timestamp = datetime.now().strftime("%H:%M")
 
             if is_assistant_message:
                 elavira_avatar_path = os.path.join("images", "elavira.png")
                 avatar_b64 = get_image_base64(elavira_avatar_path)
-                
+
                 avatar_html = ""
                 if avatar_b64:
                     avatar_html = f'<img src="data:image/png;base64,{avatar_b64}" class="avatar">'
                 else:
-                    avatar_html = '<div class="avatar assistant-avatar">E</div>' 
+                    avatar_html = '<div class="avatar assistant-avatar">E</div>'
 
                 st.markdown(f'''
                     <div class="chat-message-row">
@@ -524,7 +537,7 @@ def chat_ui():
                     </div>
                 </div>
             ''', unsafe_allow_html=True)
-        
+
     # End of chat history container
 
 
@@ -538,16 +551,16 @@ def chat_ui():
             mic_data = mic_recorder(
                 start_prompt="Parler avec Elavira 🎧",
                 stop_prompt="Arrêter l'enregistrement 🔝",
-                key="mic_input" 
+                key="mic_input"
             )
 
             if mic_data and "bytes" in mic_data:
                 transcribed_text = transcribe_audio(mic_data["bytes"])
                 if transcribed_text:
                     st.session_state.chat_input = transcribed_text
-                    send_message_to_api(transcribed_text) 
+                    send_message_to_api(transcribed_text)
                     fetch_chat_history()
-                st.rerun() 
+                st.rerun()
         elif st.session_state.transcribing:
             st.info("🎙️ Transcription audio en cours...")
         elif st.session_state.thinking:
@@ -557,9 +570,9 @@ def chat_ui():
         input_col_fixed, send_col_fixed = st.columns([5, 1])
         with input_col_fixed:
             st.text_input(
-                "Votre message ici...", 
-                key="chat_message_input_final", 
-                value=st.session_state.chat_input, 
+                "Votre message ici...",
+                key="chat_message_input_final",
+                value=st.session_state.chat_input,
                 on_change=lambda: setattr(st.session_state, "chat_input", st.session_state.chat_message_input_final),
                 placeholder="Tapez votre message ou utilisez le microphone...",
                 disabled=st.session_state.transcribing or st.session_state.thinking,
@@ -569,7 +582,7 @@ def chat_ui():
             if st.button("Envoyer", key="send_button_fixed", disabled=st.session_state.transcribing or st.session_state.thinking):
                 if st.session_state.chat_input:
                     send_message_to_api(st.session_state.chat_input)
-                    st.session_state.chat_input = "" 
+                    st.session_state.chat_input = ""
                     fetch_chat_history()
                     st.rerun()
 
@@ -580,7 +593,8 @@ def chat_ui():
 if __name__ == "__main__":
     init_session()
     if st.session_state.page == "auth":
-        add_bg("4 - Elavira (1).png") 
+        add_bg("4 - Elavira (1).png")
         auth_ui()
     elif st.session_state.page == "chat":
         chat_ui()
+        
