@@ -2,7 +2,7 @@ import streamlit as st
 import base64
 import os
 import requests
-from streamlit_mic_recorder import mic_recorder
+#from streamlit_mic_recorder import mic_recorder
 from datetime import datetime
 
 # --- Configuration ---
