@@ -1,4 +1,3 @@
-
 import streamlit as st
 import base64
 import os
@@ -279,7 +278,9 @@ def init_session():
         "login_input_password": "",
         "selected_agent_id": "agent-001",
         "transcribing": False,
-        "thinking": False
+        "thinking": False,
+        "prefill_login_username": "", # Nouvelle clé pour le pré-remplissage temporaire
+        "prefill_login_password": ""  # Nouvelle clé pour le pré-remplissage temporaire
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -351,17 +352,31 @@ def transcribe_audio(audio_bytes):
 def auth_ui():
     st.title("Bienvenue sur Elavira 🤖")
 
-    # Primary Login Section
+    # Mise à jour des clés de session_state pour les champs de connexion
+    # AVANT que les widgets soient instanciés dans CETTE EXÉCUTION.
+    # Ceci est fait au début de la fonction car elle est appelée lors du rerun.
+    if st.session_state.get("prefill_login_username"):
+        st.session_state.login_input_username = st.session_state.prefill_login_username
+        del st.session_state.prefill_login_username # Nettoyer après utilisation
+    
+    if st.session_state.get("prefill_login_password"):
+        st.session_state.login_input_password = st.session_state.prefill_login_password
+        del st.session_state.prefill_login_password # Nettoyer après utilisation
+
+    # Section principale de connexion
     st.subheader("Connectez-vous")
-    st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur")
-    st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe")
+
+    # Les valeurs des champs de connexion sont lues depuis st.session_state.
+    # Si `prefill_login_username`/`password` a été défini, il a déjà mis à jour
+    # `login_input_username`/`password` avant ces lignes.
+    login_username_value = st.session_state.get("login_input_username", "")
+    login_password_value = st.session_state.get("login_input_password", "")
+
+    st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur", value=login_username_value)
+    st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe", value=login_password_value)
+
     if st.button("Se connecter", key="login_button"):
         if st.session_state.login_input_username and st.session_state.login_input_password:
-            # --- Debugging line for troubleshooting login 401 Unauthorized ---
-            # print(f"Attempting login to FastAPI with: User={st.session_state.login_input_username}, Pass={st.session_state.login_input_password}")
-            # st.write(f"Login attempt: User='{st.session_state.login_input_username}', Pass='{'*' * len(st.session_state.login_input_password)}'")
-            # --- End Debugging ---
-
             response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
                 "username": st.session_state.login_input_username,
                 "password": st.session_state.login_input_password
@@ -380,16 +395,17 @@ def auth_ui():
         else:
             st.warning("Veuillez remplir tous les champs pour la connexion.")
 
-    st.markdown("---") # Separator
+    st.markdown("---") # Séparateur
 
-    # Secondary Registration Section (as a distinct option, less prominent)
+    # Section secondaire d'inscription (comme option distincte)
     st.subheader("Nouvel utilisateur ?")
     st.write("Créez un compte pour accéder à toutes les fonctionnalités.")
-
-    with st.expander("S'inscrire", expanded=False): # Use an expander for less prominence
+    
+    with st.expander("S'inscrire", expanded=False):
         st.text_input("Nouveau nom d'utilisateur", key="register_new_username", placeholder="Choisissez un nom d'utilisateur")
         st.text_input("Nouveau mot de passe", type="password", key="register_new_password", placeholder="Choisissez un mot de passe")
-        if st.button("Créer mon compte", key="register_button_expander"): # Changed button text to be more specific
+        
+        if st.button("Créer mon compte", key="register_button_expander"):
             if st.session_state.register_new_username and st.session_state.register_new_password:
                 response = requests.post(f"{FASTAPI_BASE_URL}/users/register/", json={
                     "username": st.session_state.register_new_username,
@@ -397,11 +413,13 @@ def auth_ui():
                 })
                 if response.status_code == 201:
                     st.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.")
-                    # Optionally pre-fill login fields after successful registration
-                    st.session_state.login_input_username = st.session_state.register_new_username
-                    st.session_state.login_input_password = st.session_state.register_new_password
-                    # Force a rerun to show success message and potentially pre-fill login fields
-                    st.rerun()
+                    
+                    # Définir les clés temporaires pour le pré-remplissage.
+                    # Ces clés ne sont PAS des "key" de widgets déjà rendus dans cette passe.
+                    st.session_state.prefill_login_username = st.session_state.register_new_username
+                    st.session_state.prefill_login_password = st.session_state.register_new_password
+
+                    st.rerun() # Force une réexécution pour que les champs de connexion soient pré-remplis
                 elif response.status_code == 400:
                     st.warning("Ce nom d'utilisateur est déjà pris.")
                 else:
@@ -460,8 +478,6 @@ def chat_ui():
     chat_history_display_container = st.container(height=500, border=False)
 
     with chat_history_display_container:
-        # We don't need a custom markdown div here anymore, as st.container itself
-        # gets the relevant classes for styling (like overflow-y: auto)
         for msg in st.session_state.messages:
             is_assistant_message = msg.get("user_id") in ["Elavira Assistant", "Solenys"]
             style_class = "assistant-message" if is_assistant_message else "user-message"
@@ -538,15 +554,15 @@ def chat_ui():
                 </div>
             ''', unsafe_allow_html=True)
 
-    # End of chat history container
+    # Fin du conteneur d'historique de chat
 
 
-    # --- BOTTOM SECTION (INPUT AREA - STICKY) ---
-    # This container will be positioned at the bottom using sticky CSS
+    # --- SECTION INFÉRIEURE (ZONE DE SAISIE - FIXE) ---
+    # Ce conteneur sera positionné en bas à l'aide du CSS sticky
     with st.container():
         st.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
 
-        # Audio button or status message
+        # Bouton audio ou message d'état
         if not st.session_state.transcribing and not st.session_state.thinking:
             mic_data = mic_recorder(
                 start_prompt="Parler avec Elavira 🎧",
@@ -566,7 +582,7 @@ def chat_ui():
         elif st.session_state.thinking:
             st.info("⏳ Elavira réfléchit, veuillez patienter...")
 
-        # Text input and send button
+        # Champ de saisie de texte et bouton d'envoi
         input_col_fixed, send_col_fixed = st.columns([5, 1])
         with input_col_fixed:
             st.text_input(
@@ -589,7 +605,7 @@ def chat_ui():
         st.markdown('</div>', unsafe_allow_html=True)
 
 
-# --- Main execution flow ---
+# --- Flux d'exécution principal ---
 if __name__ == "__main__":
     init_session()
     if st.session_state.page == "auth":
@@ -597,4 +613,3 @@ if __name__ == "__main__":
         auth_ui()
     elif st.session_state.page == "chat":
         chat_ui()
-        
