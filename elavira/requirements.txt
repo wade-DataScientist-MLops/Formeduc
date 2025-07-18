@@ -6,4 +6,3 @@ passlib
 chromadb
 pydantic
 python-multipart
-sentence-transformers
