@@ -1,9 +1,8 @@
-# requirements.txt
 fastapi
 uvicorn
-# ... vos dépendances backend existantes
-requests # Si le code de formeduc.ca fait des requêtes HTTP
-beautifulsoup4 # Si le code fait du scraping web
-passlib 
-chromadb 
-# ... toutes les autres dépendances spécifiques au code de formeduc.ca
+requests
+beautifulsoup4
+passlib
+chromadb
+pydantic
+python-multipart
