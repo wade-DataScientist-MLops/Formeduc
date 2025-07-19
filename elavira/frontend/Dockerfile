@@ -1,16 +1,22 @@
 FROM python:3.10-slim
 
-# Définir le répertoire de travail
+# Installer les dépendances système nécessaires
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Définir le dossier de travail
 WORKDIR /app
 
-# Copier tous les fichiers du frontend dans le conteneur
+# Copier les fichiers
 COPY . .
 
 # Installer les dépendances Python
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Exposer le port utilisé par Streamlit
+# Exposer le port Streamlit
 EXPOSE 8501
 
-# Démarrer l'application Streamlit
+# Commande de démarrage
 CMD ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
