@@ -22,7 +22,8 @@ def query_documents(query, n_results=3):
 def ollama_generate(prompt: str) -> str:
     try:
         result = subprocess.run(
-            ["ollama", "generate", "elavira", "--prompt", prompt],
+            ["ollama", "run", "elavira"],  # ← commande corrigée ici
+            input=prompt,
             capture_output=True,
             text=True,
             check=True,
