@@ -1,16 +1,20 @@
+import os
+from typing import List
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List
-import os
 
-# --- Import des routeurs (si tu veux les activer plus tard) ---
+# --- Import des routeurs ---
+# Assurez-vous que ces modules existent dans backend/api
 from backend.api import routes_users
 from backend.api import routes_chat
-# from backend.api import routes_agents
+from backend.api import solenys_router
 
 # --- ChromaDB ---
 import chromadb
+# La classe Settings est nécessaire pour la configuration de la dépréciation, mais pas pour le client persistant
+from sentence_transformers import SentenceTransformer
 
 # --- Initialisation FastAPI ---
 app = FastAPI(
@@ -35,32 +39,31 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Routeurs utilisateurs/chat ---
+# --- Inclusion des routeurs ---
 app.include_router(routes_users.router)
 app.include_router(routes_chat.router)
-# app.include_router(routes_agents.router)  # À activer plus tard
+# Ajout d'un prefixe /solenys pour ce routeur
+app.include_router(solenys_router.router, prefix="/solenys")
 
-# --- ChromaDB Setup ---
-def get_chroma_client(persistent: bool = True, path: str = "./chroma_data"):
-    if persistent:
-        os.makedirs(path, exist_ok=True)
-        print(f"✅ ChromaDB persistant à : {os.path.abspath(path)}")
-        return chromadb.PersistentClient(path=path)
-    else:
-        print("🧪 Client ChromaDB en mémoire")
-        return chromadb.Client()
-
-def get_chroma_collection(client, name="elavira_collection"):
-    return client.get_or_create_collection(name)
-
-# --- Initialisation ChromaDB ---
+# --- ChromaDB Setup (CORRIGÉ) ---
 script_dir = os.path.dirname(__file__)
 chroma_db_path = os.path.join(script_dir, "chroma_data")
+os.makedirs(chroma_db_path, exist_ok=True) # S'assurer que le dossier existe
 
-chroma_client = get_chroma_client(persistent=True, path=chroma_db_path)
-collection = get_chroma_collection(chroma_client, "elavira_collection")
+# Utilisation de la nouvelle API de ChromaDB pour le client persistant, qui résout la ValueError
+chroma_client = chromadb.PersistentClient(path=chroma_db_path)
+collection = chroma_client.get_or_create_collection(name="elavira_collection")
+print(f"✅ ChromaDB persistant à : {os.path.abspath(chroma_db_path)}")
 
-# --- Modèles ---
+# --- Embedder SentenceTransformer ---
+try:
+    embedder = SentenceTransformer('all-MiniLM-L6-v2')
+    print("✅ Embedder (SentenceTransformer 'all-MiniLM-L6-v2') initialisé.")
+except Exception as e:
+    print(f"❌ Erreur lors de l'initialisation de SentenceTransformer : {e}")
+    raise RuntimeError(f"Échec de l'initialisation de l'embedder : {e}")
+
+# --- Modèles Pydantic ---
 class AddDocumentsRequest(BaseModel):
     texts: List[str]
 
@@ -82,7 +85,8 @@ async def read_root():
 async def add_documents(request: AddDocumentsRequest):
     try:
         print(f"📥 Documents reçus : {request.texts}")
-        ids = [f"doc_{i}" for i in range(collection.count(), collection.count() + len(request.texts))]
+        start_index = collection.count()
+        ids = [f"doc_{i}" for i in range(start_index, start_index + len(request.texts))]
         collection.add(documents=request.texts, ids=ids)
         print(f"✅ {len(request.texts)} documents ajoutés.")
         return {"message": "Documents ajoutés", "ids": ids}

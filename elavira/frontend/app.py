@@ -5,48 +5,43 @@ import requests
 from streamlit_mic_recorder import mic_recorder
 from datetime import datetime
 import uuid
- 
+import json
+
 # --- Configuration ---
 st.set_page_config(page_title="Elavira - Formations", layout="wide")
 
 # --- CSS pour style esthétique ---
 st.markdown("""
     <style>
-    /* General App Styling - Use flexbox for the entire app */
+    /* General App Styling */
     .stApp {
         font-family: 'Segoe UI', sans-serif;
-        background-color: #fefefe; /* Very light grey */
+        background-color: #fefefe;
         display: flex;
         flex-direction: column;
-        height: 100vh; /* Make app take full viewport height */
+        height: 100vh;
         margin: 0;
         padding: 0;
     }
-
-    /* Target the main content area of Streamlit */
-    /* This class might change with Streamlit versions, inspect browser if needed */
     .main .block-container {
-        flex: 1; /* Allow this container to grow and take available vertical space */
+        flex: 1;
         display: flex;
         flex-direction: column;
-        padding-top: 1rem; /* Adjust padding as needed */
-        padding-bottom: 0rem; /* Remove default bottom padding as input is handled by sticky footer */
+        padding-top: 1rem;
+        padding-bottom: 0rem;
     }
-
-    /* Adjust default padding around the main content */
     div.st-emotion-cache-z5fcl4.ezrtsby0, div.st-emotion-cache-1cypd85.e1g8p9l0 {
         padding-left: 1rem;
         padding-right: 1rem;
     }
-
     h1, h2, h3, h4, h5, h6 {
-        color: #2c3e50; /* Darker text for headers */
+        color: #2c3e50;
         font-weight: 600;
     }
     .stButton button {
         border-radius: 20px;
         padding: 8px 20px;
-        background-color: #3b82f6; /* Streamlit blue, vibrant */
+        background-color: #3b82f6;
         color: white;
         border: none;
         margin-top: 8px;
@@ -54,25 +49,23 @@ st.markdown("""
         transition: background-color 0.3s ease;
     }
     .stButton button:hover:not(:disabled) {
-        background-color: #2e6bb4; /* Darker blue on hover */
+        background-color: #2e6bb4;
     }
     .stButton button:disabled {
-        background-color: #a0a0a0; /* Grey out disabled buttons */
+        background-color: #a0a0a0;
         cursor: not-allowed;
     }
-
-    .stTextInput > div > div > input { /* Targeting the actual input field */
+    .stTextInput > div > div > input {
         border-radius: 20px;
-        padding: 12px 18px; /* More padding */
+        padding: 12px 18px;
         background-color: #ffffff;
-        border: 1px solid #dcdcdc; /* Lighter border */
-        box-shadow: inset 0 1px 3px rgba(0,0,0,0.08); /* Subtle inner shadow */
+        border: 1px solid #dcdcdc;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.08);
     }
     .stTextInput > label {
-        font-weight: 600; /* Bolder labels */
+        font-weight: 600;
         color: #34495e;
     }
-
     /* Chat Messages Styling */
     .chat-message-row {
         display: flex;
@@ -81,181 +74,123 @@ st.markdown("""
     }
     .chat-message {
         border-radius: 20px;
-        padding: 10px 18px; /* Adjusted padding */
+        padding: 10px 18px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        max-width: 80%; /* Slightly smaller max width */
+        max-width: 80%;
         word-wrap: break-word;
         display: flex;
         align-items: flex-start;
-        gap: 12px; /* Increased gap between avatar and message */
-        line-height: 1.4; /* Better readability */
+        gap: 12px;
+        line-height: 1.4;
     }
-
-    /* ASSISTANT MESSAGES (Now on RIGHT) */
     .assistant-message {
-        background-color: #e1f0ff; /* Light blue, for assistant */
-        border-bottom-right-radius: 5px; /* Sharper corner at the tail side */
-        margin-left: auto; /* Push to right */
-        flex-direction: row-reverse; /* Puts avatar on the right */
+        background-color: #e1f0ff;
+        border-bottom-right-radius: 5px;
+        margin-left: auto;
+        flex-direction: row-reverse;
     }
-
-    /* USER MESSAGES (Now on LEFT) */
     .user-message {
-        background-color: #dcfce7; /* Light green, for user */
-        border-bottom-left-radius: 5px; /* Sharper corner at the tail side */
-        margin-right: auto; /* Push to left */
-        /* No flex-direction: row-reverse; needed as avatar is already at the start */
+        background-color: #dcfce7;
+        border-bottom-left-radius: 5px;
+        margin-right: auto;
     }
-
     .chat-message b {
-        font-weight: 700; /* Bolder names */
+        font-weight: 700;
         color: #2c3e50;
     }
-    .chat-message .message-content { /* New class for message content div */
-        flex-grow: 1; /* Allow message content to take available space */
+    .chat-message .message-content {
+        flex-grow: 1;
     }
     .chat-message .timestamp {
         font-size: 0.8em;
         color: #777;
-        margin-left: 5px; /* Space from message */
+        margin-left: 5px;
     }
-    /* Align user timestamp to the left for consistency if user messages are left */
     .user-message .timestamp {
         text-align: left;
     }
-    /* Align assistant timestamp to the right for consistency if assistant messages are right */
     .assistant-message .timestamp {
         text-align: right;
     }
-
-
     /* Avatar Styling */
     .avatar {
         width: 40px;
         height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        flex-shrink: 0; /* Prevent avatar from shrinking */
+        flex-shrink: 0;
         display: flex;
         justify-content: center;
         align-items: center;
         font-size: 1.2em;
         font-weight: bold;
         color: white;
-        background-color: #ccc; /* Default fallback background */
-        border: 2px solid #ffffff; /* White border around avatars */
+        background-color: #ccc;
+        border: 2px solid #ffffff;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .user-avatar {
-        background-color: #3b82f6; /* User blue */
+        background-color: #3b82f6;
     }
     .assistant-avatar {
-        background-color: #88c0d0; /* Elavira blue/grey */
+        background-color: #88c0d0;
     }
-
-    /* Style pour l'image de profil utilisateur */
     .user-avatar-image {
-        width: 30px; /* Taille de l'image (vous pouvez ajuster) */
-        height: 30px; /* Conserve l'aspect ratio */
-        border-radius: 50%; /* Pour une forme circulaire */
-        object-fit: cover; /* Assure que l'image remplit le cercle sans déformation */
-        border: 2px solid #ffffff; /* Bordure blanche autour de l'avatar */
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Légère ombre */
-        flex-shrink: 0; /* Empêche l'image de rétrécir */
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        flex-shrink: 0;
     }
-
     /* Thinking/Transcribing Indicators */
     .typing-indicator {
         font-style: italic;
         color: #666;
-        padding: 8px 15px; /* Added padding */
-        border-radius: 15px; /* Rounded corners */
-        background-color: #f0f0f0; /* Light background */
-        display: inline-block; /* To apply width/padding correctly */
-        max-width: fit-content; /* Adjust width to content */
+        padding: 8px 15px;
+        border-radius: 15px;
+        background-color: #f0f0f0;
+        display: inline-block;
+        max-width: fit-content;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-        position: relative; /* For the thought bubble tail */
-        animation: pulse 1.5s infinite; /* Gentle pulse animation */
+        position: relative;
+        animation: pulse 1.5s infinite;
     }
-
-    /* User side typing indicator (now on LEFT) */
     .typing-indicator.user-side {
-        margin-right: auto; /* Push to left for user side */
+        margin-right: auto;
         margin-left: 12px;
     }
-    /* Thought Bubble Tail for User Thinking (now on LEFT) */
-    .typing-indicator.user-side::before {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: -10px; /* Adjust to place the tail near the avatar */
-        width: 0;
-        height: 0;
-        border: 10px solid transparent;
-        border-bottom-color: #f0f0f0;
-        border-left-color: #f0f0f0;
-        border-radius: 0 0 0 10px;
-        transform: rotate(45deg);
-        transform-origin: bottom right;
-    }
-
-
-    /* Assistant thinking indicator (now on RIGHT) */
     .typing-indicator.assistant-thinking {
-        margin-left: auto; /* Push to right for assistant side */
+        margin-left: auto;
         margin-right: 12px;
     }
-    /* Thought Bubble Tail for Assistant Thinking (now on RIGHT) */
-    .typing-indicator.assistant-thinking::before {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        right: -10px; /* Adjust to place the tail near the avatar */
-        width: 0;
-        height: 0;
-        border: 10px solid transparent;
-        border-bottom-color: #f0f0f0;
-        border-right-color: #f0f0f0;
-        border-radius: 0 0 10px 0; /* For a slightly curved tail base */
-        transform: rotate(-45deg); /* Rotate to make it point downwards-right */
-        transform-origin: bottom left; /* Rotate around this point */
-    }
-
-
-    /* Keyframe animation for pulse */
     @keyframes pulse {
         0% { transform: scale(1); opacity: 1; }
         50% { transform: scale(1.02); opacity: 0.9; }
         100% { transform: scale(1); opacity: 1; }
     }
-
-    /* Container for chat messages with scroll */
-    .st-emotion-cache-1q1n031.e1pxm3cf4 { /* This is a common class for st.container, check in browser if needed */
+    .st-emotion-cache-1q1n031.e1pxm3cf4 {
         border-radius: 15px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         background-color: #ffffff;
         padding: 15px;
-        flex-grow: 1; /* Allow it to take available space */
-        overflow-y: auto; /* Enable vertical scrolling */
-        min-height: 200px; /* Minimum height */
-        max-height: calc(100vh - 250px); /* Adjust based on header/footer total height */
-        margin-bottom: 15px; /* Space between chat history and input area */
+        flex-grow: 1;
+        overflow-y: auto;
+        min-height: 200px;
+        max-height: calc(100vh - 250px);
+        margin-bottom: 15px;
     }
-
-
-    /* Fixed Footer for input area - Position sticky to stick to bottom of its parent (main .block-container) */
     .fixed-bottom-input {
         position: sticky;
-        bottom: 0; /* Stick to the bottom of the visible area */
-        background-color: #fefefe; /* Match app background */
-        padding: 15px 0 0; /* Padding above, none on sides/bottom */
-        border-top: 1px solid #eee; /* Subtle border at the top */
-        box-shadow: 0 -2px 10px rgba(0,0,0,0.05); /* Shadow above */
-        z-index: 100; /* Ensure it stays on top */
-        width: 100%; /* Take full width of its parent column */
+        bottom: 0;
+        background-color: #fefefe;
+        padding: 15px 0 0;
+        border-top: 1px solid #eee;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        z-index: 100;
+        width: 100%;
     }
-
-    /* Remove default gaps between Streamlit elements */
     .stVerticalBlock {
         gap: 0px;
     }
@@ -272,22 +207,20 @@ st.markdown("""
 def get_image_base64(path):
     script_dir = os.path.dirname(__file__)
     full_path = os.path.join(script_dir, path)
-
     if not os.path.exists(full_path):
-        print(f"[DEBUG] Image non trouvée à : {full_path}")
+        # print(f"[DEBUG] Image non trouvée à : {full_path}") # Désactivé pour éviter le spam de logs
         return ""
     try:
         with open(full_path, "rb") as img:
             return base64.b64encode(img.read()).decode()
     except Exception as e:
-        print(f"[DEBUG] Erreur de lecture de l'image {full_path}: {e}")
+        # print(f"[DEBUG] Erreur de lecture de l'image {full_path}: {e}") # Désactivé pour éviter le spam de logs
         return ""
 
 # --- Arrière-plan image ---
 def add_bg(image_file_name):
     script_dir = os.path.dirname(__file__)
     image_file_path = os.path.join(script_dir, "images", image_file_name)
-
     if os.path.exists(image_file_path):
         try:
             with open(image_file_path, "rb") as f:
@@ -316,11 +249,6 @@ def init_session():
         "messages": [],
         "access_token": None,
         "logged_in_user": None,
-        "chat_input_text": "", # Cette clé est maintenant plus pour stocker la "valeur par défaut"
-        "register_new_username": "",
-        "register_new_password": "",
-        "login_input_username": "",
-        "login_input_password": "",
         "selected_agent_id": "agent-001",
         "transcribing": False,
         "thinking": False,
@@ -328,7 +256,7 @@ def init_session():
         "prefill_login_password": "",
         "last_suggested_prompts": [],
         "display_suggestions": False,
-        "message_input": "", # Nouvelle clé pour le contenu de l'input texte
+        "message_input": "",
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -339,35 +267,37 @@ FASTAPI_BASE_URL = "http://localhost:8000"
 
 def send_message_to_api(text):
     if not text.strip():
-        print("[DEBUG] Tentative d'envoi de message vide, ignoré.")
         return None
 
-    payload = {
-        "text": text,
-        "user_id": st.session_state.logged_in_user or "Guest",
-        "agent_id": st.session_state.selected_agent_id
-    }
-
-    print(f"[DEBUG] Envoi du message à l'API : {payload}")
+    response_json = None
     try:
-        r = requests.post(f"{FASTAPI_BASE_URL}/chat/send_message/", json=payload, timeout=120)
-        r.raise_for_status()
+        if st.session_state.selected_agent_id == "agent-001":
+            # Endpoint pour Elavira
+            endpoint = f"{FASTAPI_BASE_URL}/chat/send_message/"
+            payload = {
+                "text": text,
+                "user_id": st.session_state.logged_in_user or "Guest",
+                "agent_id": st.session_state.selected_agent_id
+            }
+            print(f"[DEBUG] Envoi du message à Elavira: {payload}")
+            r = requests.post(endpoint, json=payload, timeout=120)
+            r.raise_for_status()
+            response_json = r.json()
 
-        response_json = r.json()
-        print(f"[DEBUG] Réponse de l'API : {response_json}")
-
-        if "id" not in response_json or not response_json["id"]:
-            response_json["id"] = datetime.now().isoformat() + "_assistant_response_" + str(uuid.uuid4())[:8]
-            print(f"[DEBUG] ID de l'assistant généré: {response_json['id']}")
-
-        if response_json.get("suggested_prompts"):
-            st.session_state.last_suggested_prompts = response_json["suggested_prompts"]
-            st.session_state.display_suggestions = False
+        elif st.session_state.selected_agent_id == "agent-002":
+            # Endpoint pour Solenys
+            endpoint = f"{FASTAPI_BASE_URL}/solenys/solenys_query"
+            print(f"[DEBUG] Envoi du message à Solenys: {text}")
+            r = requests.get(endpoint, params={"q": text}, timeout=120)
+            r.raise_for_status()
+            # Assurez-vous que la réponse contient la clé 'answer'
+            # et que la valeur est un dictionnaire de message valide.
+            response_json = r.json().get("answer")
+            
         else:
-            st.session_state.last_suggested_prompts = []
-            st.session_state.display_suggestions = False
-
-        return response_json
+            st.error("Agent sélectionné inconnu.")
+            return None
+    
     except requests.exceptions.Timeout:
         st.error("Délai de connexion à l'API dépassé. Veuillez réessayer.")
         print("[ERROR] Timeout lors de l'envoi du message.")
@@ -381,9 +311,25 @@ def send_message_to_api(text):
         st.error(f"Erreur lors de l'envoi du message à l'API: {e}")
         print(f"[ERROR] Erreur de requête générale : {e}")
         return None
-    finally:
-        pass
+    
+    # Validation et normalisation de la réponse
+    if not isinstance(response_json, dict) or "text" not in response_json:
+        st.error(f"Réponse de l'API inattendue pour l'agent {st.session_state.selected_agent_id}: {response_json}")
+        # Créez une réponse d'erreur par défaut pour ne pas faire planter l'application
+        return {
+            "id": datetime.now().isoformat() + "_error_" + str(uuid.uuid4())[:8],
+            "text": f"Désolé, une erreur s'est produite avec la réponse de {st.session_state.selected_agent_id}. Réponse brute: {response_json}",
+            "user_id": "Assistant", # Utilisation d'un user_id générique pour l'erreur
+            "timestamp": datetime.now().isoformat()
+        }
 
+    if "id" not in response_json or not response_json["id"]:
+        response_json["id"] = datetime.now().isoformat() + "_assistant_response_" + str(uuid.uuid4())[:8]
+
+    st.session_state.last_suggested_prompts = response_json.get("suggested_prompts", [])
+    st.session_state.display_suggestions = False
+        
+    return response_json
 
 def fetch_chat_history():
     print(f"[DEBUG] Récupération de l'historique pour user_id={st.session_state.logged_in_user} et agent_id={st.session_state.selected_agent_id}")
@@ -391,12 +337,17 @@ def fetch_chat_history():
         user_id_param = st.session_state.logged_in_user or "Guest"
         r = requests.get(f"{FASTAPI_BASE_URL}/chat/history/?agent_id={st.session_state.selected_agent_id}&user_id={user_id_param}", timeout=60)
         r.raise_for_status()
-
         history_messages = r.json()
 
+        # Assurez-vous que chaque message de l'historique a un 'id'
         for msg in history_messages:
             if "id" not in msg or not msg["id"]:
                 msg["id"] = datetime.now().isoformat() + "_history_" + str(uuid.uuid4())[:8]
+            # Assurez-vous que le user_id est correct pour l'affichage
+            if msg.get("user_id") == "Solenys": # Correction si l'historique stocke "Solenys" au lieu de "Solenys Assistant"
+                msg["user_id"] = "Solenys Assistant"
+            elif msg.get("user_id") == "Elavira": # Correction si l'historique stocke "Elavira" au lieu de "Elavira Assistant"
+                msg["user_id"] = "Elavira Assistant"
 
         st.session_state.messages = history_messages
         print(f"[DEBUG] Historique récupéré ({len(st.session_state.messages)} messages).")
@@ -441,8 +392,7 @@ def transcribe_audio(audio_bytes):
 
 # --- Callback pour l'envoi de message texte via le bouton ---
 def handle_send_click():
-    """Gère l'envoi du message texte depuis le bouton."""
-    # Récupère le texte de l'input en utilisant sa clé (ici, "message_input")
+    """Gère l'envoi du message texte depuis le champ de saisie ou le bouton."""
     user_message_text = st.session_state.message_input.strip()
 
     if user_message_text:
@@ -456,27 +406,27 @@ def handle_send_click():
             "timestamp": current_time_iso
         })
 
-        # Efface le contenu du champ de saisie en réinitialisant la valeur de sa clé
-        st.session_state.message_input = "" # C'est la ligne clé pour effacer le widget
-        # st.session_state.chat_input_text = "" # Plus nécessaire si message_input est la source unique
-
+        st.session_state.message_input = "" # Efface le champ de saisie
         st.session_state.thinking = True
         st.session_state.display_suggestions = False
-        # Ne pas faire de st.rerun() ici, on_click est exécuté au début du rerun de Streamlit.
-        # process_message_and_get_response() sera appelé dans le corps principal après.
     else:
         print("[DEBUG] Message texte vide, ignoré.")
 
 
 def process_message_and_get_response():
+    # Cette fonction est appelée à chaque rerun de Streamlit.
+    # Elle vérifie si une action d'envoi de message ou de transcription est en cours
+    # et si le dernier message utilisateur n'a pas encore de réponse de l'assistant.
     if st.session_state.thinking or st.session_state.transcribing:
         last_user_message = None
+        # Parcourir les messages à l'envers pour trouver le dernier message de l'utilisateur
+        # qui n'a pas encore de réponse de l'assistant.
         for i in reversed(range(len(st.session_state.messages))):
             msg = st.session_state.messages[i]
             if msg.get("user_id") == (st.session_state.logged_in_user or "Vous"):
                 has_assistant_response = False
                 for j in range(i + 1, len(st.session_state.messages)):
-                    if st.session_state.messages[j].get("user_id") in ["Elavira Assistant", "Solenys"]:
+                    if st.session_state.messages[j].get("user_id") in ["Elavira Assistant", "Solenys Assistant"]:
                         has_assistant_response = True
                         break
                 if not has_assistant_response:
@@ -492,16 +442,15 @@ def process_message_and_get_response():
 
         st.session_state.thinking = False
         st.session_state.transcribing = False
-        st.rerun()
-
+        st.rerun() # Déclenche un nouveau rerun pour afficher la réponse
 
 # --- Callback pour l'enregistrement micro ---
 def handle_mic_input(audio_bytes):
     if audio_bytes:
         print("[DEBUG] handle_mic_input appelé avec des données audio.")
         st.session_state.transcribing = True
-        st.session_state.thinking = False
-        st.rerun()
+        st.session_state.thinking = False # S'assurer que thinking est faux pendant la transcription
+        st.rerun() # Déclenche un rerun pour afficher l'indicateur de transcription
 
         transcribed_text = transcribe_audio(audio_bytes)
 
@@ -513,23 +462,18 @@ def handle_mic_input(audio_bytes):
                 "user_id": st.session_state.logged_in_user or "Vous",
                 "timestamp": current_time_iso
             })
-            # Lors de la transcription, on vide aussi le champ de texte principal
-            st.session_state.message_input = ""
-            # st.session_state.chat_input_text = "" # Plus nécessaire
-
+            st.session_state.message_input = "" # Efface le champ de saisie après transcription
 
             st.session_state.transcribing = False
-            st.session_state.thinking = True
+            st.session_state.thinking = True # Active thinking pour obtenir la réponse après transcription
             st.session_state.display_suggestions = False
-            st.rerun()
-
+            st.rerun() # Déclenche un nouveau rerun pour traiter le message transcrit
 
 # --- Auth UI ---
 def auth_ui():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        # L'image d'Elavira pour l'authentification est volontairement retirée ici.
-        st.title("Bienvenue sur Elavira 🤖")
+        st.title("Bienvenue sur Elavira �")
 
         if st.session_state.get("prefill_login_username"):
             st.session_state.login_input_username = st.session_state.prefill_login_username
@@ -548,21 +492,26 @@ def auth_ui():
 
         if st.button("Se connecter", key="login_button"):
             if st.session_state.login_input_username and st.session_state.login_input_password:
-                response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
-                    "username": st.session_state.login_input_username,
-                    "password": st.session_state.login_input_password
-                })
-                if response.status_code == 200:
-                    token = response.json().get("access_token")
-                    st.session_state.access_token = token
-                    st.session_state.logged_in_user = st.session_state.login_input_username
-                    st.session_state.page = "chat"
-                    fetch_chat_history()
-                    st.rerun()
-                elif response.status_code == 401:
-                    st.error("Nom d'utilisateur ou mot de passe incorrect.")
-                else:
-                    st.error(f"Erreur de connexion: {response.status_code} - {response.text}")
+                try:
+                    response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
+                        "username": st.session_state.login_input_username,
+                        "password": st.session_state.login_input_password
+                    })
+                    response.raise_for_status()
+                    if response.status_code == 200:
+                        token = response.json().get("access_token")
+                        st.session_state.access_token = token
+                        st.session_state.logged_in_user = st.session_state.login_input_username
+                        st.session_state.page = "chat"
+                        fetch_chat_history() # Récupère l'historique après connexion
+                        st.rerun()
+                except requests.exceptions.HTTPError as err:
+                    if err.response.status_code == 401:
+                        st.error("Nom d'utilisateur ou mot de passe incorrect.")
+                    else:
+                        st.error(f"Erreur de connexion: {err.response.status_code} - {err.response.text}")
+                except requests.exceptions.RequestException as e:
+                    st.error(f"Impossible de se connecter au serveur backend FastAPI. Erreur : {e}")
             else:
                 st.warning("Veuillez remplir tous les champs pour la connexion.")
 
@@ -577,26 +526,30 @@ def auth_ui():
 
             if st.button("Créer mon compte", key="register_button_expander"):
                 if st.session_state.register_new_username and st.session_state.register_new_password:
-                    response = requests.post(f"{FASTAPI_BASE_URL}/users/register/", json={
-                        "username": st.session_state.register_new_username,
-                        "password": st.session_state.register_new_password
-                    })
-                    if response.status_code == 201:
-                        st.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.")
-                        st.session_state.prefill_login_username = st.session_state.register_new_username
-                        st.session_state.prefill_login_password = st.session_state.register_new_password
-                        st.rerun()
-                    elif response.status_code == 400:
-                        st.warning("Ce nom d'utilisateur est déjà pris.")
-                    else:
-                        st.error(f"Erreur lors de l'inscription: {response.status_code} - {response.text}")
+                    try:
+                        response = requests.post(f"{FASTAPI_BASE_URL}/users/register/", json={
+                            "username": st.session_state.register_new_username,
+                            "password": st.session_state.register_new_password
+                        })
+                        response.raise_for_status()
+                        if response.status_code == 201:
+                            st.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.")
+                            st.session_state.prefill_login_username = st.session_state.register_new_username
+                            st.session_state.prefill_login_password = st.session_state.register_new_password
+                            st.rerun()
+                    except requests.exceptions.HTTPError as err:
+                        if err.response.status_code == 400:
+                            st.warning("Ce nom d'utilisateur est déjà pris.")
+                        else:
+                            st.error(f"Erreur lors de l'inscription: {err.response.status_code} - {err.response.text}")
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"Impossible de se connecter au serveur backend FastAPI. Erreur : {e}")
                 else:
                     st.warning("Veuillez remplir tous les champs pour l'inscription.")
 
 
 # --- Chat UI ---
 def chat_ui():
-    # --- TOP SECTION (HEADER) ---
     st.title("Messagerie intelligente 💬")
 
     col_header_left, col_header_right = st.columns([3, 1])
@@ -632,16 +585,14 @@ def chat_ui():
 
     if st.session_state.selected_agent_id != selected_agent_id_new:
         st.session_state.selected_agent_id = selected_agent_id_new
-        st.session_state.messages = []
+        st.session_state.messages = [] # Efface les messages lors du changement d'agent
         st.session_state.last_suggested_prompts = []
         st.session_state.display_suggestions = False
-        fetch_chat_history()
+        fetch_chat_history() # Recharge l'historique pour le nouvel agent
         st.rerun()
 
     st.write("---")
 
-
-    # --- MIDDLE SECTION (CHAT HISTORY) ---
     chat_history_display_container = st.container(height=500, border=False)
 
     with chat_history_display_container:
@@ -652,7 +603,8 @@ def chat_ui():
             if "id" not in msg or not msg["id"]:
                 msg["id"] = datetime.now().isoformat() + "_display_fallback_" + str(uuid.uuid4())[:8]
 
-            is_assistant_message = msg.get("user_id") in ["Elavira Assistant", "Solenys"]
+            # Assurez-vous que le user_id est correct pour l'affichage
+            is_assistant_message = msg.get("user_id") in ["Elavira Assistant", "Solenys Assistant"]
             style_class = "assistant-message" if is_assistant_message else "user-message"
 
             timestamp_raw = msg.get("timestamp", "")
@@ -666,21 +618,30 @@ def chat_ui():
             else:
                 timestamp = datetime.now().strftime("%H:%M")
 
-            # Définir les chemins d'avatar une seule fois
             elavira_avatar_path = os.path.join("images", "elavira_assistant.png")
             elavira_avatar_b64 = get_image_base64(elavira_avatar_path)
+            
+            solenys_avatar_path = os.path.join("images", "solenys_assistant.png")
+            solenys_avatar_b64 = get_image_base64(solenys_avatar_path)
 
-            user_avatar_file = "4 - Elavira (1).png" # Assurez-vous que c'est bien l'avatar de l'utilisateur
+            user_avatar_file = "4 - Elavira (1).png"
             user_avatar_path = os.path.join("images", user_avatar_file)
             user_avatar_b64 = get_image_base64(user_avatar_path)
 
             if is_assistant_message:
-                # Messages de l'assistant (maintenant à droite)
                 avatar_html = ""
-                if elavira_avatar_b64:
-                    avatar_html = f'<img src="data:image/png;base64,{elavira_avatar_b64}" class="avatar">'
-                else:
-                    avatar_html = '<div class="avatar assistant-avatar">E</div>'
+                if msg.get("user_id") == "Elavira Assistant":
+                    if elavira_avatar_b64:
+                        avatar_html = f'<img src="data:image/png;base64,{elavira_avatar_b64}" class="avatar">'
+                    else:
+                        avatar_html = '<div class="avatar assistant-avatar">E</div>'
+                elif msg.get("user_id") == "Solenys Assistant":
+                    if solenys_avatar_b64:
+                        avatar_html = f'<img src="data:image/png;base64,{solenys_avatar_b64}" class="avatar">'
+                    else:
+                        avatar_html = '<div class="avatar assistant-avatar">S</div>'
+                else: # Fallback pour les assistants non reconnus
+                    avatar_html = f'<div class="avatar assistant-avatar">?</div>'
 
                 st.markdown(f'''
                     <div class="chat-message-row" style="justify-content: flex-end;">
@@ -693,8 +654,7 @@ def chat_ui():
                     </div>
                 ''', unsafe_allow_html=True)
 
-
-            else: # Messages de l'utilisateur (maintenant à gauche)
+            else: # Message utilisateur
                 avatar_html = ""
                 if user_avatar_b64:
                     avatar_html = f'<img src="data:image/png;base64,{user_avatar_b64}" class="user-avatar-image">'
@@ -718,27 +678,12 @@ def chat_ui():
                     audio_bytes = base64.b64decode(msg['audio_base64'])
                     st.audio(audio_bytes, format="audio/mp3")
                 except Exception as e:
-                    print(f"[DEBUG] Impossible de décoder l'audio pour le message de {msg.get('user_id')}: {e}")
+                    st.error(f"Erreur de décodage audio pour le message de {msg.get('user_id')}: {e}")
 
         if st.session_state.thinking:
-            # Assistant thinking indicator (now on RIGHT)
-            st.markdown(f'''
-                <div class="chat-message-row" style="justify-content: flex-end;">
-                    <div class="typing-indicator assistant-thinking">
-                        ⏳ Elavira réfléchit...
-                    </div>
-                </div>
-            ''', unsafe_allow_html=True)
+            st.markdown(f'''<div class="chat-message-row" style="justify-content: flex-end;"><div class="typing-indicator assistant-thinking">⏳ Réflexion en cours...</div></div>''', unsafe_allow_html=True)
         if st.session_state.transcribing:
-            # User transcribing indicator (now on LEFT)
-            st.markdown(f'''
-                <div class="chat-message-row" style="justify-content: flex-start;">
-                    <div class="typing-indicator user-side">
-                        🎙️ Transcription en cours...
-                    </div>
-                </div>
-            ''', unsafe_allow_html=True)
-
+            st.markdown(f'''<div class="chat-message-row" style="justify-content: flex-start;"><div class="typing-indicator user-side">🎙️ Transcription en cours...</div></div>''', unsafe_allow_html=True)
 
     if st.session_state.last_suggested_prompts and not st.session_state.display_suggestions:
         st.markdown('<div style="text-align: center; margin-top: 15px; margin-bottom: 5px;">', unsafe_allow_html=True)
@@ -749,56 +694,43 @@ def chat_ui():
 
     if st.session_state.display_suggestions and st.session_state.last_suggested_prompts:
         st.markdown('<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; margin-bottom: 15px; justify-content: center;">', unsafe_allow_html=True)
+        def handle_suggested_prompt_click(prompt_text):
+            st.session_state.message_input = prompt_text
+            st.session_state.display_suggestions = False
         for i, prompt in enumerate(st.session_state.last_suggested_prompts):
-            st.button(
-                prompt,
-                key=f"displayed_suggested_prompt_{i}",
-                on_click=lambda p=prompt: (
-                    st.session_state.__setitem__("message_input", p), # Mettre le prompt dans le nouveau champ de texte
-                    handle_send_click() # Envoyer le message
-                )
-            )
+            st.button(prompt, key=f"displayed_suggested_prompt_{i}", on_click=handle_suggested_prompt_click, args=(prompt,))
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # --- SECTION INFÉRIEURE (ZONE DE SAISIE - FIXE) ---
     with st.container():
         st.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
-
-        input_col_fixed, send_col_fixed = st.columns([5, 1])
-        with input_col_fixed:
-            # Utilisez la nouvelle clé 'message_input' pour le widget text_input
-            # La valeur sera lue/écrite depuis st.session_state.message_input
-            st.text_input(
-                "Votre message ici...",
-                key="message_input", # Clé du widget
-                value=st.session_state.message_input, # Initialise la valeur du widget
-                placeholder="Écrivez votre message...",
-                max_chars=500
-            )
-        with send_col_fixed:
-            # Le bouton "Envoyer" déclenchera la fonction handle_send_click
-            if st.button("Envoyer", key="send_message_button", on_click=handle_send_click):
-                pass # L'action est gérée par le callback on_click
-
-        # Bouton micro (DÉPLACÉ ICI, SOUS LE CHAMP DE SAISIE DE TEXTE)
-        mic_output = mic_recorder(
-            start_prompt="Parler avec Elavira 🎧",
-            stop_prompt="Arrêter l'enregistrement 🔝",
-            key="mic_input"
-        )
-
-        if mic_output and mic_output["bytes"]:
-            handle_mic_input(mic_output["bytes"])
-
+        col_input, col_mic, col_send = st.columns([10, 1, 1])
+        input_disabled = st.session_state.thinking or st.session_state.transcribing
+        send_disabled = input_disabled or not st.session_state.message_input
+        with col_input:
+            st.text_input("Votre message", key="message_input", placeholder="Écrivez votre message ici...", label_visibility="collapsed", disabled=input_disabled, on_change=handle_send_click)
+        with col_mic:
+            # L'argument 'disabled' est retiré pour la compatibilité avec les versions antérieures de streamlit-mic-recorder.
+            # Si vous avez mis à jour la bibliothèque, vous pouvez le remettre.
+            mic_recorder(start_prompt="🎙️", stop_prompt="⏹️", just_once=True, use_container_width=True, callback=handle_mic_input, key="mic_recorder")
+        with col_send:
+            st.button("🚀", key="send_button", on_click=handle_send_click, use_container_width=True, disabled=send_disabled)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Exécution principale ---
-if __name__ == "__main__":
-    init_session()
-    # add_bg('your_background_image.png') # Décommenter si vous avez une image de fond dans 'images/'
+def main():
+    try:
+        init_session()
+        add_bg("fond_vagues_elavira.png")
+        if st.session_state.page == "auth":
+            auth_ui()
+        elif st.session_state.page == "chat":
+            chat_ui()
+        # process_message_and_get_response doit être appelé APRÈS le rendu de l'UI
+        # pour s'assurer que les états thinking/transcribing sont bien mis à jour
+        # et que le message est traité après que l'UI ait eu la chance de se rafraîchir.
+        process_message_and_get_response()
+    except Exception as e:
+        st.error(f"Une erreur inattendue s'est produite lors du chargement de la page : {e}")
+        st.stop() # Arrête l'exécution de l'application Streamlit
 
-    if st.session_state.page == "auth":
-        auth_ui()
-    elif st.session_state.page == "chat":
-        chat_ui()
-        process_message_and_get_response()  
+if __name__ == "__main__":
+    main()
