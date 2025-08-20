@@ -26,3 +26,5 @@ def index_secourisme_file():
     print("✅ Texte indexé dans ChromaDB.")
  
  
+ 
+
