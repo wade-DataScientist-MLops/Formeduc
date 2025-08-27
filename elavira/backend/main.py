@@ -5,7 +5,6 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# --- Import des routeurs ---
 # Assurez-vous que ces modules existent dans backend/api
 from backend.api import routes_users
 from backend.api import routes_chat
@@ -52,7 +51,9 @@ os.makedirs(chroma_db_path, exist_ok=True) # S'assurer que le dossier existe
 
 # Utilisation de la nouvelle API de ChromaDB pour le client persistant, qui résout la ValueError
 chroma_client = chromadb.PersistentClient(path=chroma_db_path)
+
 collection = chroma_client.get_or_create_collection(name="elavira_collection")
+
 print(f"✅ ChromaDB persistant à : {os.path.abspath(chroma_db_path)}")
 
 # --- Embedder SentenceTransformer ---
