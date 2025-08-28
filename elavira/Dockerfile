@@ -10,7 +10,7 @@ COPY . .
 # --- Étape 4 : Variables d'environnement ---
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app
-ENV OLLAMA_URL=http://localhost:11434  # URL de l'API Ollama dans le container
+ENV OLLAMA_URL=http://localhost:11434  
 
 # --- Étape 5 : Installer les dépendances Python ---
 RUN pip install --upgrade pip \
