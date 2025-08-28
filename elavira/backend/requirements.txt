@@ -9,12 +9,9 @@ chromadb
 python-jose
 gtts
 
-# Torch CPU version compatible
-torch==2.1.0+cpu
+# Torch CPU version compatible >=2.1.1
+torch==2.1.1+cpu
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Sentence Transformers
 sentence-transformers
-
-# Force NumPy <2 to avoid crash with compiled modules
 numpy<2
