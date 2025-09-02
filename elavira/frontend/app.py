@@ -263,7 +263,7 @@ def init_session():
             st.session_state[k] = v
 
 # --- API endpoints ---
-FASTAPI_BASE_URL = "https://formeduc-10.onrender.com"
+FASTAPI_BASE_URL = "http://localhost:8000"
 
 def send_message_to_api(text):
     if not text.strip():
