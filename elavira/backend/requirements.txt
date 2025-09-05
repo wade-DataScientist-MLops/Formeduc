@@ -10,8 +10,7 @@ python-jose
 gtts
 
 # Torch CPU version compatible >=2.1.1
-torch==2.1.1+cpu
---extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.1.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
 
 sentence-transformers
 numpy<2
