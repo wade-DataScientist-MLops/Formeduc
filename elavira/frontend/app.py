@@ -203,6 +203,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# --- Thème dynamique (clair/sombre) ---
+def apply_theme_css():
+    if st.session_state.get("dark_mode"):
+        st.markdown("""
+            <style>
+            .stApp { background-color: #0f172a; color: #e5e7eb; }
+            h1, h2, h3, h4, h5, h6 { color: #e5e7eb; }
+            .st-emotion-cache-1q1n031.e1pxm3cf4 { background-color: #111827; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+            .stTextInput > div > div > input { background-color: #111827; color: #e5e7eb; border-color: #374151; }
+            .stButton button { background-color: #2563eb; }
+            .stButton button:hover:not(:disabled) { background-color: #1d4ed8; }
+            .assistant-message { background-color: #1f2937; }
+            .user-message { background-color: #064e3b; }
+            .typing-indicator { background-color: #1f2937; color: #cbd5e1; }
+            .fixed-bottom-input { background-color: #0f172a; border-top-color: #1f2937; box-shadow: 0 -2px 10px rgba(0,0,0,0.3); }
+            </style>
+        """, unsafe_allow_html=True)
+
 # --- Utilitaire image base64 ---
 def get_image_base64(path):
     script_dir = os.path.dirname(__file__)
@@ -257,13 +275,33 @@ def init_session():
         "last_suggested_prompts": [],
         "display_suggestions": False,
         "message_input": "",
+        "dark_mode": False,
+        "api_base_url": None,
     }
     for k, v in defaults.items():
         if k not in st.session_state:
             st.session_state[k] = v
 
 # --- API endpoints ---
-FASTAPI_BASE_URL = "http://localhost:8000"
+# Définition d'une valeur par défaut configurable pour l'URL du backend
+DEFAULT_API_BASE_URL = (
+    os.environ.get("FASTAPI_BASE_URL")
+    or os.environ.get("API_URL")
+    or ("http://backend:8000" if os.environ.get("RUNNING_IN_DOCKER") or os.environ.get("DOCKER") else "http://localhost:8000")
+)
+
+def get_api_base_url():
+    # Initialise si nécessaire
+    if not st.session_state.get("api_base_url"):
+        st.session_state.api_base_url = DEFAULT_API_BASE_URL
+    return st.session_state.api_base_url
+
+def sidebar_settings():
+    with st.sidebar:
+        st.header("Paramètres")
+        st.checkbox("Mode sombre", key="dark_mode")
+        st.text_input("API Backend URL", key="api_base_url")
+        st.caption(f"Actuel: {st.session_state.get('api_base_url', DEFAULT_API_BASE_URL)}")
 
 def send_message_to_api(text):
     if not text.strip():
@@ -273,7 +311,7 @@ def send_message_to_api(text):
     try:
         if st.session_state.selected_agent_id == "agent-001":
             # Endpoint pour Elavira
-            endpoint = f"{FASTAPI_BASE_URL}/chat/send_message/"
+            endpoint = f"{get_api_base_url()}/chat/send_message/"
             payload = {
                 "text": text,
                 "user_id": st.session_state.logged_in_user or "Guest",
@@ -286,7 +324,7 @@ def send_message_to_api(text):
 
         elif st.session_state.selected_agent_id == "agent-002":
             # Endpoint pour Solenys
-            endpoint = f"{FASTAPI_BASE_URL}/solenys/solenys_query"
+            endpoint = f"{get_api_base_url()}/solenys/solenys_query"
             print(f"[DEBUG] Envoi du message à Solenys: {text}")
             r = requests.get(endpoint, params={"q": text}, timeout=120)
             r.raise_for_status()
@@ -335,7 +373,7 @@ def fetch_chat_history():
     print(f"[DEBUG] Récupération de l'historique pour user_id={st.session_state.logged_in_user} et agent_id={st.session_state.selected_agent_id}")
     try:
         user_id_param = st.session_state.logged_in_user or "Guest"
-        r = requests.get(f"{FASTAPI_BASE_URL}/chat/history/?agent_id={st.session_state.selected_agent_id}&user_id={user_id_param}", timeout=60)
+        r = requests.get(f"{get_api_base_url()}/chat/history/?agent_id={st.session_state.selected_agent_id}&user_id={user_id_param}", timeout=60)
         r.raise_for_status()
         history_messages = r.json()
 
@@ -369,7 +407,7 @@ def transcribe_audio(audio_bytes):
     files = {'audio_file': ("audio.wav", audio_bytes, "audio/wav")}
     print("[DEBUG] Envoi de l'audio pour transcription.")
     try:
-        r = requests.post(f"{FASTAPI_BASE_URL}/chat/transcribe_audio/", files=files, timeout=120)
+        r = requests.post(f"{get_api_base_url()}/chat/transcribe_audio/", files=files, timeout=120)
         r.raise_for_status()
         transcribed_text = r.json().get("transcribed_text", "")
         print(f"[DEBUG] Texte transcrit : '{transcribed_text}'")
@@ -473,7 +511,7 @@ def handle_mic_input(audio_bytes):
 def auth_ui():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.title("Bienvenue sur Elavira �")
+        st.title("Bienvenue sur Elavira ✨")
 
         if st.session_state.get("prefill_login_username"):
             st.session_state.login_input_username = st.session_state.prefill_login_username
@@ -493,7 +531,7 @@ def auth_ui():
         if st.button("Se connecter", key="login_button"):
             if st.session_state.login_input_username and st.session_state.login_input_password:
                 try:
-                    response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
+                    response = requests.post(f"{get_api_base_url()}/users/login/", json={
                         "username": st.session_state.login_input_username,
                         "password": st.session_state.login_input_password
                     })
@@ -527,7 +565,7 @@ def auth_ui():
             if st.button("Créer mon compte", key="register_button_expander"):
                 if st.session_state.register_new_username and st.session_state.register_new_password:
                     try:
-                        response = requests.post(f"{FASTAPI_BASE_URL}/users/register/", json={
+                        response = requests.post(f"{get_api_base_url()}/users/register/", json={
                             "username": st.session_state.register_new_username,
                             "password": st.session_state.register_new_password
                         })
@@ -719,6 +757,18 @@ def chat_ui():
 def main():
     try:
         init_session()
+        # Paramètre de requête ?api=... pour surcharger l'URL backend
+        try:
+            params = st.experimental_get_query_params()
+            api_param = params.get("api", [None])[0]
+            if api_param:
+                st.session_state.api_base_url = api_param.strip()
+        except Exception:
+            pass
+
+        # Barre latérale et thème
+        sidebar_settings()
+        apply_theme_css()
         add_bg("fond_vagues_elavira.png")
         if st.session_state.page == "auth":
             auth_ui()
