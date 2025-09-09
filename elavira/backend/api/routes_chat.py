@@ -21,12 +21,14 @@ class MessageDisplay(BaseModel):
     text: str
     user_id: str
     timestamp: str
+    agent_id: Optional[str] = None
     audio_base64: Optional[str] = None
     suggested_prompts: Optional[List[str]] = None
 
 class MessageCreate(BaseModel):
     text: str
     user_id: str = "Guest"
+    agent_id: Optional[str] = None
 
 fake_db_messages: List[Dict] = []
 message_id_counter = 0
@@ -294,7 +296,8 @@ async def send_message(message: MessageCreate):
         "id": message_id_counter,
         "text": message.text,
         "user_id": message.user_id,
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
+        "agent_id": message.agent_id or "agent-001",
     }
     fake_db_messages.append(user_msg)
 
@@ -376,6 +379,7 @@ async def send_message(message: MessageCreate):
         "text": response_text,
         "user_id": "Elavira Assistant",
         "timestamp": datetime.utcnow().isoformat(),
+        "agent_id": message.agent_id or "agent-001",
         "audio_base64": audio_base64,
         "suggested_prompts": generated_suggested_prompts
     }
@@ -384,8 +388,13 @@ async def send_message(message: MessageCreate):
     return bot_msg
 
 @router.get("/history/", response_model=List[MessageDisplay])
-async def get_chat_history():
-    return fake_db_messages
+async def get_chat_history(agent_id: Optional[str] = None, user_id: Optional[str] = None):
+    filtered = fake_db_messages
+    if agent_id:
+        filtered = [m for m in filtered if m.get("agent_id") == agent_id]
+    if user_id:
+        filtered = [m for m in filtered if m.get("user_id") in [user_id, "Elavira Assistant", "Solenys Assistant"]]
+    return filtered
 
 @router.post("/transcribe_audio/")
 async def transcribe_audio(file: UploadFile = File(...)):

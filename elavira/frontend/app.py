@@ -473,7 +473,7 @@ def handle_mic_input(audio_bytes):
 def auth_ui():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.title("Bienvenue sur Elavira �")
+        st.title("Bienvenue sur Elavira ")
 
         if st.session_state.get("prefill_login_username"):
             st.session_state.login_input_username = st.session_state.prefill_login_username
@@ -483,48 +483,46 @@ def auth_ui():
             st.session_state.login_input_password = st.session_state.prefill_login_password
             del st.session_state.prefill_login_password
 
-        st.subheader("Connectez-vous")
-        login_username_value = st.session_state.get("login_input_username", "")
-        login_password_value = st.session_state.get("login_input_password", "")
+        tab_login, tab_register = st.tabs(["Se connecter", "S'inscrire"])
 
-        st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur", value=login_username_value)
-        st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe", value=login_password_value)
+        with tab_login:
+            login_username_value = st.session_state.get("login_input_username", "")
+            login_password_value = st.session_state.get("login_input_password", "")
 
-        if st.button("Se connecter", key="login_button"):
-            if st.session_state.login_input_username and st.session_state.login_input_password:
-                try:
-                    response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
-                        "username": st.session_state.login_input_username,
-                        "password": st.session_state.login_input_password
-                    })
-                    response.raise_for_status()
-                    if response.status_code == 200:
-                        token = response.json().get("access_token")
-                        st.session_state.access_token = token
-                        st.session_state.logged_in_user = st.session_state.login_input_username
-                        st.session_state.page = "chat"
-                        fetch_chat_history() # Récupère l'historique après connexion
-                        st.rerun()
-                except requests.exceptions.HTTPError as err:
-                    if err.response.status_code == 401:
-                        st.error("Nom d'utilisateur ou mot de passe incorrect.")
-                    else:
-                        st.error(f"Erreur de connexion: {err.response.status_code} - {err.response.text}")
-                except requests.exceptions.RequestException as e:
-                    st.error(f"Impossible de se connecter au serveur backend FastAPI. Erreur : {e}")
-            else:
-                st.warning("Veuillez remplir tous les champs pour la connexion.")
+            st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur", value=login_username_value)
+            st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe", value=login_password_value)
 
-        st.markdown("---")
+            if st.button("Se connecter", key="login_button"):
+                if st.session_state.login_input_username and st.session_state.login_input_password:
+                    try:
+                        response = requests.post(f"{FASTAPI_BASE_URL}/users/login/", json={
+                            "username": st.session_state.login_input_username,
+                            "password": st.session_state.login_input_password
+                        })
+                        response.raise_for_status()
+                        if response.status_code == 200:
+                            token = response.json().get("access_token")
+                            st.session_state.access_token = token
+                            st.session_state.logged_in_user = st.session_state.login_input_username
+                            st.session_state.page = "chat"
+                            fetch_chat_history() # Récupère l'historique après connexion
+                            st.rerun()
+                    except requests.exceptions.HTTPError as err:
+                        if err.response.status_code == 401:
+                            st.error("Nom d'utilisateur ou mot de passe incorrect.")
+                        else:
+                            st.error(f"Erreur de connexion: {err.response.status_code} - {err.response.text}")
+                    except requests.exceptions.RequestException as e:
+                        st.error(f"Impossible de se connecter au serveur backend FastAPI. Erreur : {e}")
+                else:
+                    st.warning("Veuillez remplir tous les champs pour la connexion.")
 
-        st.subheader("Nouvel utilisateur ?")
-        st.write("Créez un compte pour accéder à toutes les fonctionnalités.")
-
-        with st.expander("S'inscrire", expanded=False):
+        with tab_register:
+            st.write("Créez un compte pour accéder à toutes les fonctionnalités.")
             st.text_input("Nouveau nom d'utilisateur", key="register_new_username", placeholder="Choisissez un nom d'utilisateur")
             st.text_input("Nouveau mot de passe", type="password", key="register_new_password", placeholder="Choisissez un mot de passe")
 
-            if st.button("Créer mon compte", key="register_button_expander"):
+            if st.button("Créer mon compte", key="register_button_tab"):
                 if st.session_state.register_new_username and st.session_state.register_new_password:
                     try:
                         response = requests.post(f"{FASTAPI_BASE_URL}/users/register/", json={
@@ -536,6 +534,7 @@ def auth_ui():
                             st.success("Compte créé avec succès ! Vous pouvez maintenant vous connecter.")
                             st.session_state.prefill_login_username = st.session_state.register_new_username
                             st.session_state.prefill_login_password = st.session_state.register_new_password
+                            st.experimental_set_query_params(tab="login")
                             st.rerun()
                     except requests.exceptions.HTTPError as err:
                         if err.response.status_code == 400:
