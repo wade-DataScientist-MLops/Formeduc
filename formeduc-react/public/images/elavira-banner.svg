@@ -1,0 +1,82 @@
+<svg width="600" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="elaviraGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="educationPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
+      <rect width="30" height="30" fill="transparent"/>
+      <circle cx="15" cy="15" r="2" fill="#E1F5FE" opacity="0.3"/>
+      <path d="M5,15 L25,15 M15,5 L15,25" stroke="#E1F5FE" stroke-width="1" opacity="0.2"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="600" height="300" fill="url(#elaviraGradient)"/>
+  <rect width="600" height="300" fill="url(#educationPattern)"/>
+  
+  <!-- Glowing circle behind head -->
+  <circle cx="150" cy="150" r="60" fill="#E1F5FE" opacity="0.3"/>
+  <circle cx="150" cy="150" r="45" fill="#E1F5FE" opacity="0.5"/>
+  
+  <!-- Elavira character -->
+  <!-- Head -->
+  <circle cx="150" cy="120" r="35" fill="#F4C2A1" stroke="#D4A574" stroke-width="2"/>
+  
+  <!-- Hair -->
+  <path d="M115,100 Q150,85 185,100 Q180,95 175,90 Q150,80 125,90 Q120,95 115,100" fill="#8B4513"/>
+  <path d="M120,95 Q150,85 180,95 Q175,90 170,85 Q150,80 130,85 Q125,90 120,95" fill="#8B4513"/>
+  
+  <!-- Hair bun -->
+  <circle cx="165" cy="95" r="8" fill="#8B4513"/>
+  
+  <!-- Eyes -->
+  <circle cx="140" cy="115" r="3" fill="#8B4513"/>
+  <circle cx="160" cy="115" r="3" fill="#8B4513"/>
+  
+  <!-- Eyebrows -->
+  <path d="M135,108 Q140,105 145,108" stroke="#8B4513" stroke-width="2" fill="none"/>
+  <path d="M155,108 Q160,105 165,108" stroke="#8B4513" stroke-width="2" fill="none"/>
+  
+  <!-- Smile -->
+  <path d="M140,125 Q150,130 160,125" stroke="#8B4513" stroke-width="2" fill="none"/>
+  
+  <!-- Glasses -->
+  <circle cx="140" cy="115" r="12" fill="none" stroke="#2C3E50" stroke-width="2"/>
+  <circle cx="160" cy="115" r="12" fill="none" stroke="#2C3E50" stroke-width="2"/>
+  <line x1="152" y1="115" x2="148" y2="115" stroke="#2C3E50" stroke-width="2"/>
+  
+  <!-- Professional outfit -->
+  <rect x="120" y="155" width="60" height="80" fill="#FFFFFF" stroke="#D3D3D3" stroke-width="2"/>
+  
+  <!-- Blouse collar -->
+  <path d="M120,155 L150,170 L180,155 L180,160 L150,175 L120,160 Z" fill="#F8F9FA"/>
+  
+  <!-- Professional details -->
+  <rect x="130" y="180" width="40" height="4" fill="#667eea"/>
+  <rect x="130" y="190" width="40" height="2" fill="#667eea" opacity="0.7"/>
+  <rect x="130" y="195" width="40" height="2" fill="#667eea" opacity="0.7"/>
+  
+  <!-- Stethoscope -->
+  <path d="M140,170 Q160,160 180,170" stroke="#2C3E50" stroke-width="3" fill="none"/>
+  <circle cx="140" cy="170" r="3" fill="#2C3E50"/>
+  <circle cx="180" cy="170" r="3" fill="#2C3E50"/>
+  
+  <!-- Medical cross -->
+  <rect x="145" y="200" width="10" height="10" fill="#E74C3C"/>
+  <rect x="147" y="198" width="6" height="14" fill="#E74C3C"/>
+  <rect x="142" y="203" width="16" height="4" fill="#E74C3C"/>
+  
+  <!-- ELAVIRA text banner -->
+  <rect x="50" y="250" width="500" height="40" fill="#2C3E50" rx="20"/>
+  <text x="300" y="275" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">ELAVIRA</text>
+  
+  <!-- Educational elements -->
+  <rect x="400" y="50" width="20" height="20" fill="#E1F5FE" opacity="0.3"/>
+  <rect x="450" y="80" width="15" height="15" fill="#E1F5FE" opacity="0.3"/>
+  <rect x="500" y="60" width="25" height="25" fill="#E1F5FE" opacity="0.3"/>
+  
+  <!-- Book icon -->
+  <rect x="420" y="100" width="30" height="20" fill="#E1F5FE" opacity="0.4"/>
+  <path d="M420,100 L450,100 M420,110 L450,110 M420,120 L450,120" stroke="#E1F5FE" stroke-width="1" opacity="0.6"/>
+</svg>

@@ -10,7 +10,7 @@ import json
 # --- Configuration ---
 st.set_page_config(page_title="Elavira - Formations", layout="wide")
 
-# --- CSS pour style esthétique ---
+# --- CSS pour style esthétique et corrections ---
 st.markdown("""
     <style>
     /* General App Styling */
@@ -83,14 +83,15 @@ st.markdown("""
         gap: 12px;
         line-height: 1.4;
     }
-    .assistant-message {
-        background-color: #e1f0ff;
+    /* CORRECTION ICI : Inversion des couleurs et de l'alignement */
+    .user-message {
+        background-color: #dcfce7; /* Vert clair pour l'utilisateur */
         border-bottom-right-radius: 5px;
         margin-left: auto;
         flex-direction: row-reverse;
     }
-    .user-message {
-        background-color: #dcfce7;
+    .assistant-message {
+        background-color: #e1f0ff; /* Bleu clair pour l'assistant */
         border-bottom-left-radius: 5px;
         margin-right: auto;
     }
@@ -107,10 +108,10 @@ st.markdown("""
         margin-left: 5px;
     }
     .user-message .timestamp {
-        text-align: left;
+        text-align: right; /* Le timestamp de l'utilisateur est à droite */
     }
     .assistant-message .timestamp {
-        text-align: right;
+        text-align: left; /* Le timestamp de l'assistant est à gauche */
     }
     /* Avatar Styling */
     .avatar {
@@ -181,6 +182,7 @@ st.markdown("""
         max-height: calc(100vh - 250px);
         margin-bottom: 15px;
     }
+    /* CORRECTION ICI : Ajustement de la hauteur du champ de saisie */
     .fixed-bottom-input {
         position: sticky;
         bottom: 0;
@@ -190,6 +192,7 @@ st.markdown("""
         box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
         z-index: 100;
         width: 100%;
+        min-height: 80px; /* Ajout d'une hauteur minimale */
     }
     .stVerticalBlock {
         gap: 0px;
@@ -208,13 +211,11 @@ def get_image_base64(path):
     script_dir = os.path.dirname(__file__)
     full_path = os.path.join(script_dir, path)
     if not os.path.exists(full_path):
-        # print(f"[DEBUG] Image non trouvée à : {full_path}") # Désactivé pour éviter le spam de logs
         return ""
     try:
         with open(full_path, "rb") as img:
             return base64.b64encode(img.read()).decode()
     except Exception as e:
-        # print(f"[DEBUG] Erreur de lecture de l'image {full_path}: {e}") # Désactivé pour éviter le spam de logs
         return ""
 
 # --- Arrière-plan image ---
@@ -241,7 +242,6 @@ def add_bg(image_file_name):
     else:
         print(f"[DEBUG] Image de fond non trouvée : {image_file_path}")
 
-
 # --- Init session_state ---
 def init_session():
     defaults = {
@@ -257,6 +257,7 @@ def init_session():
         "last_suggested_prompts": [],
         "display_suggestions": False,
         "message_input": "",
+        "audio_enabled": True, # Ajout de l'état pour l'audio
     }
     for k, v in defaults.items():
         if k not in st.session_state:
@@ -283,43 +284,33 @@ def send_message_to_api(text):
             r = requests.post(endpoint, json=payload, timeout=120)
             r.raise_for_status()
             response_json = r.json()
-
         elif st.session_state.selected_agent_id == "agent-002":
             # Endpoint pour Solenys
             endpoint = f"{FASTAPI_BASE_URL}/solenys/solenys_query"
             print(f"[DEBUG] Envoi du message à Solenys: {text}")
             r = requests.get(endpoint, params={"q": text}, timeout=120)
             r.raise_for_status()
-            # Assurez-vous que la réponse contient la clé 'answer'
-            # et que la valeur est un dictionnaire de message valide.
             response_json = r.json().get("answer")
-            
         else:
             st.error("Agent sélectionné inconnu.")
             return None
-    
     except requests.exceptions.Timeout:
         st.error("Délai de connexion à l'API dépassé. Veuillez réessayer.")
-        print("[ERROR] Timeout lors de l'envoi du message.")
         return None
     except requests.exceptions.ConnectionError:
         st.error("Impossible de se connecter au serveur backend FastAPI. Assurez-vous qu'il est en cours d'exécution.")
         st.error("Veuillez lancer votre backend FastAPI avec la commande : `uvicorn main:app --reload` dans le dossier de votre API.")
-        print("[ERROR] Erreur de connexion au backend.")
         return None
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors de l'envoi du message à l'API: {e}")
-        print(f"[ERROR] Erreur de requête générale : {e}")
         return None
     
-    # Validation et normalisation de la réponse
     if not isinstance(response_json, dict) or "text" not in response_json:
         st.error(f"Réponse de l'API inattendue pour l'agent {st.session_state.selected_agent_id}: {response_json}")
-        # Créez une réponse d'erreur par défaut pour ne pas faire planter l'application
         return {
             "id": datetime.now().isoformat() + "_error_" + str(uuid.uuid4())[:8],
-            "text": f"Désolé, une erreur s'est produite avec la réponse de {st.session_state.selected_agent_id}. Réponse brute: {response_json}",
-            "user_id": "Assistant", # Utilisation d'un user_id générique pour l'erreur
+            "text": f"Désolé, une erreur s'est produite avec la réponse de {st.session_state.selected_agent_id}.",
+            "user_id": "Assistant",
             "timestamp": datetime.now().isoformat()
         }
 
@@ -332,72 +323,36 @@ def send_message_to_api(text):
     return response_json
 
 def fetch_chat_history():
-    print(f"[DEBUG] Récupération de l'historique pour user_id={st.session_state.logged_in_user} et agent_id={st.session_state.selected_agent_id}")
     try:
         user_id_param = st.session_state.logged_in_user or "Guest"
         r = requests.get(f"{FASTAPI_BASE_URL}/chat/history/?agent_id={st.session_state.selected_agent_id}&user_id={user_id_param}", timeout=60)
         r.raise_for_status()
         history_messages = r.json()
-
-        # Assurez-vous que chaque message de l'historique a un 'id'
         for msg in history_messages:
             if "id" not in msg or not msg["id"]:
                 msg["id"] = datetime.now().isoformat() + "_history_" + str(uuid.uuid4())[:8]
-            # Assurez-vous que le user_id est correct pour l'affichage
-            if msg.get("user_id") == "Solenys": # Correction si l'historique stocke "Solenys" au lieu de "Solenys Assistant"
+            if msg.get("user_id") == "Solenys":
                 msg["user_id"] = "Solenys Assistant"
-            elif msg.get("user_id") == "Elavira": # Correction si l'historique stocke "Elavira" au lieu de "Elavira Assistant"
+            elif msg.get("user_id") == "Elavira":
                 msg["user_id"] = "Elavira Assistant"
-
         st.session_state.messages = history_messages
-        print(f"[DEBUG] Historique récupéré ({len(st.session_state.messages)} messages).")
-    except requests.exceptions.Timeout:
-        st.error("Délai de connexion à l'API dépassé lors de la récupération de l'historique.")
-        st.session_state.messages = []
-        print("[ERROR] Timeout lors de la récupération de l'historique.")
-    except requests.exceptions.ConnectionError:
-        st.error("Impossible de se connecter au serveur backend FastAPI pour l'historique. Assurez-vous qu'il est en cours d'exécution.")
-        st.error("Veuillez lancer votre backend FastAPI avec la commande : `uvicorn main:app --reload` dans le dossier de votre API.")
-        st.session_state.messages = []
-        print("[ERROR] Erreur de connexion au backend pour l'historique.")
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors de la récupération de l'historique: {e}")
         st.session_state.messages = []
-        print(f"[ERROR] Erreur de requête générale pour l'historique : {e}")
 
 def transcribe_audio(audio_bytes):
     files = {'audio_file': ("audio.wav", audio_bytes, "audio/wav")}
-    print("[DEBUG] Envoi de l'audio pour transcription.")
     try:
         r = requests.post(f"{FASTAPI_BASE_URL}/chat/transcribe_audio/", files=files, timeout=120)
         r.raise_for_status()
-        transcribed_text = r.json().get("transcribed_text", "")
-        print(f"[DEBUG] Texte transcrit : '{transcribed_text}'")
-        return transcribed_text
-    except requests.exceptions.Timeout:
-        st.error("Délai de connexion à l'API dépassé lors de la transcription audio.")
-        print("[ERROR] Timeout lors de la transcription audio.")
-        return None
-    except requests.exceptions.ConnectionError:
-        st.error("Impossible de se connecter au serveur backend FastAPI pour la transcription. Assurez-vous qu'il est en cours d'exécution.")
-        st.error("Veuillez lancer votre backend FastAPI avec la commande : `uvicorn main:app --reload` dans le dossier de votre API.")
-        print("[ERROR] Erreur de connexion au backend pour la transcription.")
-        return None
+        return r.json().get("transcribed_text", "")
     except requests.exceptions.RequestException as e:
         st.error(f"Erreur lors de la transcription audio: {e}")
-        print(f"[ERROR] Erreur de requête générale pour la transcription : {e}")
         return None
-    finally:
-        pass
 
-# --- Callback pour l'envoi de message texte via le bouton ---
 def handle_send_click():
-    """Gère l'envoi du message texte depuis le champ de saisie ou le bouton."""
     user_message_text = st.session_state.message_input.strip()
-
     if user_message_text:
-        print(f"[DEBUG] handle_send_click appelé avec texte: '{user_message_text}'")
-
         current_time_iso = datetime.now().isoformat()
         st.session_state.messages.append({
             "id": current_time_iso + "_user_msg_" + str(uuid.uuid4())[:8],
@@ -405,55 +360,40 @@ def handle_send_click():
             "user_id": st.session_state.logged_in_user or "Vous",
             "timestamp": current_time_iso
         })
-
-        st.session_state.message_input = "" # Efface le champ de saisie
+        st.session_state.message_input = ""
         st.session_state.thinking = True
         st.session_state.display_suggestions = False
-    else:
-        print("[DEBUG] Message texte vide, ignoré.")
-
+        st.rerun()
 
 def process_message_and_get_response():
-    # Cette fonction est appelée à chaque rerun de Streamlit.
-    # Elle vérifie si une action d'envoi de message ou de transcription est en cours
-    # et si le dernier message utilisateur n'a pas encore de réponse de l'assistant.
     if st.session_state.thinking or st.session_state.transcribing:
         last_user_message = None
-        # Parcourir les messages à l'envers pour trouver le dernier message de l'utilisateur
-        # qui n'a pas encore de réponse de l'assistant.
         for i in reversed(range(len(st.session_state.messages))):
             msg = st.session_state.messages[i]
             if msg.get("user_id") == (st.session_state.logged_in_user or "Vous"):
-                has_assistant_response = False
-                for j in range(i + 1, len(st.session_state.messages)):
-                    if st.session_state.messages[j].get("user_id") in ["Elavira Assistant", "Solenys Assistant"]:
-                        has_assistant_response = True
-                        break
+                has_assistant_response = any(
+                    st.session_state.messages[j].get("user_id") in ["Elavira Assistant", "Solenys Assistant"]
+                    for j in range(i + 1, len(st.session_state.messages))
+                )
                 if not has_assistant_response:
                     last_user_message = msg
                     break
 
         if last_user_message:
-            last_user_message_text = last_user_message["text"]
-            assistant_response = send_message_to_api(last_user_message_text)
-
+            assistant_response = send_message_to_api(last_user_message["text"])
             if assistant_response:
                 st.session_state.messages.append(assistant_response)
-
+        
         st.session_state.thinking = False
         st.session_state.transcribing = False
-        st.rerun() # Déclenche un nouveau rerun pour afficher la réponse
+        st.rerun()
 
-# --- Callback pour l'enregistrement micro ---
 def handle_mic_input(audio_bytes):
     if audio_bytes:
-        print("[DEBUG] handle_mic_input appelé avec des données audio.")
         st.session_state.transcribing = True
-        st.session_state.thinking = False # S'assurer que thinking est faux pendant la transcription
-        st.rerun() # Déclenche un rerun pour afficher l'indicateur de transcription
-
+        st.session_state.thinking = False
+        st.rerun()
         transcribed_text = transcribe_audio(audio_bytes)
-
         if transcribed_text:
             current_time_iso = datetime.now().isoformat()
             st.session_state.messages.append({
@@ -462,34 +402,20 @@ def handle_mic_input(audio_bytes):
                 "user_id": st.session_state.logged_in_user or "Vous",
                 "timestamp": current_time_iso
             })
-            st.session_state.message_input = "" # Efface le champ de saisie après transcription
-
+            st.session_state.message_input = ""
             st.session_state.transcribing = False
-            st.session_state.thinking = True # Active thinking pour obtenir la réponse après transcription
+            st.session_state.thinking = True
             st.session_state.display_suggestions = False
-            st.rerun() # Déclenche un nouveau rerun pour traiter le message transcrit
+            st.rerun()
 
 # --- Auth UI ---
 def auth_ui():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        st.title("Bienvenue sur Elavira �")
-
-        if st.session_state.get("prefill_login_username"):
-            st.session_state.login_input_username = st.session_state.prefill_login_username
-            del st.session_state.prefill_login_username
-
-        if st.session_state.get("prefill_login_password"):
-            st.session_state.login_input_password = st.session_state.prefill_login_password
-            del st.session_state.prefill_login_password
-
+        st.title("Bienvenue sur Elavira 👋")
         st.subheader("Connectez-vous")
-        login_username_value = st.session_state.get("login_input_username", "")
-        login_password_value = st.session_state.get("login_input_password", "")
-
-        st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur", value=login_username_value)
-        st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe", value=login_password_value)
-
+        st.text_input("Nom d'utilisateur", key="login_input_username", placeholder="Votre nom d'utilisateur")
+        st.text_input("Mot de passe", type="password", key="login_input_password", placeholder="Votre mot de passe")
         if st.button("Se connecter", key="login_button"):
             if st.session_state.login_input_username and st.session_state.login_input_password:
                 try:
@@ -499,31 +425,24 @@ def auth_ui():
                     })
                     response.raise_for_status()
                     if response.status_code == 200:
-                        token = response.json().get("access_token")
-                        st.session_state.access_token = token
+                        st.session_state.access_token = response.json().get("access_token")
                         st.session_state.logged_in_user = st.session_state.login_input_username
                         st.session_state.page = "chat"
-                        fetch_chat_history() # Récupère l'historique après connexion
+                        fetch_chat_history()
                         st.rerun()
                 except requests.exceptions.HTTPError as err:
-                    if err.response.status_code == 401:
-                        st.error("Nom d'utilisateur ou mot de passe incorrect.")
-                    else:
-                        st.error(f"Erreur de connexion: {err.response.status_code} - {err.response.text}")
+                    st.error("Nom d'utilisateur ou mot de passe incorrect." if err.response.status_code == 401 else f"Erreur de connexion: {err.response.text}")
                 except requests.exceptions.RequestException as e:
                     st.error(f"Impossible de se connecter au serveur backend FastAPI. Erreur : {e}")
             else:
-                st.warning("Veuillez remplir tous les champs pour la connexion.")
+                st.warning("Veuillez remplir tous les champs.")
 
         st.markdown("---")
-
         st.subheader("Nouvel utilisateur ?")
         st.write("Créez un compte pour accéder à toutes les fonctionnalités.")
-
         with st.expander("S'inscrire", expanded=False):
             st.text_input("Nouveau nom d'utilisateur", key="register_new_username", placeholder="Choisissez un nom d'utilisateur")
             st.text_input("Nouveau mot de passe", type="password", key="register_new_password", placeholder="Choisissez un mot de passe")
-
             if st.button("Créer mon compte", key="register_button_expander"):
                 if st.session_state.register_new_username and st.session_state.register_new_password:
                     try:
@@ -538,20 +457,15 @@ def auth_ui():
                             st.session_state.prefill_login_password = st.session_state.register_new_password
                             st.rerun()
                     except requests.exceptions.HTTPError as err:
-                        if err.response.status_code == 400:
-                            st.warning("Ce nom d'utilisateur est déjà pris.")
-                        else:
-                            st.error(f"Erreur lors de l'inscription: {err.response.status_code} - {err.response.text}")
+                        st.warning("Ce nom d'utilisateur est déjà pris." if err.response.status_code == 400 else f"Erreur lors de l'inscription: {err.response.text}")
                     except requests.exceptions.RequestException as e:
                         st.error(f"Impossible de se connecter au serveur backend FastAPI. Erreur : {e}")
                 else:
-                    st.warning("Veuillez remplir tous les champs pour l'inscription.")
-
+                    st.warning("Veuillez remplir tous les champs.")
 
 # --- Chat UI ---
 def chat_ui():
     st.title("Messagerie intelligente 💬")
-
     col_header_left, col_header_right = st.columns([3, 1])
     with col_header_left:
         st.write(f"Connecté en tant que **{st.session_state.logged_in_user}**")
@@ -565,16 +479,8 @@ def chat_ui():
             st.session_state.display_suggestions = False
             st.rerun()
 
-    agent_options = [
-        ("Elavira", "agent-001"),
-        ("Solenys", "agent-002")
-    ]
-    current_agent_index = 0
-    for i, (name, id_val) in enumerate(agent_options):
-        if id_val == st.session_state.selected_agent_id:
-            current_agent_index = i
-            break
-
+    agent_options = [("Elavira", "agent-001"), ("Solenys", "agent-002")]
+    current_agent_index = next((i for i, (_, id_val) in enumerate(agent_options) if id_val == st.session_state.selected_agent_id), 0)
     selected_agent_display, selected_agent_id_new = st.selectbox(
         "Choisissez votre assistant :",
         options=agent_options,
@@ -585,10 +491,10 @@ def chat_ui():
 
     if st.session_state.selected_agent_id != selected_agent_id_new:
         st.session_state.selected_agent_id = selected_agent_id_new
-        st.session_state.messages = [] # Efface les messages lors du changement d'agent
+        st.session_state.messages = []
         st.session_state.last_suggested_prompts = []
         st.session_state.display_suggestions = False
-        fetch_chat_history() # Recharge l'historique pour le nouvel agent
+        fetch_chat_history()
         st.rerun()
 
     st.write("---")
@@ -597,16 +503,15 @@ def chat_ui():
 
     with chat_history_display_container:
         if not st.session_state.messages and not st.session_state.thinking and not st.session_state.transcribing:
-            st.info("Aucun message dans l'historique pour le moment. Commencez la conversation ci-dessous !")
+            st.info("Aucun message dans l'historique. Commencez la conversation ci-dessous !")
 
         for msg in st.session_state.messages:
             if "id" not in msg or not msg["id"]:
                 msg["id"] = datetime.now().isoformat() + "_display_fallback_" + str(uuid.uuid4())[:8]
 
-            # Assurez-vous que le user_id est correct pour l'affichage
             is_assistant_message = msg.get("user_id") in ["Elavira Assistant", "Solenys Assistant"]
             style_class = "assistant-message" if is_assistant_message else "user-message"
-
+            
             timestamp_raw = msg.get("timestamp", "")
             timestamp = ""
             if timestamp_raw:
@@ -615,45 +520,30 @@ def chat_ui():
                     timestamp = dt_obj.strftime("%H:%M")
                 except ValueError:
                     timestamp = timestamp_raw[11:16] if len(timestamp_raw) >= 16 else timestamp_raw
-            else:
-                timestamp = datetime.now().strftime("%H:%M")
 
-            elavira_avatar_path = os.path.join("images", "elavira_assistant.png")
-            elavira_avatar_b64 = get_image_base64(elavira_avatar_path)
-            
-            solenys_avatar_path = os.path.join("images", "solenys_assistant.png")
-            solenys_avatar_b64 = get_image_base64(solenys_avatar_path)
-
-            user_avatar_file = "4 - Elavira (1).png"
-            user_avatar_path = os.path.join("images", user_avatar_file)
-            user_avatar_b64 = get_image_base64(user_avatar_path)
+            elavira_avatar_b64 = get_image_base64(os.path.join("images", "elavira_assistant.png"))
+            solenys_avatar_b64 = get_image_base64(os.path.join("images", "solenys_assistant.png"))
+            user_avatar_b64 = get_image_base64(os.path.join("images", "4 - Elavira (1).png"))
 
             if is_assistant_message:
                 avatar_html = ""
-                if msg.get("user_id") == "Elavira Assistant":
-                    if elavira_avatar_b64:
-                        avatar_html = f'<img src="data:image/png;base64,{elavira_avatar_b64}" class="avatar">'
-                    else:
-                        avatar_html = '<div class="avatar assistant-avatar">E</div>'
-                elif msg.get("user_id") == "Solenys Assistant":
-                    if solenys_avatar_b64:
-                        avatar_html = f'<img src="data:image/png;base64,{solenys_avatar_b64}" class="avatar">'
-                    else:
-                        avatar_html = '<div class="avatar assistant-avatar">S</div>'
-                else: # Fallback pour les assistants non reconnus
-                    avatar_html = f'<div class="avatar assistant-avatar">?</div>'
+                if msg.get("user_id") == "Elavira Assistant" and elavira_avatar_b64:
+                    avatar_html = f'<img src="data:image/png;base64,{elavira_avatar_b64}" class="avatar">'
+                elif msg.get("user_id") == "Solenys Assistant" and solenys_avatar_b64:
+                    avatar_html = f'<img src="data:image/png;base64,{solenys_avatar_b64}" class="avatar">'
+                else:
+                    avatar_html = '<div class="avatar assistant-avatar">?</div>'
 
                 st.markdown(f'''
-                    <div class="chat-message-row" style="justify-content: flex-end;">
+                    <div class="chat-message-row" style="justify-content: flex-start;">
                         <div class="chat-message {style_class}">
+                            {avatar_html}
                             <div class="message-content">
                                 <b>{msg.get("user_id", "Assistant")}</b> <span class="timestamp">({timestamp})</span><br>{msg.get("text", "...")}
                             </div>
-                            {avatar_html}
                         </div>
                     </div>
                 ''', unsafe_allow_html=True)
-
             else: # Message utilisateur
                 avatar_html = ""
                 if user_avatar_b64:
@@ -663,17 +553,17 @@ def chat_ui():
                     avatar_html = f'<div class="avatar user-avatar">{user_initial}</div>'
 
                 st.markdown(f'''
-                    <div class="chat-message-row" style="justify-content: flex-start;">
+                    <div class="chat-message-row" style="justify-content: flex-end;">
                         <div class="chat-message {style_class}">
-                            {avatar_html}
                             <div class="message-content">
                                 <b>{msg.get("user_id", "Vous")}</b> <span class="timestamp">({timestamp})</span><br>{msg.get("text", "...")}
                             </div>
+                            {avatar_html}
                         </div>
                     </div>
                 ''', unsafe_allow_html=True)
 
-            if is_assistant_message and msg.get("audio_base64"):
+            if is_assistant_message and msg.get("audio_base64") and st.session_state.audio_enabled:
                 try:
                     audio_bytes = base64.b64decode(msg['audio_base64'])
                     st.audio(audio_bytes, format="audio/mp3")
@@ -700,20 +590,27 @@ def chat_ui():
         for i, prompt in enumerate(st.session_state.last_suggested_prompts):
             st.button(prompt, key=f"displayed_suggested_prompt_{i}", on_click=handle_suggested_prompt_click, args=(prompt,))
         st.markdown('</div>', unsafe_allow_html=True)
-
+    
     with st.container():
         st.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
-        col_input, col_mic, col_send = st.columns([10, 1, 1])
+        col_input, col_mic, col_send, col_audio = st.columns([10, 1, 1, 1])
         input_disabled = st.session_state.thinking or st.session_state.transcribing
         send_disabled = input_disabled or not st.session_state.message_input
         with col_input:
             st.text_input("Votre message", key="message_input", placeholder="Écrivez votre message ici...", label_visibility="collapsed", disabled=input_disabled, on_change=handle_send_click)
         with col_mic:
-            # L'argument 'disabled' est retiré pour la compatibilité avec les versions antérieures de streamlit-mic-recorder.
-            # Si vous avez mis à jour la bibliothèque, vous pouvez le remettre.
-            mic_recorder(start_prompt="🎙️", stop_prompt="⏹️", just_once=True, use_container_width=True, callback=handle_mic_input, key="mic_recorder")
+            mic_recorder(start_prompt="🎙️", stop_prompt="⏹️", just_once=True, use_container_width=True, callback=handle_mic_input, key="mic_recorder", disabled=input_disabled)
         with col_send:
             st.button("🚀", key="send_button", on_click=handle_send_click, use_container_width=True, disabled=send_disabled)
+        with col_audio:
+            if st.session_state.audio_enabled:
+                if st.button("🔊", key="disable_audio_button", use_container_width=True):
+                    st.session_state.audio_enabled = False
+                    st.rerun()
+            else:
+                if st.button("🔇", key="enable_audio_button", use_container_width=True):
+                    st.session_state.audio_enabled = True
+                    st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
 def main():
@@ -724,13 +621,10 @@ def main():
             auth_ui()
         elif st.session_state.page == "chat":
             chat_ui()
-        # process_message_and_get_response doit être appelé APRÈS le rendu de l'UI
-        # pour s'assurer que les états thinking/transcribing sont bien mis à jour
-        # et que le message est traité après que l'UI ait eu la chance de se rafraîchir.
-        process_message_and_get_response()
+            process_message_and_get_response()
     except Exception as e:
-        st.error(f"Une erreur inattendue s'est produite lors du chargement de la page : {e}")
-        st.stop() # Arrête l'exécution de l'application Streamlit
+        st.error(f"Une erreur inattendue s'est produite: {e}")
+        st.stop()
 
 if __name__ == "__main__":
     main()

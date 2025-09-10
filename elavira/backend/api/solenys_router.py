@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from ..core.solenys_logic import ask_solenys
+from core.solenys_logic import ask_solenys
 
 router = APIRouter()
 

@@ -1,0 +1,78 @@
+<svg width="600" height="300" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="solenysGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#20B2AA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#008B8B;stop-opacity:1" />
+    </linearGradient>
+    <pattern id="circuitPattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="40" fill="transparent"/>
+      <path d="M10,10 L30,10 M20,10 L20,30 M10,20 L30,20" stroke="#4DD0E1" stroke-width="1" opacity="0.3"/>
+      <circle cx="10" cy="10" r="2" fill="#4DD0E1" opacity="0.4"/>
+      <circle cx="30" cy="30" r="2" fill="#4DD0E1" opacity="0.4"/>
+    </pattern>
+  </defs>
+  
+  <!-- Background with circuit pattern -->
+  <rect width="600" height="300" fill="url(#solenysGradient)"/>
+  <rect width="600" height="300" fill="url(#circuitPattern)"/>
+  
+  <!-- Glowing circle behind head -->
+  <circle cx="150" cy="150" r="60" fill="#4DD0E1" opacity="0.3"/>
+  <circle cx="150" cy="150" r="45" fill="#4DD0E1" opacity="0.5"/>
+  
+  <!-- Solenys character -->
+  <!-- Head -->
+  <circle cx="150" cy="120" r="35" fill="#D2B48C" stroke="#B8860B" stroke-width="2"/>
+  
+  <!-- Hair -->
+  <path d="M115,100 Q150,85 185,100 Q180,95 175,90 Q150,80 125,90 Q120,95 115,100" fill="#708090"/>
+  <path d="M120,95 Q150,85 180,95 Q175,90 170,85 Q150,80 130,85 Q125,90 120,95" fill="#708090"/>
+  
+  <!-- Beard -->
+  <path d="M130,140 Q150,155 170,140 Q165,150 150,145 Q135,150 130,140" fill="#708090"/>
+  
+  <!-- Mustache -->
+  <path d="M135,130 Q150,135 165,130" stroke="#708090" stroke-width="3" fill="none"/>
+  
+  <!-- Eyes -->
+  <circle cx="140" cy="115" r="3" fill="#8B4513"/>
+  <circle cx="160" cy="115" r="3" fill="#8B4513"/>
+  
+  <!-- Eyebrows -->
+  <path d="M135,108 Q140,105 145,108" stroke="#708090" stroke-width="2" fill="none"/>
+  <path d="M155,108 Q160,105 165,108" stroke="#708090" stroke-width="2" fill="none"/>
+  
+  <!-- Smile -->
+  <path d="M140,125 Q150,130 160,125" stroke="#8B4513" stroke-width="2" fill="none"/>
+  
+  <!-- Uniform -->
+  <rect x="120" y="155" width="60" height="80" fill="#F5F5F5" stroke="#D3D3D3" stroke-width="2"/>
+  
+  <!-- Orange collar -->
+  <path d="M120,155 L150,170 L180,155 L180,160 L150,175 L120,160 Z" fill="#FF8C00"/>
+  
+  <!-- Orange shoulder stripes -->
+  <rect x="120" y="155" width="60" height="8" fill="#FF8C00"/>
+  <rect x="125" y="200" width="50" height="6" fill="#FF8C00"/>
+  
+  <!-- Chest emblem -->
+  <circle cx="150" cy="180" r="8" fill="#FF8C00"/>
+  <circle cx="150" cy="180" r="4" fill="#FF8C00"/>
+  <line x1="150" y1="170" x2="150" y2="180" stroke="#FF8C00" stroke-width="2"/>
+  
+  <!-- Orange sleeve accents -->
+  <rect x="120" y="200" width="8" height="25" fill="#FF8C00"/>
+  <rect x="172" y="200" width="8" height="25" fill="#FF8C00"/>
+  
+  <!-- SOLENYS text banner -->
+  <rect x="50" y="250" width="500" height="40" fill="#1E3A8A" rx="20"/>
+  <text x="300" y="275" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">SOLENYS</text>
+  
+  <!-- Additional circuit elements -->
+  <rect x="400" y="50" width="20" height="20" fill="#4DD0E1" opacity="0.3"/>
+  <rect x="450" y="80" width="15" height="15" fill="#4DD0E1" opacity="0.3"/>
+  <rect x="500" y="60" width="25" height="25" fill="#4DD0E1" opacity="0.3"/>
+  
+  <!-- Circuit lines -->
+  <path d="M400,60 L450,90 M450,95 L500,75" stroke="#4DD0E1" stroke-width="2" opacity="0.4"/>
+</svg>

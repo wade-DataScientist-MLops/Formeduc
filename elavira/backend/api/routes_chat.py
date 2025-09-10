@@ -12,7 +12,7 @@ import random
 
 # Import des fonctions de ChromaDB et Ollama
 # Assurez-vous que ces imports sont corrects pour votre structure de projet
-from backend.core.chroma_client import collection, embedder, ollama_generate, query_documents
+from core.chroma_client import collection, embedder, ollama_generate, query_documents
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -388,11 +388,11 @@ async def get_chat_history():
     return fake_db_messages
 
 @router.post("/transcribe_audio/")
-async def transcribe_audio(file: UploadFile = File(...)):
+async def transcribe_audio(audio_file: UploadFile = File(...)):
     try:
-        if not file:
-            raise HTTPException(status_code=400, detail="Aucun fichier n’a été fourni.")
-        audio_bytes = await file.read()
+        if not audio_file:
+            raise HTTPException(status_code=400, detail="Aucun fichier n'a été fourni.")
+        audio_bytes = await audio_file.read()
         response = requests.post(
             "http://localhost:11434/api/transcribe",
             files={"audio": ("audio.wav", audio_bytes, "audio/wav")}

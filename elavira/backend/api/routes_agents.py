@@ -5,9 +5,9 @@ from typing import List
 import os
 
 # --- Import des routeurs (si tu veux les activer plus tard) ---
-from backend.api import routes_users
-from backend.api import routes_chat
-# from backend.api import routes_agents
+from api import routes_users
+from api import routes_chat
+# from api import routes_agents
 
 # --- ChromaDB ---
 import chromadb

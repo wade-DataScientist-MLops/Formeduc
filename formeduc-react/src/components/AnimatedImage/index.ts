@@ -1,0 +1,2 @@
+export { AnimatedImageComponent } from './AnimatedImage';
+

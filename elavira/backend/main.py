@@ -5,10 +5,10 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-# Assurez-vous que ces modules existent dans backend/api
-from backend.api import routes_users
-from backend.api import routes_chat
-from backend.api import solenys_router
+# Assurez-vous que ces modules existent dans api
+from api import routes_users
+from api import routes_chat
+from api import solenys_router
 
 # --- ChromaDB ---
 import chromadb

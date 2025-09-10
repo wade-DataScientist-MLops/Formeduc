@@ -3,10 +3,10 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 # Importez la logique IA que vous venez de créer
-from ..core.formeduc_logic import fetch_data_from_formeduc_api, process_formeduc_content
+from core.formeduc_logic import fetch_data_from_formeduc_api, process_formeduc_content
 # Importez aussi vos autres modules si vous voulez utiliser votre LLM ou Vector Store
-from ..core.llm_loader import get_llm_model
-from ..core.vector_store import get_vector_store_client
+from core.llm_loader import get_llm_model
+from core.vector_store import get_vector_store_client
 
 router = APIRouter()
 
