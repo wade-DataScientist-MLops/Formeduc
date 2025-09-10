@@ -1,42 +1,74 @@
-version: "3.9"
+version: '3.8'
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:15-alpine
+    restart: always
     environment:
       POSTGRES_DB: elaviradb
       POSTGRES_USER: mon_user
       POSTGRES_PASSWORD: mon_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
+
+  ollama:
+    image: ollama/ollama
+    container_name: elavira-ollama-1
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ollama_models:/root/.ollama
+    ports:
+      - "11434:11434"
+    restart: always
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
-    ports:
-      - "8000:8000"
+    build: ./backend
+    container_name: elavira-backend-1
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
     volumes:
       - ./backend:/app
-    depends_on:
-      - db
+    ports:
+      - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://mon_user:mon_password@db:5432/elaviradb
+    depends_on:
+      - db
+      - ollama
+    restart: always
 
-  frontend:
-    build:
-      context: ./frontend
+  frontend-react:
+    build: 
+      context: ../formeduc-react
       dockerfile: Dockerfile
-    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
-    ports:
-      - "8501:8501"
+    container_name: elavira-frontend-react-1
+    command: ["npm", "start"]
     volumes:
-      - ./frontend:/app
+      - ../formeduc-react:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
     depends_on:
       - backend
+    restart: always
+
+  # Ancien frontend Streamlit (optionnel, pour transition)
+  frontend-streamlit:
+    build: ./frontend
+    container_name: elavira-frontend-streamlit-1
+    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "8501:8501"
+    environment:
+      - DATABASE_URL=postgresql://mon_user:mon_password@db:5432/elaviradb
+    depends_on:
+      - backend
+    restart: always
 
 volumes:
   postgres_data:
+  ollama_models:
