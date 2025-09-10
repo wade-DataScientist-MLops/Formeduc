@@ -50,9 +50,8 @@ Le fichier `docker-compose.yml` a été mis à jour avec :
 
 | Service | URL | Description |
 |---------|-----|-------------|
-| **React (Nouveau)** | http://votre-ip:3000 | Interface moderne avec carrousel |
-| **Streamlit (Legacy)** | http://votre-ip:8501 | Interface originale |
-| **API Backend** | http://votre-ip:8000 | API FastAPI |
+| **Frontend React** | http://votre-ip:3000 | Interface moderne avec carrousel Netflix-style |
+| **Backend API** | http://votre-ip:8000 | API FastAPI |
 | **Ollama** | http://votre-ip:11434 | Service IA |
 
 ## 🛠️ Commandes de maintenance
@@ -76,9 +75,8 @@ docker system prune -f
 ### Firewall (si nécessaire)
 ```bash
 # Ouvrir les ports nécessaires
-sudo ufw allow 3000  # React
-sudo ufw allow 8000  # API
-sudo ufw allow 8501  # Streamlit
+sudo ufw allow 3000  # React Frontend
+sudo ufw allow 8000  # API Backend
 sudo ufw allow 11434 # Ollama
 ```
 
@@ -116,8 +114,8 @@ docker-compose logs ollama
 
 ## ✅ Vérification du déploiement
 
-1. **React** : http://votre-ip:3000 → Doit afficher le carrousel
-2. **API** : http://votre-ip:8000/docs → Documentation Swagger
+1. **Frontend React** : http://votre-ip:3000 → Doit afficher le carrousel Netflix-style
+2. **API Backend** : http://votre-ip:8000/docs → Documentation Swagger
 3. **Ollama** : http://votre-ip:11434 → Interface Ollama
 
 ## 🔄 Mise à jour future

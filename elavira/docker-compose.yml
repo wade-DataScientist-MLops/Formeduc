@@ -37,11 +37,11 @@ services:
       - ollama
     restart: always
 
-  frontend-react:
+  frontend:
     build: 
       context: ../formeduc-react
       dockerfile: Dockerfile
-    container_name: elavira-frontend-react-1
+    container_name: elavira-frontend-1
     command: ["npm", "start"]
     volumes:
       - ../formeduc-react:/app
@@ -54,21 +54,7 @@ services:
       - backend
     restart: always
 
-  # Ancien frontend Streamlit (optionnel, pour transition)
-  frontend-streamlit:
-    build: ./frontend
-    container_name: elavira-frontend-streamlit-1
-    command: ["streamlit", "run", "app.py", "--server.port=8501", "--server.enableCORS=false", "--server.enableXsrfProtection=false"]
-    volumes:
-      - ./frontend:/app
-    ports:
-      - "8501:8501"
-    environment:
-      - DATABASE_URL=postgresql://mon_user:mon_password@db:5432/elaviradb
-    depends_on:
-      - backend
-    restart: always
 
 volumes:
   postgres_data:
-  ollama_model
+  ollama_models
