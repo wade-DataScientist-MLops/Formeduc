@@ -82,30 +82,41 @@ def ollama_generate(prompt: str) -> str:
         return f"Erreur inattendue : {e}"
 
 # --- Fonction principale pour générer la réponse RAG ---
-def rag_generate(query: str, system_persona: str) -> str:
+def rag_generate(query: str, system_persona: str = None) -> str:
     """
-    Génère une réponse en combinant le contexte ChromaDB et le modèle Ollama.
+    Génère une réponse en combinant le contexte ChromaDB Formeduc et le modèle Ollama.
+    Spécialement conçu pour Elavira avec les données de Formeduc.
     """
-    # Récupération des documents les plus pertinents
+    # Persona par défaut pour Elavira
+    if system_persona is None:
+        system_persona = """Tu es Elavira, une assistante IA experte en formations de secourisme et services de garde éducatifs. 
+Tu travailles pour Formeduc, une institution spécialisée dans la formation en secourisme adaptée à la petite enfance et au milieu scolaire.
+Tu es bienveillante, professionnelle et experte dans ton domaine. Tu réponds uniquement sur les sujets liés aux formations Formeduc, 
+au secourisme, aux services de garde, et à l'éducation à la petite enfance."""
+    
+    # Récupération des documents les plus pertinents de Formeduc
     context_docs = query_documents(query, n_results=5)
-    context = "\n\n".join(context_docs) if context_docs else "Aucun contexte disponible."
+    context = "\n\n".join(context_docs) if context_docs else "Aucun contexte Formeduc disponible."
 
-    # Construction du prompt
+    # Construction du prompt spécialisé pour Elavira
     prompt = f"""
 {system_persona}
 
-Voici des extraits du catalogue de Formeduc :
+INFORMATIONS FORMEDUC:
 ---
 {context}
 ---
 
-Réponds à la question suivante uniquement à partir des informations fournies. 
-Si la réponse n’est pas dans le contexte, indique-le poliment sans inventer de réponse.
+INSTRUCTIONS:
+- Réponds uniquement sur les formations Formeduc, le secourisme, et les services de garde
+- Si la question n'est pas liée à Formeduc, redirige poliment vers les sujets de formation
+- Utilise les informations fournies ci-dessus pour donner des réponses précises
+- Sois professionnelle et bienveillante comme Elavira
 
-Question :
+Question de l'utilisateur :
 {query}
 
-Réponse :
+Réponse d'Elavira :
 """
     return ollama_generate(prompt)
 
