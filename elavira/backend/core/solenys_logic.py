@@ -72,7 +72,7 @@ def ask_solenys(question: str) -> dict:
     # Réponses prédéfinies pour calculs simples
     question_lower = question.lower().strip()
     
-    if "bonjour" in question_lower or "qui es-tu" in question_lower():
+    if "bonjour" in question_lower or "qui es-tu" in question_lower:
         response_text = (
             "Bonjour ! Je suis Solenys, professeur spécialisé dans le programme de secondaire du Québec. "
             "Je peux vous aider avec les mathématiques, sciences, français selon le PFEQ. "
