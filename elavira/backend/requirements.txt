@@ -8,7 +8,7 @@ passlib
 chromadb
 python-jose
 gtts
-torch==2.1.1
+torch==2.1.2
 transformers==4.35.0
 sentence-transformers==2.2.2
 numpy<2
