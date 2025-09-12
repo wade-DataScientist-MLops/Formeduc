@@ -14,7 +14,7 @@ def test_model_speed(model_name: str, test_prompt: str = "Bonjour, comment allez
     start_time = time.time()
     
     try:
-        url = "http://localhost:11434/api/generate"
+        url = "http://ollama:11434/api/generate"
         data = {
             "model": model_name,
             "prompt": test_prompt,
