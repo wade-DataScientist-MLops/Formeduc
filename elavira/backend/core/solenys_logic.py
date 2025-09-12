@@ -17,20 +17,27 @@ def ask_solenys(question: str) -> dict:
     
     # Définition de la persona de Solenys
     solenys_persona = (
-        "Tu es Solenys, professeur académique spécialisé pour les élèves du secondaire. "
-        "Tu aides avec les mathématiques, sciences, français et autres matières. "
-        "Tu expliques clairement et donnes des exemples concrets. "
-        "Tu gardes le contexte de la conversation et réponds de manière cohérente. "
-        "Si on te pose une question de calcul simple comme '2 fois 2', tu réponds directement : 2 x 2 = 4."
+        "Tu es Solenys, professeur de mathématiques pour élèves du secondaire. "
+        "Réponds de manière directe et concise. "
+        "Pour les calculs simples, donne directement la réponse : 2 x 2 = 4, 4 + 4 = 8. "
+        "Si on demande 'explique plus', explique brièvement la méthode. "
+        "Garde le contexte de la conversation précédente."
     )
 
-    # Réponses simples prédéfinies
-    if "bonjour" in question.lower() or "qui es-tu" in question.lower():
+    # Réponses prédéfinies pour calculs simples
+    question_lower = question.lower().strip()
+    
+    if "bonjour" in question_lower or "qui es-tu" in question_lower():
         response_text = (
-            "Bonjour ! Je suis Solenys, votre professeur académique. "
-            "Je vous aide avec les mathématiques, sciences, français et autres matières du secondaire. "
-            "Que souhaitez-vous apprendre ou réviser aujourd'hui ?"
+            "Bonjour ! Je suis Solenys, professeur de mathématiques. "
+            "Que voulez-vous calculer ?"
         )
+    elif "2 fois 2" in question_lower or "2 x 2" in question_lower:
+        response_text = "2 x 2 = 4"
+    elif "4 plus 4" in question_lower or "4 + 4" in question_lower:
+        response_text = "4 + 4 = 8"
+    elif "explique plus" in question_lower:
+        response_text = "Pour additionner : on compte les unités. Pour multiplier : on répète l'addition."
     else:
         # Utiliser directement Ollama sans ChromaDB
         response_text = ollama_generate_simple(question, solenys_persona)
@@ -52,9 +59,9 @@ def ollama_generate_simple(prompt: str, system_persona: str) -> str:
             "prompt": f"{system_persona}\n\nQuestion: {prompt}\n\nRéponse:",
             "stream": False,
             "options": {
-                "temperature": 0.7,
+                "temperature": 0.6,
                 "top_p": 0.9,
-                "max_tokens": 150,
+                "max_tokens": 50,
                 "repeat_penalty": 1.1
             }
         }
