@@ -69,7 +69,7 @@ def ollama_generate(prompt_text: str) -> str:
         # Utiliser l'API HTTP d'Ollama
         url = "http://ollama:11434/api/generate"
         data = {
-            "model": "elavira",
+            "model": "qwen2:1.5b",
             "prompt": prompt_text,
             "stream": False
         }

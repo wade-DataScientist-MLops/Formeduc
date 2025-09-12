@@ -12,7 +12,7 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # --- Configuration Ollama API ---
 OLLAMA_API_URL = "http://ollama:11434/api/generate"
-MODEL_NAME = "elavira"  # Modèle utilisé
+MODEL_NAME = "qwen2:1.5b"  # Modèle utilisé
 
 # --- Initialisation du client ChromaDB ---
 script_dir = os.path.dirname(__file__)
