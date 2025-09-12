@@ -13,6 +13,7 @@ import random
 # Import des fonctions de ChromaDB et Ollama
 # Assurez-vous que ces imports sont corrects pour votre structure de projet
 from core.chroma_client import collection, embedder, ollama_generate, query_documents
+from core.conversation_memory import add_to_memory
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 

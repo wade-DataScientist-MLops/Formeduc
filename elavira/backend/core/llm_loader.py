@@ -6,6 +6,7 @@ import json
 from typing import List
 import chromadb
 from sentence_transformers import SentenceTransformer
+from .conversation_memory import get_conversation_context
 
 # --- Pour éviter le warning parallelism Huggingface (optionnel) ---
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -64,9 +65,9 @@ def ollama_generate(prompt: str) -> str:
             "prompt": prompt,
             "stream": False,
             "options": {
-                "temperature": 0.7,
+                "temperature": 0.8,
                 "top_p": 0.9,
-                "max_tokens": 200,
+                "max_tokens": 100,
                 "repeat_penalty": 1.1
             }
         }
@@ -88,41 +89,43 @@ def ollama_generate(prompt: str) -> str:
         return f"Erreur inattendue : {e}"
 
 # --- Fonction principale pour générer la réponse RAG ---
-def rag_generate(query: str, system_persona: str = None) -> str:
+def rag_generate(query: str, system_persona: str = None, user_id: str = "default", agent_id: str = "elavira") -> str:
     """
     Génère une réponse en combinant le contexte ChromaDB Formeduc et le modèle Ollama.
     Spécialement conçu pour Elavira avec les données de Formeduc.
     """
     # Persona par défaut pour Elavira
     if system_persona is None:
-        system_persona = """Tu es Elavira, une assistante IA experte en formations de secourisme et services de garde éducatifs. 
-Tu travailles pour Formeduc, une institution spécialisée dans la formation en secourisme adaptée à la petite enfance et au milieu scolaire.
-Tu es bienveillante, professionnelle et experte dans ton domaine. Tu réponds uniquement sur les sujets liés aux formations Formeduc, 
-au secourisme, aux services de garde, et à l'éducation à la petite enfance."""
+        system_persona = """Tu es Elavira, experte Formeduc. Réponds BRIÈVEMENT et DIRECTEMENT.
+Règles:
+- Maximum 3-4 phrases
+- Réponses courtes et précises
+- Utilise les données Formeduc fournies
+- Sois chaleureuse mais concise
+- Si pas d'info, dis "Contactez Formeduc au 418 842-7523"."""
+    
+    # Récupération du contexte de conversation
+    conversation_context = get_conversation_context(user_id, agent_id, max_messages=2)
     
     # Récupération des documents les plus pertinents de Formeduc
-    context_docs = query_documents(query, n_results=5)
+    context_docs = query_documents(query, n_results=3)
     context = "\n\n".join(context_docs) if context_docs else "Aucun contexte Formeduc disponible."
 
     # Construction du prompt spécialisé pour Elavira
     prompt = f"""
 {system_persona}
 
+CONTEXTE DE CONVERSATION:
+{conversation_context}
+
 INFORMATIONS FORMEDUC:
 ---
 {context}
 ---
 
-INSTRUCTIONS:
-- Réponds uniquement sur les formations Formeduc, le secourisme, et les services de garde
-- Si la question n'est pas liée à Formeduc, redirige poliment vers les sujets de formation
-- Utilise les informations fournies ci-dessus pour donner des réponses précises
-- Sois professionnelle et bienveillante comme Elavira
+Question actuelle: {query}
 
-Question de l'utilisateur :
-{query}
-
-Réponse d'Elavira :
+Réponse courte:
 """
     return ollama_generate(prompt)
 
