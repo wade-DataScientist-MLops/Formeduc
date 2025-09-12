@@ -45,6 +45,20 @@ const Avatar = styled.div<{ isUser: boolean; isElavira?: boolean; isSolenys?: bo
   }};
   border: 2px solid #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+`;
+
+const AvatarImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+`;
+
+const AvatarInitial = styled.div`
+  font-size: 1.2em;
+  font-weight: bold;
+  color: white;
 `;
 
 const MessageContent = styled.div`
@@ -88,6 +102,15 @@ const getAvatarContent = (message: Message) => {
   }
 };
 
+const getAvatarImage = (message: Message) => {
+  if (message.user_id === 'Elavira Assistant') {
+    return '/images/elavira-real.png';
+  } else if (message.user_id === 'Solenys Assistant') {
+    return '/images/solenys-banner.jpg';
+  }
+  return null;
+};
+
 const formatTimestamp = (timestamp: string) => {
   try {
     const date = new Date(timestamp);
@@ -117,7 +140,23 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           isElavira={isElavira} 
           isSolenys={isSolenys}
         >
-          {getAvatarContent(message)}
+          {getAvatarImage(message) ? (
+            <AvatarImage 
+              src={getAvatarImage(message)} 
+              alt={message.user_id}
+              onError={(e) => {
+                // Fallback vers l'initiale si l'image ne charge pas
+                const target = e.target as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.innerHTML = getAvatarContent(message);
+                }
+              }}
+            />
+          ) : (
+            <AvatarInitial>{getAvatarContent(message)}</AvatarInitial>
+          )}
         </Avatar>
         
         <MessageContent>
