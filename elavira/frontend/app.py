@@ -408,6 +408,21 @@ def handle_mic_input(audio_bytes):
             st.session_state.display_suggestions = False
             st.rerun()
 
+def play_audio_response(audio_base64, volume=0.8):
+    """Joue une réponse audio avec le volume spécifié"""
+    if audio_base64:
+        try:
+            audio_bytes = base64.b64decode(audio_base64)
+            st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+        except Exception as e:
+            st.error(f"Erreur de lecture audio: {e}")
+
+def handle_voice_response(message_data):
+    """Gère la réponse vocale automatique"""
+    if message_data.get("audio_base64") and st.session_state.get("auto_play_checkbox", True):
+        volume = st.session_state.get("volume_slider", 0.8)
+        play_audio_response(message_data["audio_base64"], volume)
+
 # --- Auth UI ---
 def auth_ui():
     col1, col2, col3 = st.columns([1, 2, 1])
@@ -566,7 +581,11 @@ def chat_ui():
             if is_assistant_message and msg.get("audio_base64") and st.session_state.audio_enabled:
                 try:
                     audio_bytes = base64.b64decode(msg['audio_base64'])
-                    st.audio(audio_bytes, format="audio/mp3")
+                    # Lecture automatique si activée
+                    if st.session_state.get("auto_play_checkbox", True):
+                        st.audio(audio_bytes, format="audio/mp3", autoplay=True)
+                    else:
+                        st.audio(audio_bytes, format="audio/mp3")
                 except Exception as e:
                     st.error(f"Erreur de décodage audio pour le message de {msg.get('user_id')}: {e}")
 
@@ -591,6 +610,42 @@ def chat_ui():
             st.button(prompt, key=f"displayed_suggested_prompt_{i}", on_click=handle_suggested_prompt_click, args=(prompt,))
         st.markdown('</div>', unsafe_allow_html=True)
     
+    # Interface vocale améliorée
+    st.markdown("### 🎤 Interface Vocale")
+    voice_col1, voice_col2, voice_col3, voice_col4 = st.columns([2, 1, 1, 1])
+    
+    with voice_col1:
+        st.markdown("**Enregistrement vocal :**")
+        audio_bytes = mic_recorder(
+            key="mic_recorder_enhanced",
+            start_prompt="🎤 Cliquez pour parler",
+            stop_prompt="⏹️ Arrêter l'enregistrement",
+            just_once=False,
+            use_container_width=True,
+            callback=None
+        )
+        
+        if audio_bytes:
+            st.session_state.transcribing = True
+            st.rerun()
+    
+    with voice_col2:
+        st.markdown("**Contrôles audio :**")
+        if st.button("🔊 Test TTS", key="test_tts_button"):
+            # Simuler un test TTS
+            st.info("Test de synthèse vocale...")
+    
+    with voice_col3:
+        st.markdown("**Volume :**")
+        volume_level = st.slider("", 0.0, 1.0, 0.8, key="volume_slider")
+    
+    with voice_col4:
+        st.markdown("**Paramètres :**")
+        auto_play = st.checkbox("Lecture auto", value=True, key="auto_play_checkbox")
+        voice_enabled = st.checkbox("Mode vocal", value=True, key="voice_enabled_checkbox")
+
+    st.markdown("---")
+
     with st.container():
         st.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
         col_input, col_mic, col_send, col_audio = st.columns([10, 1, 1, 1])

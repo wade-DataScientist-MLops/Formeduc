@@ -39,13 +39,9 @@ services:
 
   frontend:
     build: 
-      context: ../formeduc-react
+      context: ./frontend-react
       dockerfile: Dockerfile
     container_name: elavira-frontend-1
-    command: ["npm", "start"]
-    volumes:
-      - ../formeduc-react:/app
-      - /app/node_modules
     ports:
       - "3000:3000"
     environment:
