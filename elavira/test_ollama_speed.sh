@@ -5,6 +5,7 @@ echo "======================================"
 
 # Test du modèle actuel
 echo "🔄 Test du modèle actuel: qwen2:1.5b"
+echo "Temps de réponse:"
 time curl -X POST http://localhost:11434/api/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -15,13 +16,13 @@ time curl -X POST http://localhost:11434/api/generate \
       "temperature": 0.7,
       "max_tokens": 100
     }
-  }' 2>/dev/null | jq -r '.response' | head -c 200
+  }' 2>/dev/null | grep -o '"response":"[^"]*"' | head -c 200
 
 echo -e "\n\n🔄 Test avec un modèle plus rapide: llama3.2:1b"
 echo "Téléchargement du modèle llama3.2:1b..."
-docker-compose exec ollama ollama pull llama3.2:1b
+sudo docker-compose exec ollama ollama pull llama3.2:1b
 
-echo "Test de vitesse..."
+echo "Test de vitesse:"
 time curl -X POST http://localhost:11434/api/generate \
   -H "Content-Type: application/json" \
   -d '{
@@ -32,7 +33,7 @@ time curl -X POST http://localhost:11434/api/generate \
       "temperature": 0.7,
       "max_tokens": 100
     }
-  }' 2>/dev/null | jq -r '.response' | head -c 200
+  }' 2>/dev/null | grep -o '"response":"[^"]*"' | head -c 200
 
 echo -e "\n\n✅ Test terminé!"
 echo "Si llama3.2:1b est plus rapide, vous pouvez l'utiliser en modifiant MODEL_NAME dans les fichiers de configuration."
