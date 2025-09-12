@@ -50,7 +50,13 @@ def ollama_generate_simple(prompt: str, system_persona: str) -> str:
         data = {
             "model": "qwen2:1.5b",
             "prompt": f"{system_persona}\n\nQuestion: {prompt}\n\nRéponse:",
-            "stream": False
+            "stream": False,
+            "options": {
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "max_tokens": 150,
+                "repeat_penalty": 1.1
+            }
         }
         
         response = requests.post(url, json=data, timeout=300)

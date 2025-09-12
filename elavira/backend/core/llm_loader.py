@@ -62,7 +62,13 @@ def ollama_generate(prompt: str) -> str:
         data = {
             "model": MODEL_NAME,
             "prompt": prompt,
-            "stream": False
+            "stream": False,
+            "options": {
+                "temperature": 0.7,
+                "top_p": 0.9,
+                "max_tokens": 200,
+                "repeat_penalty": 1.1
+            }
         }
         
         response = requests.post(OLLAMA_API_URL, json=data, timeout=300)
