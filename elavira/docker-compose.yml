@@ -39,7 +39,7 @@ services:
 
   frontend:
     build: 
-      context: ./frontend-react
+      context: ../formeduc-react
       dockerfile: Dockerfile
     container_name: elavira-frontend-1
     ports:

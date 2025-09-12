@@ -6,6 +6,7 @@ import requests
 import os
 import chromadb
 from sentence_transformers import SentenceTransformer
+from .conversation_memory import get_conversation_context, add_message
 
 # --- Configuration Solenys ---
 # Solenys utilise ChromaDB avec le document PFEQ + Ollama
@@ -55,12 +56,15 @@ def query_solenys_documents(query: str, n_results: int = 3):
         print(f"❌ Erreur recherche documents Solenys : {e}")
         return []
 
-def ask_solenys(question: str) -> dict:
+def ask_solenys(question: str, user_id: str = "default") -> dict:
     """
     Fonction pour interroger l'assistant Solenys avec une question donnée.
-    Solenys utilise ChromaDB avec le document PFEQ + Ollama.
+    Solenys utilise ChromaDB avec le document PFEQ + Ollama + mémoire de conversation.
     """
     response_text = ""
+    
+    # Récupération du contexte de conversation
+    conversation_context = get_conversation_context(user_id, "solenys", max_messages=3)
     
     # Définition de la persona de Solenys
     solenys_persona = (
@@ -85,12 +89,15 @@ def ask_solenys(question: str) -> dict:
     elif "explique plus" in question_lower:
         response_text = "Pour additionner : on compte les unités. Pour multiplier : on répète l'addition."
     else:
-        # Utiliser ChromaDB + Ollama avec le document PFEQ
+        # Utiliser ChromaDB + Ollama avec le document PFEQ + mémoire
         context_docs = query_solenys_documents(question, n_results=3)
         context = "\n\n".join(context_docs) if context_docs else "Aucun contexte PFEQ disponible."
         
         full_prompt = f"""
 {solenys_persona}
+
+Contexte de conversation:
+{conversation_context}
 
 Programme de formation de l'école québécoise (PFEQ) :
 {context}
@@ -100,6 +107,10 @@ Question de l'élève : {question}
 Réponse pédagogique :
 """
         response_text = ollama_generate_simple(full_prompt, "")
+
+    # Ajouter le message utilisateur et la réponse à la mémoire
+    add_message(user_id, "solenys", "user", question)
+    add_message(user_id, "solenys", "assistant", response_text)
 
     return {
         "id": f"{datetime.now().isoformat()}_assistant_response_{str(uuid.uuid4())[:8]}",

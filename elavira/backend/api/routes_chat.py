@@ -1,4 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
+
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 from datetime import datetime
@@ -299,63 +300,40 @@ async def send_message(message: MessageCreate):
     }
     fake_db_messages.append(user_msg)
 
-    text_lower = message.text.lower().strip()
-    greetings = ["salut", "bonjour", "coucou", "hello", "hey"]
+    # Utiliser l'IA pour toutes les réponses (plus de réponses prédéfinies)
+    try:
+        # Recherche contextuelle avec ChromaDB
+        context_docs = query_documents(message.text, n_results=5)
+        context = "\n\n".join(context_docs) if context_docs else ""
+        print(f"[DEBUG] Contexte extrait : {context[:200]}...")
+    except Exception as e:
+        print(f"[ChromaDB] Erreur lors de la recherche contextuelle : {e}")
+        context = ""
 
-    response_text = ""
-    generated_suggested_prompts = [] 
+    text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
 
-    if any(greet in text_lower for greet in greetings):
-        salutations = [
-            "Salut ! Je suis Elavira, votre éducatrice en secourisme chez Formeduc. Comment puis-je vous aider aujourd’hui ?",
-            "Bonjour, c’est Elavira, ravie de vous aider. Que puis-je faire pour vous ?",
-            "Coucou, ici Elavira, prête à répondre à vos questions sur nos formations."
-        ]
-        response_text = random.choice(salutations)
-        generated_suggested_prompts = [
-            "Quelles formations proposez-vous ?",
-            "Parlez-moi de Formeduc",
-            "Comment fonctionne le secourisme en ligne ?"
-        ]
+    base_system_prompt = (
+        "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable avec les informations du catalogue :\n"
+        f"{text_catalogue_for_ollama}\n\n"
+        "Instructions importantes:\n"
+        "- Si la question n'est pas claire, demande des clarifications\n"
+        "- Reste toujours professionnel et serviable\n"
+        "- Propose des alternatives si tu ne comprends pas\n"
+        "- Utilise les informations du catalogue pour répondre"
+    )
 
-    elif any(keyword in text_lower for keyword in ["formation", "formations", "proposez", "cours", "offrez", "liste des formations", "catalogue", "tarifs"]): # Ajout de "tarifs"
-        response_text = format_catalogue_text(catalogue_formations_data) 
-        generated_suggested_prompts = [
-            "Détails sur la formation RSGE",
-            "Quelles sont les formations en ligne ?",
-            "Y a-t-il des formations gratuites ?",
-            "Comment m'inscrire à une formation ?",
-            "Quel est le prix du secourisme en milieu scolaire ?" 
-        ]
-        
-    else:
-        try:
-            # Recherche contextuelle avec ChromaDB
-            context_docs = query_documents(message.text, n_results=5)
-            context = "\n\n".join(context_docs) if context_docs else ""
-            print(f"[DEBUG] Contexte extrait : {context[:200]}...")
-        except Exception as e:
-            print(f"[ChromaDB] Erreur lors de la recherche contextuelle : {e}")
-            context = ""
+    full_prompt = (
+        f"{base_system_prompt}\n\n"
+        f"Contexte pertinent (si disponible) : {context}\n"
+        f"Question de l'utilisateur : {message.text}\n"
+        "Réponse d'Elavira :"
+    )
 
-        text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
-
-        base_system_prompt = (
-            "Tu es Elavira de Formeduc. Réponds simplement avec les informations du catalogue :\n"
-            f"{text_catalogue_for_ollama}"
-        )
-
-        full_prompt = (
-            f"{base_system_prompt}\n\n"
-            f"Question : {message.text}\n"
-            "Réponse :"
-        )
-
-        loop = asyncio.get_running_loop()
-        response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
-        print(f"[AI Response] Réponse générée : {response_text[:100]}...")
-        
-        generated_suggested_prompts = generate_suggested_prompts(message.text, response_text)
+    loop = asyncio.get_running_loop()
+    response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+    print(f"[AI Response] Réponse générée : {response_text[:100]}...")
+    
+    generated_suggested_prompts = generate_suggested_prompts(message.text, response_text)
 
     audio_base64 = await synthesize_speech_async(response_text)
     print(f"[TTS] Audio généré : {'Oui' if audio_base64 else 'Non'}")
