@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException
+tes jse from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 from datetime import datetime
@@ -341,25 +341,14 @@ async def send_message(message: MessageCreate):
         text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
 
         base_system_prompt = (
-            "Tu es Elavira, une assistante IA bienveillante, chaleureuse et experte en secourisme. "
-            "Ton objectif principal est d'aider les utilisateurs à trouver les informations spécifiques "
-            "dont ils ont besoin sur les formations Formeduc en ligne, en te basant **uniquement** sur "
-            "le catalogue de formations et le contexte fourni. "
-            "Si la réponse n'est pas dans le contexte ou le catalogue, dis que tu ne sais pas mais propose "
-            "des alternatives ou de reformuler la question. "
-            "Tu réponds de manière concise, claire et naturelle, comme dans une vraie conversation. "
-            "Tu ne rédiges jamais de documents administratifs ou rapports. "
-            "Tu poses des questions ouvertes pour comprendre les besoins si ce n’est pas clair. "
-            "Utilise ce catalogue de formations pour guider tes réponses :\n"
-            f"{text_catalogue_for_ollama}\n" 
-            "Sois polie, engageante et simple. Réponds **spécifiquement** à la question posée, sans digresser."
+            "Tu es Elavira de Formeduc. Réponds simplement avec les informations du catalogue :\n"
+            f"{text_catalogue_for_ollama}"
         )
 
         full_prompt = (
             f"{base_system_prompt}\n\n"
-            f"Contexte pertinent (si disponible) : {context}\n"
-            f"Question de l'utilisateur : {message.text}\n"
-            "Réponse d'Elavira :"
+            f"Question : {message.text}\n"
+            "Réponse :"
         )
 
         loop = asyncio.get_running_loop()
