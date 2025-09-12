@@ -28,6 +28,9 @@ origins = [
     "http://127.0.0.1:8000",
     "http://localhost:3000",   # React
     "http://localhost:8501",   # Streamlit
+    "http://104.254.182.118:3000",  # React sur serveur
+    "http://104.254.182.118:8000",  # Backend sur serveur
+    "http://104.254.182.118",       # Serveur principal
 ]
 
 app.add_middleware(

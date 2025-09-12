@@ -1,7 +1,8 @@
 # Fichier: backend/core/llm_loader.py
 
 import os
-import subprocess
+import requests
+import json
 from typing import List
 import chromadb
 from sentence_transformers import SentenceTransformer
@@ -9,13 +10,9 @@ from sentence_transformers import SentenceTransformer
 # --- Pour éviter le warning parallelism Huggingface (optionnel) ---
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-# --- Ajouter le chemin vers Ollama au PATH pour macOS Apple Silicon ---
-ollama_path = "/opt/homebrew/bin"
-if ollama_path not in os.environ["PATH"]:
-    os.environ["PATH"] += os.pathsep + ollama_path
-
-OLLAMA_BIN = os.path.join(ollama_path, "ollama")  # Chemin absolu correct
-MODEL_NAME = "qwen2:1.5b"  # Modèle utilisé
+# --- Configuration Ollama API ---
+OLLAMA_API_URL = "http://ollama:11434/api/generate"
+MODEL_NAME = "elavira"  # Modèle utilisé
 
 # --- Initialisation du client ChromaDB ---
 script_dir = os.path.dirname(__file__)
@@ -59,26 +56,30 @@ def query_documents(query_text: str, n_results: int = 3) -> List[str]:
 
 # --- Fonction pour générer la réponse avec Ollama via CLI ---
 def ollama_generate(prompt: str) -> str:
-    print(f"[Ollama CLI] Envoi du prompt (début) : {prompt[:100]}...")
+    print(f"[Ollama API] Envoi du prompt : {prompt[:100]}...")
     try:
-        result = subprocess.run(
-            [OLLAMA_BIN, "run", MODEL_NAME],
-            input=prompt.encode('utf-8'),
-            capture_output=True,
-            check=True,
-            timeout=300
-        )
-        stdout = result.stdout.decode('utf-8', errors='replace').strip()
-        stderr = result.stderr.decode('utf-8', errors='replace').strip()
-        if stderr and not stdout:
-            return f"Erreur Ollama (stderr) : {stderr}"
-        return stdout
-    except FileNotFoundError:
-        return f"Erreur : programme Ollama introuvable à {OLLAMA_BIN}."
-    except subprocess.CalledProcessError as e:
-        return f"Erreur Ollama : {e.stderr.decode('utf-8', errors='replace').strip()}"
+        # Utiliser l'API HTTP d'Ollama
+        data = {
+            "model": MODEL_NAME,
+            "prompt": prompt,
+            "stream": False
+        }
+        
+        response = requests.post(OLLAMA_API_URL, json=data, timeout=300)
+        response.raise_for_status()
+        
+        result = response.json()
+        generated_text = result.get("response", "").strip()
+        
+        print(f"[Ollama API] Réponse reçue : {generated_text[:200]}...")
+        return generated_text
+        
+    except requests.exceptions.RequestException as e:
+        print(f"[Ollama API] Erreur de connexion : {e}")
+        return f"Erreur de connexion Ollama : {e}"
     except Exception as e:
-        return f"Erreur inattendue lors de l'appel Ollama : {str(e)}"
+        print(f"[Ollama API] Erreur inattendue : {e}")
+        return f"Erreur inattendue : {e}"
 
 # --- Fonction principale pour générer la réponse RAG ---
 def rag_generate(query: str, system_persona: str) -> str:

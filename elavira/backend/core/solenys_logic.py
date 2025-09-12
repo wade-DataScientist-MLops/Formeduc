@@ -5,10 +5,8 @@ from datetime import datetime
 from .llm_loader import rag_generate  # Utilise bien ton llm_loader avec qwen2:1.5b
 import os
 
-# --- Ajouter le chemin complet vers Ollama au PATH pour macOS Apple Silicon ---
-ollama_path = "/opt/homebrew/bin"
-if ollama_path not in os.environ["PATH"]:
-    os.environ["PATH"] += os.pathsep + ollama_path
+# --- Configuration Solenys ---
+# Utilise l'API HTTP d'Ollama via llm_loader
 
 def ask_solenys(question: str) -> dict:
     """

@@ -2,7 +2,8 @@ import os
 import chromadb
 from sentence_transformers import SentenceTransformer
 from typing import List
-import subprocess
+import requests
+import json
 
 # Pour éviter le warning parallelism Huggingface (optionnel)
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -63,26 +64,28 @@ def query_documents(query_text: str, n_results: int = 3) -> List[str]:
 # --- Fonction Ollama generate corrigée ---
 
 def ollama_generate(prompt_text: str) -> str:
-    print(f"[Ollama CLI] Envoi du prompt via stdin : {prompt_text[:100]}...")
+    print(f"[Ollama API] Envoi du prompt : {prompt_text[:100]}...")
     try:
-        command = ["ollama", "run", "elavira"]
-        result = subprocess.run(
-            command,
-            input=prompt_text,  # prompt envoyé via stdin
-            capture_output=True,
-            text=True,
-            check=True,
-            timeout=300
-        )
-        response = result.stdout.strip()
-        print(f"[Ollama CLI] Réponse reçue : {response[:200]}...")
-        return response
-    except subprocess.CalledProcessError as e:
-        print(f"[Ollama CLI] Erreur commande : {e.stderr}")
-        return f"Erreur Ollama : {e.stderr or 'détails non disponibles'}"
-    except FileNotFoundError:
-        print("[Ollama CLI] Commande 'ollama' introuvable.")
-        return "Erreur : programme Ollama introuvable."
+        # Utiliser l'API HTTP d'Ollama
+        url = "http://ollama:11434/api/generate"
+        data = {
+            "model": "elavira",
+            "prompt": prompt_text,
+            "stream": False
+        }
+        
+        response = requests.post(url, json=data, timeout=300)
+        response.raise_for_status()
+        
+        result = response.json()
+        generated_text = result.get("response", "").strip()
+        
+        print(f"[Ollama API] Réponse reçue : {generated_text[:200]}...")
+        return generated_text
+        
+    except requests.exceptions.RequestException as e:
+        print(f"[Ollama API] Erreur de connexion : {e}")
+        return f"Erreur de connexion Ollama : {e}"
     except Exception as e:
-        print(f"[Ollama CLI] Erreur inattendue : {e}")
+        print(f"[Ollama API] Erreur inattendue : {e}")
         return f"Erreur inattendue : {e}"

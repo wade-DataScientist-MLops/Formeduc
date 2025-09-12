@@ -381,7 +381,7 @@ async def send_message(message: MessageCreate):
     }
     fake_db_messages.append(bot_msg)
 
-    return bot_msg
+    return MessageDisplay(**bot_msg)
 
 @router.get("/history/", response_model=List[MessageDisplay])
 async def get_chat_history():

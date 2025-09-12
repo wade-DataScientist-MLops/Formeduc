@@ -28,6 +28,5 @@ docker-compose logs --tail=50
 
 echo "✅ Déploiement terminé!"
 echo "🌐 Application React: http://localhost:3000"
-echo "🌐 Application Streamlit: http://localhost:8501"
 echo "🔧 Backend API: http://localhost:8000"
 echo "🤖 Ollama: http://localhost:11434"
