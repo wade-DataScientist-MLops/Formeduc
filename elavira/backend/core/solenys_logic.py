@@ -48,7 +48,7 @@ def ollama_generate_simple(prompt: str, system_persona: str) -> str:
     try:
         url = "http://ollama:11434/api/generate"
         data = {
-            "model": "qwen2:1.5b",
+            "model": "llama3.2:1b",
             "prompt": f"{system_persona}\n\nQuestion: {prompt}\n\nRéponse:",
             "stream": False,
             "options": {
