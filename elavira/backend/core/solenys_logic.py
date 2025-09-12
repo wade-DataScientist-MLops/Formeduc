@@ -17,16 +17,19 @@ def ask_solenys(question: str) -> dict:
     
     # Définition de la persona de Solenys
     solenys_persona = (
-        "Tu es Solenys, prof pour élèves du secondaire. "
-        "Aide avec maths, sciences, français. "
-        "Réponds simplement."
+        "Tu es Solenys, professeur académique spécialisé pour les élèves du secondaire. "
+        "Tu aides avec les mathématiques, sciences, français et autres matières. "
+        "Tu expliques clairement et donnes des exemples concrets. "
+        "Tu gardes le contexte de la conversation et réponds de manière cohérente. "
+        "Si on te pose une question de calcul simple comme '2 fois 2', tu réponds directement : 2 x 2 = 4."
     )
 
     # Réponses simples prédéfinies
     if "bonjour" in question.lower() or "qui es-tu" in question.lower():
         response_text = (
-            "Salut ! Je suis Solenys. "
-            "Je t'aide avec tes cours. Que veux-tu savoir ?"
+            "Bonjour ! Je suis Solenys, votre professeur académique. "
+            "Je vous aide avec les mathématiques, sciences, français et autres matières du secondaire. "
+            "Que souhaitez-vous apprendre ou réviser aujourd'hui ?"
         )
     else:
         # Utiliser directement Ollama sans ChromaDB
@@ -49,9 +52,9 @@ def ollama_generate_simple(prompt: str, system_persona: str) -> str:
             "prompt": f"{system_persona}\n\nQuestion: {prompt}\n\nRéponse:",
             "stream": False,
             "options": {
-                "temperature": 0.8,
+                "temperature": 0.7,
                 "top_p": 0.9,
-                "max_tokens": 80,
+                "max_tokens": 150,
                 "repeat_penalty": 1.1
             }
         }
