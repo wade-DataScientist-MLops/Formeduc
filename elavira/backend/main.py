@@ -85,6 +85,10 @@ class QueryRequest(BaseModel):
 async def read_root():
     return {"message": "Bienvenue sur l'API Elavira!"}
 
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "service": "elavira-api"}
+
 @app.post("/add_documents/")
 async def add_documents(request: AddDocumentsRequest):
     try:
