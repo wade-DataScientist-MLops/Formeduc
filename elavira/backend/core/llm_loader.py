@@ -6,7 +6,7 @@ import json
 from typing import List
 import chromadb
 from sentence_transformers import SentenceTransformer
-from .conversation_memory import get_conversation_context
+# from .conversation_memory import get_conversation_context
 
 # --- Pour éviter le warning parallelism Huggingface (optionnel) ---
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -96,36 +96,22 @@ def rag_generate(query: str, system_persona: str = None, user_id: str = "default
     """
     # Persona par défaut pour Elavira
     if system_persona is None:
-        system_persona = """Tu es Elavira, experte Formeduc. Réponds BRIÈVEMENT et DIRECTEMENT.
-Règles:
-- Maximum 3-4 phrases
-- Réponses courtes et précises
-- Utilise les données Formeduc fournies
-- Sois chaleureuse mais concise
-- Si pas d'info, dis "Contactez Formeduc au 418 842-7523"."""
-    
-    # Récupération du contexte de conversation
-    conversation_context = get_conversation_context(user_id, agent_id, max_messages=2)
+        system_persona = """Tu es Elavira de Formeduc. Réponds simplement et brièvement."""
     
     # Récupération des documents les plus pertinents de Formeduc
     context_docs = query_documents(query, n_results=3)
     context = "\n\n".join(context_docs) if context_docs else "Aucun contexte Formeduc disponible."
 
-    # Construction du prompt spécialisé pour Elavira
+    # Construction du prompt simplifié pour Elavira
     prompt = f"""
 {system_persona}
 
-CONTEXTE DE CONVERSATION:
-{conversation_context}
-
-INFORMATIONS FORMEDUC:
----
+Données Formeduc:
 {context}
----
 
-Question actuelle: {query}
+Question: {query}
 
-Réponse courte:
+Réponse:
 """
     return ollama_generate(prompt)
 

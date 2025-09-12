@@ -17,19 +17,16 @@ def ask_solenys(question: str) -> dict:
     
     # Définition de la persona de Solenys
     solenys_persona = (
-        "Tu es Solenys, professeure virtuelle spécialisée pour les élèves du secondaire. "
-        "Tu aides avec les cours de maths, sciences, français, histoire, etc. "
-        "Tu expliques simplement, étape par étape. "
-        "Tu donnes des exemples concrets. "
-        "Tu encourages et rassures les élèves. "
-        "Réponds en 2-3 phrases maximum."
+        "Tu es Solenys, prof pour élèves du secondaire. "
+        "Aide avec maths, sciences, français. "
+        "Réponds simplement."
     )
 
     # Réponses simples prédéfinies
     if "bonjour" in question.lower() or "qui es-tu" in question.lower():
         response_text = (
-            "Salut ! Je suis Solenys, ta prof virtuelle. "
-            "Je t'aide avec tes cours du secondaire. Que veux-tu réviser ?"
+            "Salut ! Je suis Solenys. "
+            "Je t'aide avec tes cours. Que veux-tu savoir ?"
         )
     else:
         # Utiliser directement Ollama sans ChromaDB
