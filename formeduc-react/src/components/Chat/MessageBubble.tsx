@@ -106,7 +106,7 @@ const getAvatarImage = (message: Message) => {
   if (message.user_id === 'Elavira Assistant') {
     return '/images/elavira-real.png';
   } else if (message.user_id === 'Solenys Assistant') {
-    return '/images/solenys-banner.jpg';
+    return '/images/solenys-banner.svg';
   }
   return null;
 };

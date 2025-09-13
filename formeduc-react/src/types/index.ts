@@ -28,10 +28,10 @@ export interface TranscribeResponse {
   transcribed_text: string;
 }
 
-export type AgentType = 'agent-001' | 'agent-002';
+export type AgentType = 'agent-001' | 'agent-002' | 'elavira' | 'solenys';
 
 export interface AppState {
-  page: 'auth' | 'chat';
+  page: 'auth' | 'chat' | 'agents';
   messages: Message[];
   access_token: string | null;
   logged_in_user: string | null;
