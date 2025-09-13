@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { AgentCard } from './AgentCard';
 import { useApp } from '../../context/AppContext';
+import { AgentType } from '../../types';
 
 const DashboardContainer = styled.div`
   display: flex;
@@ -129,7 +130,7 @@ export const AgentsDashboard: React.FC = () => {
   const { dispatch } = useApp();
 
   const handleChatClick = (agentId: string) => {
-    dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId });
+    dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });
     dispatch({ type: 'SET_PAGE', payload: 'chat' });
   };
 
