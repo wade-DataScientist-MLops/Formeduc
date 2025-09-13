@@ -313,17 +313,24 @@ async def send_message(message: MessageCreate):
     text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
 
     base_system_prompt = (
-        "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable avec les informations du catalogue :\n"
-        f"{text_catalogue_for_ollama}\n\n"
+        "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable.\n\n"
         "Instructions importantes:\n"
+        "- Réponds de manière concise et personnalisée\n"
+        "- Si on te demande des formations, donne un aperçu général puis propose des détails\n"
         "- Si la question n'est pas claire, demande des clarifications\n"
         "- Reste toujours professionnel et serviable\n"
         "- Propose des alternatives si tu ne comprends pas\n"
-        "- Utilise les informations du catalogue pour répondre"
+        "- Utilise les informations du catalogue pour répondre de manière pertinente"
     )
 
+    # Ajouter le catalogue seulement si la question concerne les formations
+    formation_keywords = ["formation", "cours", "prix", "tarif", "secourisme", "rsge", "programme"]
+    should_include_catalogue = any(keyword in message.text.lower() for keyword in formation_keywords)
+    
+    catalogue_context = f"\n\nCatalogue des formations Formeduc :\n{text_catalogue_for_ollama}" if should_include_catalogue else ""
+    
     full_prompt = (
-        f"{base_system_prompt}\n\n"
+        f"{base_system_prompt}{catalogue_context}\n\n"
         f"Contexte pertinent (si disponible) : {context}\n"
         f"Question de l'utilisateur : {message.text}\n"
         "Réponse d'Elavira :"
