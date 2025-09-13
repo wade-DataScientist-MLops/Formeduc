@@ -3,6 +3,7 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthWithCarousel } from './components/Auth/AuthWithCarousel';
 import { ChatInterface } from './components/Chat/ChatInterface';
+import { AgentsDashboard } from './components/Agents/AgentsDashboard';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -137,7 +138,7 @@ function AppContent() {
           if (response.ok) {
             dispatch({ type: 'SET_ACCESS_TOKEN', payload: token });
             dispatch({ type: 'SET_LOGGED_IN_USER', payload: user });
-            dispatch({ type: 'SET_PAGE', payload: 'chat' });
+            dispatch({ type: 'SET_PAGE', payload: 'agents' });
           } else {
             // Token invalide, nettoyer le localStorage
             localStorage.removeItem('access_token');
@@ -165,9 +166,22 @@ function AppContent() {
     );
   }
 
+  const renderPage = () => {
+    switch (state.page) {
+      case 'auth':
+        return <AuthWithCarousel />;
+      case 'agents':
+        return <AgentsDashboard />;
+      case 'chat':
+        return <ChatInterface />;
+      default:
+        return <AgentsDashboard />;
+    }
+  };
+
   return (
     <AppContainer>
-      {state.page === 'auth' ? <AuthWithCarousel /> : <ChatInterface />}
+      {renderPage()}
     </AppContainer>
   );
 }

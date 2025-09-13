@@ -68,26 +68,25 @@ def ask_solenys(question: str, user_id: str = "default") -> dict:
     
     # Définition de la persona de Solenys
     solenys_persona = (
-        "Tu es Solenys, professeur spécialisé dans le programme de secondaire du Québec (PFEQ). "
-        "Tu aides les élèves avec les mathématiques, sciences, français selon le curriculum québécois. "
-        "Réponds de manière claire et pédagogique en te basant sur le programme officiel."
+        "Tu es Solenys, professeur québécois. Réponds simplement et clairement. "
+        "Sois concis et direct. Évite les répétitions et les explications trop longues."
     )
 
     # Réponses prédéfinies pour calculs simples
     question_lower = question.lower().strip()
     
-    if "bonjour" in question_lower or "qui es-tu" in question_lower:
+    if "bonjour" in question_lower or "salut" in question_lower or "qui es-tu" in question_lower:
         response_text = (
-            "Bonjour ! Je suis Solenys, professeur spécialisé dans le programme de secondaire du Québec. "
-            "Je peux vous aider avec les mathématiques, sciences, français selon le PFEQ. "
-            "Que souhaitez-vous apprendre ?"
+            "Bonjour ! Je suis Solenys, ton professeur québécois. "
+            "Je peux t'aider avec les maths, sciences et français. "
+            "Comment puis-je t'aider ?"
         )
     elif "2 fois 2" in question_lower or "2 x 2" in question_lower:
         response_text = "2 x 2 = 4"
     elif "4 plus 4" in question_lower or "4 + 4" in question_lower:
         response_text = "4 + 4 = 8"
-    elif "explique plus" in question_lower:
-        response_text = "Pour additionner : on compte les unités. Pour multiplier : on répète l'addition."
+    elif "explique plus" in question_lower or "explique" in question_lower:
+        response_text = "Pour multiplier : on répète l'addition. 2 x 2 = 2 + 2 = 4"
     else:
         # Utiliser ChromaDB + Ollama avec le document PFEQ + mémoire
         context_docs = query_solenys_documents(question, n_results=3)
@@ -104,7 +103,13 @@ Programme de formation de l'école québécoise (PFEQ) :
 
 Question de l'élève : {question}
 
-Réponse pédagogique :
+Instructions:
+- Réponds de manière simple et claire
+- Évite les répétitions
+- Sois concis et direct
+- Maximum 2-3 phrases
+
+Réponse:
 """
         response_text = ollama_generate_simple(full_prompt, "")
 
