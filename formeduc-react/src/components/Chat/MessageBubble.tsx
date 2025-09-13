@@ -140,23 +140,26 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           isElavira={isElavira} 
           isSolenys={isSolenys}
         >
-          {getAvatarImage(message) ? (
-            <AvatarImage 
-              src={getAvatarImage(message)} 
-              alt={message.user_id}
-              onError={(e) => {
-                // Fallback vers l'initiale si l'image ne charge pas
-                const target = e.target as HTMLImageElement;
-                target.style.display = 'none';
-                const parent = target.parentElement;
-                if (parent) {
-                  parent.innerHTML = getAvatarContent(message);
-                }
-              }}
-            />
-          ) : (
-            <AvatarInitial>{getAvatarContent(message)}</AvatarInitial>
-          )}
+          {(() => {
+            const avatarImage = getAvatarImage(message);
+            return avatarImage ? (
+              <AvatarImage 
+                src={avatarImage} 
+                alt={message.user_id}
+                onError={(e) => {
+                  // Fallback vers l'initiale si l'image ne charge pas
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    parent.innerHTML = getAvatarContent(message);
+                  }
+                }}
+              />
+            ) : (
+              <AvatarInitial>{getAvatarContent(message)}</AvatarInitial>
+            );
+          })()}
         </Avatar>
         
         <MessageContent>
