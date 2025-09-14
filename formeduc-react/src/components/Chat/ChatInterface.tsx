@@ -181,23 +181,12 @@ export const ChatInterface: React.FC = () => {
     try {
       let response: Message;
 
-      if (state.selected_agent_id === 'agent-001') {
-        // Elavira
-        response = await chatAPI.sendMessage({
-          text: text.trim(),
-          user_id: state.logged_in_user || 'Guest',
-          agent_id: state.selected_agent_id,
-        });
-      } else {
-        // Solenys
-        const solenysResponse = await solenysAPI.query(text.trim());
-        response = {
-          id: Date.now().toString() + '_solenys_' + Math.random().toString(36).substr(2, 9),
-          text: solenysResponse.answer,
-          user_id: 'Solenys Assistant',
-          timestamp: new Date().toISOString(),
-        };
-      }
+      // Utiliser l'API unifiée avec l'agent spécifié
+      response = await chatAPI.sendMessage({
+        text: text.trim(),
+        user_id: state.logged_in_user || 'Guest',
+        agent: state.selected_agent_id, // Envoyer l'agent sélectionné
+      });
 
       dispatch({ type: 'ADD_MESSAGE', payload: response });
       

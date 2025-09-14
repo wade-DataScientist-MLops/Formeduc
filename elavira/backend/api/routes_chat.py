@@ -15,6 +15,7 @@ import random
 # Assurez-vous que ces imports sont corrects pour votre structure de projet
 from core.chroma_client import collection, embedder, ollama_generate, query_documents
 from core.conversation_memory import add_message
+from core.master_agent import master_agent
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -29,6 +30,7 @@ class MessageDisplay(BaseModel):
 class MessageCreate(BaseModel):
     text: str
     user_id: str = "Guest"
+    agent: Optional[str] = None  # Pour spécifier l'agent
 
 fake_db_messages: List[Dict] = []
 message_id_counter = 0
@@ -300,45 +302,70 @@ async def send_message(message: MessageCreate):
     }
     fake_db_messages.append(user_msg)
 
-    # Utiliser l'IA pour toutes les réponses (plus de réponses prédéfinies)
+    # Utiliser l'Agent Maître pour router vers le bon agent
     try:
-        # Recherche contextuelle avec ChromaDB
-        context_docs = query_documents(message.text, n_results=5)
-        context = "\n\n".join(context_docs) if context_docs else ""
-        print(f"[DEBUG] Contexte extrait : {context[:200]}...")
+        print(f"[DEBUG] Routage vers l'agent: {message.agent if hasattr(message, 'agent') else 'auto'}")
+        
+        # Déterminer l'agent à utiliser
+        agent_preference = None
+        if hasattr(message, 'agent') and message.agent:
+            agent_preference = message.agent
+            print(f"[DEBUG] Agent spécifié: {agent_preference}")
+        
+        # Utiliser l'Agent Maître pour dispatcher la tâche
+        result = master_agent.dispatch_task(
+            user_message=message.text,
+            user_id=message.user_id,
+            agent_preference=agent_preference
+        )
+        
+        response_text = result.get("response", "Désolé, une erreur est survenue.")
+        selected_agent = result.get("agent", "Unknown")
+        
+        print(f"[DEBUG] Agent sélectionné: {selected_agent}")
+        print(f"[DEBUG] Réponse générée: {response_text[:100]}...")
+        
     except Exception as e:
-        print(f"[ChromaDB] Erreur lors de la recherche contextuelle : {e}")
-        context = ""
+        print(f"[ERROR] Erreur dans le routage des agents: {e}")
+        # Fallback vers Elavira en cas d'erreur
+        try:
+            context_docs = query_documents(message.text, n_results=5)
+            context = "\n\n".join(context_docs) if context_docs else ""
+            
+            text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
+            
+            base_system_prompt = (
+                "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable.\n\n"
+                "Instructions importantes:\n"
+                "- Réponds de manière concise et personnalisée\n"
+                "- Si on te demande des formations, donne un aperçu général puis propose des détails\n"
+                "- Si la question n'est pas claire, demande des clarifications\n"
+                "- Reste toujours professionnel et serviable\n"
+                "- Propose des alternatives si tu ne comprends pas\n"
+                "- Utilise les informations du catalogue pour répondre de manière pertinente"
+            )
 
-    text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
+            formation_keywords = ["formation", "cours", "prix", "tarif", "secourisme", "rsge", "programme"]
+            should_include_catalogue = any(keyword in message.text.lower() for keyword in formation_keywords)
+            
+            catalogue_context = f"\n\nCatalogue des formations Formeduc :\n{text_catalogue_for_ollama}" if should_include_catalogue else ""
+            
+            full_prompt = (
+                f"{base_system_prompt}{catalogue_context}\n\n"
+                f"Contexte pertinent (si disponible) : {context}\n"
+                f"Question de l'utilisateur : {message.text}\n"
+                "Réponse d'Elavira :"
+            )
 
-    base_system_prompt = (
-        "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable.\n\n"
-        "Instructions importantes:\n"
-        "- Réponds de manière concise et personnalisée\n"
-        "- Si on te demande des formations, donne un aperçu général puis propose des détails\n"
-        "- Si la question n'est pas claire, demande des clarifications\n"
-        "- Reste toujours professionnel et serviable\n"
-        "- Propose des alternatives si tu ne comprends pas\n"
-        "- Utilise les informations du catalogue pour répondre de manière pertinente"
-    )
-
-    # Ajouter le catalogue seulement si la question concerne les formations
-    formation_keywords = ["formation", "cours", "prix", "tarif", "secourisme", "rsge", "programme"]
-    should_include_catalogue = any(keyword in message.text.lower() for keyword in formation_keywords)
-    
-    catalogue_context = f"\n\nCatalogue des formations Formeduc :\n{text_catalogue_for_ollama}" if should_include_catalogue else ""
-    
-    full_prompt = (
-        f"{base_system_prompt}{catalogue_context}\n\n"
-        f"Contexte pertinent (si disponible) : {context}\n"
-        f"Question de l'utilisateur : {message.text}\n"
-        "Réponse d'Elavira :"
-    )
-
-    loop = asyncio.get_running_loop()
-    response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
-    print(f"[AI Response] Réponse générée : {response_text[:100]}...")
+            loop = asyncio.get_running_loop()
+            response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+            selected_agent = "Elavira (fallback)"
+            print(f"[FALLBACK] Réponse Elavira générée: {response_text[:100]}...")
+            
+        except Exception as fallback_error:
+            print(f"[ERROR] Erreur dans le fallback: {fallback_error}")
+            response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+            selected_agent = "System Error"
     
     generated_suggested_prompts = generate_suggested_prompts(message.text, response_text)
 

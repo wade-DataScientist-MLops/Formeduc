@@ -21,7 +21,8 @@ export interface Message {
 export interface MessageCreate {
   text: string;
   user_id: string;
-  agent_id: string;
+  agent_id?: string;
+  agent?: string;
 }
 
 export interface TranscribeResponse {
