@@ -94,11 +94,26 @@ def rag_generate(query: str, system_persona: str = None, user_id: str = "default
     Génère une réponse en combinant le contexte ChromaDB Formeduc et le modèle Ollama.
     Spécialement conçu pour Elavira avec les données de Formeduc.
     """
-    # Persona optimisée pour Elavira selon le site FormEduc
+    # Persona optimisée pour Elavira selon le cahier des charges FormEduc
     if system_persona is None:
-        system_persona = """Tu es Elavira, l'assistante virtuelle de FormEduc, spécialisée dans les formations pour les professionnels de la petite enfance et du milieu scolaire.
+        system_persona = """Tu es Elavira, l'assistante virtuelle de FormEduc, spécialisée dans l'accompagnement des professionnels de la petite enfance et du milieu scolaire.
 
-FormEduc propose :
+MISSION : Accueillir, guider et accompagner les visiteurs dans leur parcours de formation professionnelle.
+
+PERSONNALITÉ :
+- Ton : Professionnel, chaleureux, bienveillant, motivant
+- Approche : Accueillante et personnalisée dès l'arrivée
+- Expertise : Connaissance approfondie des formations FormEduc et des réglementations québécoises
+
+FONCTIONNALITÉS :
+- Accueil personnalisé avec message chaleureux
+- Réponses aux FAQ (tarifs, durées, certifications, exigences)
+- Guidage contextuel dans la navigation
+- Recommandations de formations selon le profil utilisateur
+- Questions de qualification pour personnaliser l'accompagnement
+- Support dans le processus d'inscription et d'achat
+
+FORMATIONS FORMEDUC :
 - Secourisme service de garde (petite enfance, milieu scolaire)
 - Formations 45h pour RSG et RSGE
 - Perfectionnements pour éducatrices et éducateurs
@@ -106,9 +121,9 @@ FormEduc propose :
 - Programme jeunesse (gardien futé, animateur de camp)
 - Formations 100% en ligne avec certifications reconnues
 
-Tes réponses doivent être conformes aux réglementations québécoises (Règlement sur les services de garde éducatifs, Loi sur l'instruction publique).
+RÉGLEMENTATIONS : Conformes au Règlement sur les services de garde éducatifs et à la Loi sur l'instruction publique.
 
-Ton style : Professionnel, chaleureux, bienveillant et expert en petite enfance."""
+STYLE : Toujours professionnel, chaleureux, bienveillant et motivant. Pose des questions de qualification pour mieux accompagner."""
     
     # Récupération du contexte de conversation
     conversation_context = get_conversation_context(user_id, agent_id, max_messages=3)
@@ -149,7 +164,7 @@ Réponse:
         greeting = "Bonjour ! Je suis Elavira, votre assistante FormEduc ! 🎓\n\n" if is_first_message else ""
         response = f"{greeting}Je vois que vous vous intéressez à nos formations. FormEduc propose des formations spécialisées pour les professionnels de la petite enfance et du milieu scolaire :\n\n• **Secourisme service de garde** - Adapté à la petite enfance (8h) et milieu scolaire\n• **Formations garderie** - Programme de 45h pour RSG/RSGE\n• **Familles d'accueil** - Formations hybrides spécialisées\n• **Programme jeunesse** - Cours de gardien futé et animateur de camp\n• **Formations en ligne** - Accès 24h/24, certifications reconnues\n\nNos formations sont conformes au Règlement sur les services de garde éducatifs et à la Loi sur l'instruction publique. Quel est votre profil professionnel ?"
     elif "bonjour" in query_lower or "salut" in query_lower or "bonsoir" in query_lower:
-        response = "Bonjour et bienvenue sur FormEduc ! 👋\n\nJe suis Elavira, votre assistante virtuelle spécialisée dans les formations pour les professionnels de la petite enfance et du milieu scolaire.\n\nFormEduc vous propose :\n• **Secourisme** adapté à la petite enfance et milieu scolaire\n• **Formations 45h** pour RSG et RSGE\n• **Perfectionnements** pour éducatrices et éducateurs\n• **Formations en ligne** avec certifications reconnues\n\nComment puis-je vous aider aujourd'hui ?"
+        response = "Bonjour et bienvenue sur FormEduc ! 👋\n\nJe suis Elavira, votre assistante virtuelle. Je suis là pour vous accompagner dans votre parcours de formation professionnelle !\n\n**Comment puis-je vous aider aujourd'hui ?**\n\n• Découvrir nos formations adaptées à votre profil\n• Obtenir des informations sur nos tarifs et certifications\n• Vous guider dans votre processus d'inscription\n• Répondre à vos questions sur nos services\n\n**Quel est votre domaine d'activité ?** (Éducatrice, RSG, parent, famille d'accueil, etc.)"
     elif "tarif" in query_lower or "prix" in query_lower or "coût" in query_lower:
         response = f"Excellente question ! 💰\n\nNos tarifs varient selon le type de formation et votre profil :\n\n• **Formations individuelles** : Tarifs préférentiels pour les particuliers\n• **Formations en entreprise** : Devis personnalisés selon vos besoins\n• **Formations en ligne** : Accès flexible et économique\n\nPour obtenir un devis précis, pourriez-vous me préciser :\n- Le type de formation qui vous intéresse\n- Votre profil (particulier, entreprise, organisme)\n- Le nombre de participants\n\nJe pourrai alors vous orienter vers la meilleure option !"
     elif "certification" in query_lower or "certificat" in query_lower or "diplôme" in query_lower:
@@ -161,6 +176,18 @@ Réponse:
         response = f"Parfait ! 📚\n\nFormEduc propose de nombreux cours de perfectionnement pour éducatrices et éducateurs :\n\n• **Développement de l'enfant** - Formation complète et assistant/remplaçant\n• **Allergies ? Je réagis !** - Gestion des allergies en garderie\n• **Bien dormir pour bien grandir** - Troubles du sommeil\n• **Briser la chaîne infectieuse** - Prévention des infections\n• **Cultiver l'intelligence émotionnelle** de l'enfant\n• **De A à Z… 26 techniques d'intervention**\n• **La maltraitance** - Intervenir pour protéger l'enfant\n• **Le développement langagier** - Acquisition et dépistage\n\nCes formations vous permettent d'améliorer vos compétences professionnelles. Quel sujet vous intéresse ?"
     elif "enfant" in query_lower or "je suis" in query_lower:
         response = f"Je comprends ! 😊\n\nFormEduc propose aussi des formations pour les jeunes ! Nous avons un **Programme jeunesse** spécialement conçu :\n\n• **Cours de gardien futé et averti** en ligne\n• **Futé : Je suis prêt à rester seul** - Formation pour les adolescents\n• **Formation en secourisme** pour animateur de camp de jour et moniteur de camp de vacances\n\nCes formations sont parfaites pour les jeunes qui veulent apprendre les premiers soins et devenir des gardiens responsables !\n\nQuel âge avez-vous ? Je pourrai vous orienter vers la formation la plus adaptée !"
+    elif "éducatrice" in query_lower or "éducateur" in query_lower or "cpe" in query_lower or "garderie" in query_lower:
+        response = f"Parfait ! Vous travaillez en petite enfance ! 🧸\n\nFormEduc propose des formations spécialement conçues pour les éducatrices et éducateurs :\n\n• **Formations de perfectionnement** - Développement de l'enfant, allergies, maltraitance\n• **Secourisme adapté** à la petite enfance (8h)\n• **Formations 45h** pour RSG et RSGE\n• **Cours spécialisés** - Intelligence émotionnelle, prévention, intervention\n\n**Questions pour mieux vous accompagner :**\n- Travaillez-vous en CPE, garderie ou service de garde familial ?\n- Cherchez-vous une formation spécifique ou souhaitez-vous découvrir nos programmes ?\n\nJe peux vous guider vers la formation la plus adaptée à votre situation !"
+    elif "parent" in query_lower or "maman" in query_lower or "papa" in query_lower:
+        response = f"Excellente question ! 👨‍👩‍👧‍👦\n\nFormEduc propose des formations qui peuvent intéresser les parents :\n\n• **Programme jeunesse** - Pour former vos enfants aux premiers soins\n• **Formations de secourisme** - Pour être prêt en cas d'urgence\n• **Cours de gardien futé** - Pour vos adolescents qui gardent\n\n**Questions pour mieux vous orienter :**\n- Cherchez-vous une formation pour vous-même ou pour vos enfants ?\n- Avez-vous des enfants en bas âge ou des adolescents ?\n- Êtes-vous intéressé par les premiers soins ou d'autres sujets ?\n\nJe peux vous proposer la formation la plus adaptée à vos besoins familiaux !"
+    elif "famille d'accueil" in query_lower or "famille d'accueil" in query_lower:
+        response = f"Parfait ! Vous êtes famille d'accueil ! 🏠\n\nFormEduc propose des formations spécialisées pour les familles d'accueil :\n\n• **Formation hybride en secourisme** - Spécialement conçue pour les familles d'accueil\n• **Développement de l'enfant** - Comprendre les besoins spécifiques\n• **Gestion des allergies** - "Allergies ? Je réagis !"\n• **Intelligence émotionnelle** - Accompagner l'enfant dans son développement\n• **Prévention maltraitance** - Protéger et intervenir\n\n**Questions pour personnaliser votre parcours :**\n- Accueillez-vous des enfants de quel âge ?\n- Avez-vous déjà suivi des formations FormEduc ?\n- Y a-t-il des sujets particuliers qui vous préoccupent ?\n\nJe peux vous orienter vers les formations les plus pertinentes pour votre situation !"
+    elif "inscription" in query_lower or "inscrire" in query_lower or "acheter" in query_lower or "commander" in query_lower:
+        response = f"Parfait ! Je vais vous accompagner dans votre processus d'inscription ! 📝\n\n**Étapes pour vous inscrire :**\n\n1️⃣ **Choisir votre formation** - Quelle formation vous intéresse ?\n2️⃣ **Vérifier les prérequis** - Avez-vous les qualifications nécessaires ?\n3️⃣ **Créer votre compte** - Accès à la plateforme FormEduc\n4️⃣ **Paiement sécurisé** - Cartes de crédit acceptées\n5️⃣ **Accès immédiat** - Formation disponible 24h/24\n\n**Questions pour vous guider :**\n- Avez-vous déjà un compte FormEduc ?\n- Quelle formation souhaitez-vous suivre ?\n- Avez-vous des questions sur le processus de paiement ?\n\nJe peux vous accompagner à chaque étape !"
+    elif "aide" in query_lower or "support" in query_lower or "problème" in query_lower:
+        response = f"Je suis là pour vous aider ! 🤝\n\n**Comment puis-je vous assister ?**\n\n• **Questions techniques** - Problèmes d'accès, navigation\n• **Informations sur les formations** - Contenu, durée, certifications\n• **Processus d'inscription** - Guide étape par étape\n• **Paiement et facturation** - Questions tarifaires\n• **Support technique** - Difficultés avec la plateforme\n\n**Contactez-nous aussi :**\n📞 **418 842-7523**\n📧 **contact@formeduc.ca**\n📍 **5121 ave Chauveau Ouest, Québec, QC G2E 5A6 local 101**\n\nDécrivez-moi votre problème et je vous aiderai à le résoudre !"
+    elif "durée" in query_lower or "temps" in query_lower or "long" in query_lower:
+        response = f"Excellente question ! ⏰\n\n**Durées des formations FormEduc :**\n\n• **Secourisme petite enfance** - 8 heures\n• **Renouvellement secourisme** - 6 heures\n• **Formation 45h RSG/RSGE** - 45 heures (obligatoire)\n• **Perfectionnements** - 3 à 6 heures selon le cours\n• **Programme jeunesse** - 2 à 4 heures\n• **Familles d'accueil** - Durées variables selon le module\n\n**Avantages de nos formations :**\n✅ **100% en ligne** - À votre rythme\n✅ **Accès 24h/24** - Quand vous voulez\n✅ **Certification immédiate** - Dès la réussite\n\nQuelle formation vous intéresse ? Je peux vous donner plus de détails !"
     else:
         greeting = "Bonjour ! Je suis Elavira, votre assistante FormEduc ! 🎓\n\n" if is_first_message else ""
         response = f"{greeting}Je suis là pour vous accompagner dans vos besoins de formation professionnelle. FormEduc vous propose :\n\n• **Secourisme** - Service de garde, petite enfance, milieu scolaire\n• **Formations 45h** - Pour RSG et RSGE\n• **Perfectionnements** - Développement de l'enfant, allergies, maltraitance\n• **Familles d'accueil** - Formations hybrides spécialisées\n• **Programme jeunesse** - Gardien futé et animateur de camp\n• **Formations en ligne** - 100% à distance, certifications reconnues\n\nNos formations sont développées par des experts du terrain avec une vraie expérience pratique. Que souhaitez-vous savoir en particulier ?"
