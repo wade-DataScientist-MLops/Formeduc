@@ -7,6 +7,7 @@ import AgentCreatorModal from '../AgentCreator/AgentCreatorModal';
 const DashboardContainer = styled.div`
   min-height: 100vh;
   background: #ffffff;
+  padding: 24px;
 `;
 
 const DashboardHeader = styled.div`
@@ -336,9 +337,6 @@ export const AgentsManagementDashboard: React.FC = () => {
         }}
         onAgentCreated={handleAgentCreated}
       />
-      
-      {/* Debug */}
-      {console.log('État du modal:', isCreatorOpen)}
     </DashboardContainer>
   );
 };
