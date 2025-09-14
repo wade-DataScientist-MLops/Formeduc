@@ -357,7 +357,7 @@ async def send_message(message: MessageCreate):
             try:
                 from core.solenys_logic import ask_solenys
                 result = ask_solenys(question=message.text, user_id=message.user_id)
-                response_text = result.get("response", "Désolé, je ne peux pas répondre pour le moment.")
+                response_text = result.get("text", "Désolé, je ne peux pas répondre pour le moment.")
                 selected_agent = "Solenys Assistant"
                 print(f"[DEBUG] Réponse Solenys générée: {response_text[:100]}...")
                 
@@ -423,7 +423,7 @@ async def send_message(message: MessageCreate):
                 try:
                     from core.solenys_logic import ask_solenys
                     result = ask_solenys(question=message.text, user_id=message.user_id)
-                    response_text = result.get("response", "Désolé, je ne peux pas répondre pour le moment.")
+                    response_text = result.get("text", "Désolé, je ne peux pas répondre pour le moment.")
                     selected_agent = "Solenys Assistant"
                     print(f"[DEBUG] Réponse Solenys auto générée: {response_text[:100]}...")
                     
