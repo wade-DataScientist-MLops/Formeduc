@@ -105,9 +105,9 @@ const getAvatarContent = (message: Message) => {
 
 const getAvatarImage = (selectedAgentId: string) => {
   if (selectedAgentId === 'elavira') {
-    return '/images/elavira-real.png';
+    return '/images/elavira-real.png'; // Garde l'image existante d'Elavira
   } else if (selectedAgentId === 'solenys') {
-    return '/images/solenys-banner.svg';
+    return '/avatars/solenys.svg'; // Utilise le nouveau SVG de Solenys
   }
   return null;
 };

@@ -90,6 +90,14 @@ const AgentIcon = styled.div`
   justify-content: center;
   color: white;
   font-size: 24px;
+  overflow: hidden;
+`;
+
+const AgentIconImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
 `;
 
 const AgentInfo = styled.div`
@@ -273,7 +281,21 @@ export const AgentsManagementDashboard: React.FC = () => {
           >
             <AgentHeader>
               <AgentIcon>
-                {agent.id === 'elavira' ? '🎓' : agent.id === 'solenys' ? '👨‍🏫' : '🤖'}
+                {agent.id === 'solenys' ? (
+                  <AgentIconImage 
+                    src="/avatars/solenys.svg" 
+                    alt="Solenys"
+                    onError={(e) => {
+                      // Fallback vers l'emoji si l'image ne charge pas
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = '👨‍🏫';
+                      }
+                    }}
+                  />
+                ) : agent.id === 'elavira' ? '🎓' : '🤖'}
               </AgentIcon>
               <AgentInfo>
                 <AgentName>{agent.name}</AgentName>
