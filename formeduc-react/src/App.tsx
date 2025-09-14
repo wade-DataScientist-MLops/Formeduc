@@ -3,7 +3,7 @@ import styled, { createGlobalStyle } from 'styled-components';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthWithCarousel } from './components/Auth/AuthWithCarousel';
 import { ChatInterface } from './components/Chat/ChatInterface';
-import { AgentsDashboard } from './components/Agents/AgentsDashboard';
+import { AgentsManagementDashboard } from './components/Dashboard/AgentsManagementDashboard';
 import { MainLayout } from './components/Layout/MainLayout';
 
 const GlobalStyle = createGlobalStyle`
@@ -174,7 +174,7 @@ function AppContent() {
       case 'agents':
         return (
           <MainLayout>
-            <AgentsDashboard />
+            <AgentsManagementDashboard />
           </MainLayout>
         );
       case 'chat':
@@ -186,7 +186,7 @@ function AppContent() {
       default:
         return (
           <MainLayout>
-            <AgentsDashboard />
+            <AgentsManagementDashboard />
           </MainLayout>
         );
     }
