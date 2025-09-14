@@ -197,43 +197,23 @@ const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'danger'
 
 const agents = [
   {
-    id: 'assistant',
-    name: 'Assistant',
-    role: 'Assistant général polyvalent',
-    description: 'Assistant capable d\'aider avec diverses tâches',
-    capabilities: ['qwen2.5:7b', 'rag.search', 'rag.answer', 'math.evaluate', '+2 autres'],
+    id: 'elavira',
+    name: 'Elavira',
+    role: 'Spécialiste Formeduc',
+    description: 'Spécialiste des formations professionnelles Formeduc : secourisme, premiers soins, SST et formations en entreprise.',
+    capabilities: ['Formations professionnelles', 'Secourisme', 'Premiers soins', 'SST', 'Formations entreprise'],
     status: 'Active',
-    createdAt: '2025-09-03',
-    knowledgePacks: 0
-  },
-  {
-    id: 'prog',
-    name: 'Prog',
-    role: 'Programmeur',
-    description: 'Programmeur',
-    capabilities: ['qwen2.5:7b'],
-    status: 'Active',
-    createdAt: '2025-09-05',
-    knowledgePacks: 0
-  },
-  {
-    id: 'chef',
-    name: 'Chef',
-    role: 'Chef cuisinier spécialisé',
-    description: 'Grand chef cuisinier',
-    capabilities: ['qwen2.5:7b', 'rag.search', 'math.evaluate', 'rag.answer', '+1 autres'],
-    status: 'Active',
-    createdAt: '2025-09-03',
-    knowledgePacks: 2
+    createdAt: '2025-09-14',
+    knowledgePacks: 3
   },
   {
     id: 'solenys',
     name: 'Solenys',
-    role: 'Professeur et tuteur',
-    description: 'Tuteur pédagogique qui explique clairement, guide pas à pas, crée des exercices et évalue la compréhension.',
-    capabilities: ['qwen2.5:7b', 'rag.search', 'rag.answer', 'math.evaluate', '+4 autres'],
+    role: 'Professeur québécois',
+    description: 'Professeur spécialisé dans l\'enseignement secondaire selon le programme PFEQ du Québec.',
+    capabilities: ['Mathématiques', 'Sciences', 'Français', 'Programme PFEQ', 'Enseignement secondaire'],
     status: 'Active',
-    createdAt: '2025-09-03',
+    createdAt: '2025-09-14',
     knowledgePacks: 2
   }
 ];
@@ -279,7 +259,9 @@ export const AgentsManagementDashboard: React.FC = () => {
             onClick={() => handleAgentSelect(agent.id)}
           >
             <AgentHeader>
-              <AgentIcon>🤖</AgentIcon>
+              <AgentIcon>
+                {agent.id === 'elavira' ? '🎓' : agent.id === 'solenys' ? '👨‍🏫' : '🤖'}
+              </AgentIcon>
               <AgentInfo>
                 <AgentName>{agent.name}</AgentName>
                 <AgentRole>{agent.role}</AgentRole>
