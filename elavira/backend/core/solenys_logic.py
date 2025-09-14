@@ -111,8 +111,17 @@ Instructions:
 
 Réponse:
 """
-        # Temporaire : réponse simple pour tester
-        response_text = f"Je suis Solenys, ton professeur québécois. Tu me demandes : {question}. Je vais t'aider avec ça !"
+        # Réponse personnalisée de Solenys
+        if "math" in question.lower() or "mathématiques" in question.lower():
+            response_text = f"Salut ! Je suis Solenys, ton prof de mathématiques ! 📐\n\nTu demandes : '{question}'\n\nJe peux t'aider avec :\n• Algèbre et équations\n• Géométrie\n• Statistiques et probabilités\n• Fonctions et graphiques\n• Calcul différentiel et intégral\n\nQuelle matière veux-tu qu'on travaille ?"
+        elif "science" in question.lower() or "physique" in question.lower() or "chimie" in question.lower():
+            response_text = f"Salut ! Je suis Solenys, ton prof de sciences ! 🔬\n\nTu demandes : '{question}'\n\nJe peux t'aider avec :\n• Physique (mécanique, électricité, ondes)\n• Chimie (réactions, liaisons, équilibres)\n• Biologie (cellules, génétique, évolution)\n\nQuelle matière scientifique t'intéresse ?"
+        elif "français" in question.lower() or "littérature" in question.lower():
+            response_text = f"Salut ! Je suis Solenys, ton prof de français ! 📚\n\nTu demandes : '{question}'\n\nJe peux t'aider avec :\n• Grammaire et syntaxe\n• Littérature québécoise\n• Analyse de textes\n• Rédaction et composition\n• Communication orale\n\nQuel aspect du français veux-tu travailler ?"
+        elif "bonjour" in question.lower() or "salut" in question.lower():
+            response_text = "Salut ! Je suis Solenys, ton professeur québécois ! 👋\n\nJe suis spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec. Je peux t'aider en mathématiques, sciences, français, et autres matières.\n\nQuelle matière veux-tu qu'on travaille ensemble ?"
+        else:
+            response_text = f"Salut ! Je suis Solenys, ton professeur québécois ! 🎓\n\nTu me demandes : '{question}'\n\nJe suis spécialisé dans l'enseignement secondaire selon le programme PFEQ. Je peux t'aider en mathématiques, sciences, français, histoire, géographie, et plus encore !\n\nQuelle matière veux-tu qu'on explore ?"
 
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, "solenys", "user", question)

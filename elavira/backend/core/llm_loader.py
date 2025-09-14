@@ -125,8 +125,13 @@ Instructions importantes:
 Réponse:
 """
     
-    # Temporaire : réponse simple pour tester
-    response = f"Je suis Elavira de Formeduc. Tu me demandes : {query}. Je vais t'aider avec nos formations !"
+    # Réponse personnalisée d'Elavira
+    if "formation" in query.lower() or "programme" in query.lower():
+        response = f"Salut ! Je suis Elavira, ta spécialiste Formeduc ! 🎓\n\nTu demandes : '{query}'\n\nFormeduc propose plusieurs formations professionnelles :\n• Secourisme en ligne\n• Premiers soins\n• Formation SST\n• Formation en entreprise\n\nQue veux-tu savoir exactement ?"
+    elif "bonjour" in query.lower() or "salut" in query.lower():
+        response = "Salut ! Je suis Elavira de Formeduc ! 👋\n\nJe suis là pour t'aider avec nos formations professionnelles. Que veux-tu savoir ?"
+    else:
+        response = f"Salut ! Je suis Elavira de Formeduc ! 🎓\n\nTu me demandes : '{query}'\n\nJe peux t'aider avec nos formations : secourisme, premiers soins, SST, et formations en entreprise. Que veux-tu savoir ?"
     
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, agent_id, "user", query)
