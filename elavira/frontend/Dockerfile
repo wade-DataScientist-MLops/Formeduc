@@ -1,9 +1,20 @@
-FROM python:3.10-slim
+# Dockerfile pour l'application React
+FROM node:18-alpine
 
+# Définir le répertoire de travail
 WORKDIR /app
 
+# Copier les fichiers package.json et package-lock.json
+COPY package*.json ./
+
+# Installer les dépendances
+RUN npm install
+
+# Copier le reste du code source
 COPY . .
 
-RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
+# Exposer le port 3000
+EXPOSE 3000
 
-CMD ["streamlit", "run", "app.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
+# Commande pour démarrer l'application
+CMD ["npm", "start"]
