@@ -111,7 +111,8 @@ Instructions:
 
 Réponse:
 """
-        response_text = ollama_generate_simple(full_prompt, "")
+        # Temporaire : réponse simple pour tester
+        response_text = f"Je suis Solenys, ton professeur québécois. Tu me demandes : {question}. Je vais t'aider avec ça !"
 
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, "solenys", "user", question)
