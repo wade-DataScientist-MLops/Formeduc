@@ -125,8 +125,8 @@ Instructions importantes:
 Réponse:
 """
     
-    # Générer la réponse
-    response = ollama_generate(prompt)
+    # Temporaire : réponse simple pour tester
+    response = f"Je suis Elavira de Formeduc. Tu me demandes : {query}. Je vais t'aider avec nos formations !"
     
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, agent_id, "user", query)
