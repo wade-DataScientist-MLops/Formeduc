@@ -14,6 +14,7 @@ import random
 # Import des fonctions de ChromaDB et Ollama
 # Assurez-vous que ces imports sont corrects pour votre structure de projet
 from core.chroma_client import collection, embedder, ollama_generate, query_documents
+from core.llm_loader import rag_generate
 from core.conversation_memory import add_message
 from core.master_agent import master_agent
 
@@ -342,7 +343,7 @@ async def send_message(message: MessageCreate):
                 )
 
                 loop = asyncio.get_running_loop()
-                response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+                response_text = await loop.run_in_executor(executor, rag_generate, message.text, None, message.user_id, "elavira")
                 selected_agent = "Elavira Assistant"
                 print(f"[DEBUG] Réponse Elavira générée: {response_text[:100]}...")
                 
@@ -408,7 +409,7 @@ async def send_message(message: MessageCreate):
                     )
 
                     loop = asyncio.get_running_loop()
-                    response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+                    response_text = await loop.run_in_executor(executor, rag_generate, message.text, None, message.user_id, "elavira")
                     selected_agent = "Elavira Assistant"
                     print(f"[DEBUG] Réponse Elavira auto générée: {response_text[:100]}...")
                     
@@ -457,8 +458,8 @@ async def send_message(message: MessageCreate):
                     )
 
                     loop = asyncio.get_running_loop()
-                    response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
-                    selected_agent = "Elavira (défaut)"
+                    response_text = await loop.run_in_executor(executor, rag_generate, message.text, None, message.user_id, "elavira")
+                    selected_agent = "Elavira Assistant"
                     print(f"[DEBUG] Réponse Elavira défaut générée: {response_text[:100]}...")
                     
                 except Exception as e:
@@ -502,8 +503,8 @@ async def send_message(message: MessageCreate):
             )
 
             loop = asyncio.get_running_loop()
-            response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
-            selected_agent = "Elavira (fallback)"
+            response_text = await loop.run_in_executor(executor, rag_generate, message.text, None, message.user_id, "elavira")
+            selected_agent = "Elavira Assistant"
             print(f"[FALLBACK] Réponse Elavira générée: {response_text[:100]}...")
             
         except Exception as fallback_error:
