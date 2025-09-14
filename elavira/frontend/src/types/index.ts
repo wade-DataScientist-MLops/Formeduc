@@ -32,7 +32,7 @@ export interface TranscribeResponse {
 export type AgentType = 'agent-001' | 'agent-002' | 'elavira' | 'solenys';
 
 export interface AppState {
-  page: 'auth' | 'chat' | 'agents';
+  page: 'auth' | 'chat' | 'agents' | 'register' | 'login';
   messages: Message[];
   access_token: string | null;
   logged_in_user: string | null;
