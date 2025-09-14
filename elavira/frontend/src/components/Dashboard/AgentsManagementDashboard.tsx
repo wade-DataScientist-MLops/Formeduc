@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { AgentType } from '../../types';
+import AgentCreatorModal from '../AgentCreator/AgentCreatorModal';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
@@ -221,6 +222,7 @@ const agents = [
 export const AgentsManagementDashboard: React.FC = () => {
   const { dispatch } = useApp();
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
+  const [isCreatorOpen, setIsCreatorOpen] = useState(false);
 
   const handleAgentSelect = (agentId: string) => {
     dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });
@@ -237,6 +239,12 @@ export const AgentsManagementDashboard: React.FC = () => {
     console.log('Supprimer agent:', agentId);
   };
 
+  const handleAgentCreated = (newAgent: any) => {
+    // Ajouter le nouvel agent à la liste
+    agents.push(newAgent);
+    console.log('Nouvel agent créé:', newAgent);
+  };
+
   return (
     <DashboardContainer>
       <DashboardHeader>
@@ -245,9 +253,9 @@ export const AgentsManagementDashboard: React.FC = () => {
       </DashboardHeader>
 
       <DashboardActions>
-        <AddAgentButton>
+        <AddAgentButton onClick={() => setIsCreatorOpen(true)}>
           <span>+</span>
-          Nouvel agent
+          Créer un agent
         </AddAgentButton>
       </DashboardActions>
 
@@ -315,6 +323,12 @@ export const AgentsManagementDashboard: React.FC = () => {
           </AgentCard>
         ))}
       </AgentsGrid>
+
+      <AgentCreatorModal
+        isOpen={isCreatorOpen}
+        onClose={() => setIsCreatorOpen(false)}
+        onAgentCreated={handleAgentCreated}
+      />
     </DashboardContainer>
   );
 };

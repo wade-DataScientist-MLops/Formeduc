@@ -10,6 +10,7 @@ from api import routes_users
 from api import routes_chat
 from api import solenys_router
 from api import routes_external_api
+from api import routes_agents
 
 # --- ChromaDB ---
 import chromadb
@@ -49,6 +50,8 @@ app.include_router(routes_chat.router)
 app.include_router(solenys_router.router, prefix="/solenys")
 # API externe pour applications tierces
 app.include_router(routes_external_api.router)
+# API pour la gestion des agents
+app.include_router(routes_agents.router)
 
 # --- ChromaDB Setup (CORRIGÉ) ---
 script_dir = os.path.dirname(__file__)

@@ -1,172 +1,284 @@
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Any, Optional
+import json
+import uuid
+from datetime import datetime
 import os
 
-# --- Import des routeurs (si tu veux les activer plus tard) ---
-from api import routes_users
-from api import routes_chat
-# from api import routes_agents
+router = APIRouter(prefix="/api/agents", tags=["Agents"])
 
-# --- ChromaDB ---
-import chromadb
+# Modèles de données
+class AgentConfig(BaseModel):
+    name: str
+    role: str
+    description: str
+    model: str
+    timeout: int = 30000
+    temperature: float = 0.6
+    maxTokens: int = 400
+    topK: int = 40
+    topP: float = 0.9
+    repetitionPenalty: float = 1.0
+    stopWords: str = "User:\nÉlève:\nAssistant:"
+    systemPrompt: str
+    tools: Dict[str, bool]
+    knowledgePacks: Dict[str, bool]
 
-# --- Initialisation FastAPI ---
-app = FastAPI(
-    title="API Elavira",
-    description="Une API pour l'assistant intelligent Elavira",
-    version="0.0.1",
-)
-
-# --- CORS ---
-origins = [
-    "http://localhost",
-    "http://127.0.0.1:8000",
-    "http://localhost:3000",   # React
-    "http://localhost:8501",   # Streamlit
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# --- Routeurs utilisateurs/chat ---
-app.include_router(routes_users.router)
-app.include_router(routes_chat.router)
-# app.include_router(routes_agents.router)  # À activer plus tard
-
-# --- ChromaDB Setup ---
-def get_chroma_client(persistent: bool = True, path: str = "./chroma_data"):
-    if persistent:
-        os.makedirs(path, exist_ok=True)
-        print(f"✅ ChromaDB persistant à : {os.path.abspath(path)}")
-        return chromadb.PersistentClient(path=path)
-    else:
-        print("🧪 Client ChromaDB en mémoire")
-        return chromadb.Client()
-
-def get_chroma_collection(client, name="elavira_collection"):
-    return client.get_or_create_collection(name)
-
-# --- Initialisation ChromaDB ---
-script_dir = os.path.dirname(__file__)
-chroma_db_path = os.path.join(script_dir, "chroma_data")
-
-chroma_client = get_chroma_client(persistent=True, path=chroma_db_path)
-collection = get_chroma_collection(chroma_client, "elavira_collection")
-
-# --- Modèles ---
-class AddDocumentsRequest(BaseModel):
-    texts: List[str]
-
-class EmbeddingItem(BaseModel):
+class AgentResponse(BaseModel):
     id: str
-    embedding: List[float]
-    document: str
+    name: str
+    role: str
+    description: str
+    model: str
+    status: str
+    createdAt: str
+    config: Dict[str, Any]
 
-class QueryRequest(BaseModel):
-    query_embedding: List[float]
-    n_results: int = 5
+# Stockage des agents (en production, utiliser une base de données)
+agents_db = {}
 
-# --- Endpoints ---
-@app.get("/")
-async def read_root():
-    return {"message": "Bienvenue sur l'API Elavira!"}
-
-@app.post("/add_documents/")
-async def add_documents(request: AddDocumentsRequest):
+@router.post("/create", response_model=AgentResponse)
+async def create_agent(agent_config: AgentConfig):
+    """Créer un nouvel agent avec configuration complète"""
     try:
-        print(f"📥 Documents reçus : {request.texts}")
-        ids = [f"doc_{i}" for i in range(collection.count(), collection.count() + len(request.texts))]
-        collection.add(documents=request.texts, ids=ids)
-        print(f"✅ {len(request.texts)} documents ajoutés.")
-        return {"message": "Documents ajoutés", "ids": ids}
+        # Générer un ID unique
+        agent_id = str(uuid.uuid4())
+        
+        # Créer la configuration de l'agent
+        agent_data = {
+            "id": agent_id,
+            "name": agent_config.name,
+            "role": agent_config.role,
+            "description": agent_config.description,
+            "model": agent_config.model,
+            "status": "Active",
+            "createdAt": datetime.now().isoformat(),
+            "config": {
+                "timeout": agent_config.timeout,
+                "temperature": agent_config.temperature,
+                "maxTokens": agent_config.maxTokens,
+                "topK": agent_config.topK,
+                "topP": agent_config.topP,
+                "repetitionPenalty": agent_config.repetitionPenalty,
+                "stopWords": agent_config.stopWords,
+                "systemPrompt": agent_config.systemPrompt,
+                "tools": agent_config.tools,
+                "knowledgePacks": agent_config.knowledgePacks
+            }
+        }
+        
+        # Sauvegarder l'agent
+        agents_db[agent_id] = agent_data
+        
+        # Créer le fichier de configuration de l'agent
+        await save_agent_config(agent_id, agent_data)
+        
+        # Initialiser les outils de l'agent
+        await initialize_agent_tools(agent_id, agent_config)
+        
+        return AgentResponse(**agent_data)
+        
     except Exception as e:
-        print(f"❌ Erreur ajout documents : {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erreur ajout documents : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la création de l'agent: {str(e)}")
 
-@app.post("/chroma/add_embedding/")
-async def add_embedding(item: EmbeddingItem):
+@router.get("/", response_model=List[AgentResponse])
+async def list_agents():
+    """Lister tous les agents créés"""
+    return list(agents_db.values())
+
+@router.get("/{agent_id}", response_model=AgentResponse)
+async def get_agent(agent_id: str):
+    """Récupérer un agent spécifique"""
+    if agent_id not in agents_db:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    return agents_db[agent_id]
+
+@router.put("/{agent_id}", response_model=AgentResponse)
+async def update_agent(agent_id: str, agent_config: AgentConfig):
+    """Mettre à jour un agent existant"""
+    if agent_id not in agents_db:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
     try:
+        # Mettre à jour les données
+        agents_db[agent_id].update({
+            "name": agent_config.name,
+            "role": agent_config.role,
+            "description": agent_config.description,
+            "model": agent_config.model,
+            "config": {
+                "timeout": agent_config.timeout,
+                "temperature": agent_config.temperature,
+                "maxTokens": agent_config.maxTokens,
+                "topK": agent_config.topK,
+                "topP": agent_config.topP,
+                "repetitionPenalty": agent_config.repetitionPenalty,
+                "stopWords": agent_config.stopWords,
+                "systemPrompt": agent_config.systemPrompt,
+                "tools": agent_config.tools,
+                "knowledgePacks": agent_config.knowledgePacks
+            }
+        })
+        
+        # Sauvegarder la configuration mise à jour
+        await save_agent_config(agent_id, agents_db[agent_id])
+        
+        return agents_db[agent_id]
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour: {str(e)}")
+
+@router.delete("/{agent_id}")
+async def delete_agent(agent_id: str):
+    """Supprimer un agent"""
+    if agent_id not in agents_db:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    try:
+        # Supprimer l'agent de la base de données
+        del agents_db[agent_id]
+        
+        # Supprimer les fichiers de configuration
+        await delete_agent_config(agent_id)
+        
+        return {"message": "Agent supprimé avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression: {str(e)}")
+
+@router.post("/{agent_id}/upload")
+async def upload_document(agent_id: str, file: UploadFile = File(...)):
+    """Télécharger un document pour l'indexation RAG d'un agent"""
+    if agent_id not in agents_db:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    try:
+        # Créer le dossier de l'agent s'il n'existe pas
+        agent_dir = f"agents/{agent_id}/documents"
+        os.makedirs(agent_dir, exist_ok=True)
+        
+        # Sauvegarder le fichier
+        file_path = os.path.join(agent_dir, file.filename)
+        with open(file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        # Indexer le document pour le RAG
+        await index_document_for_agent(agent_id, file_path)
+        
+        return {"message": f"Document {file.filename} téléchargé et indexé avec succès"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du téléchargement: {str(e)}")
+
+@router.post("/{agent_id}/chat")
+async def chat_with_agent(agent_id: str, message: str, user_id: str = "default"):
+    """Chatter avec un agent spécifique"""
+    if agent_id not in agents_db:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    try:
+        agent_data = agents_db[agent_id]
+        
+        # Utiliser la logique de génération appropriée selon la configuration
+        response = await generate_agent_response(agent_data, message, user_id)
+        
+        return {
+            "id": str(uuid.uuid4()),
+            "text": response,
+            "user_id": f"{agent_data['name']} Assistant",
+            "timestamp": datetime.now().isoformat(),
+            "agent_id": agent_id
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération: {str(e)}")
+
+# Fonctions utilitaires
+async def save_agent_config(agent_id: str, agent_data: dict):
+    """Sauvegarder la configuration d'un agent dans un fichier"""
+    config_dir = f"agents/{agent_id}"
+    os.makedirs(config_dir, exist_ok=True)
+    
+    config_path = os.path.join(config_dir, "config.json")
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump(agent_data, f, indent=2, ensure_ascii=False)
+
+async def delete_agent_config(agent_id: str):
+    """Supprimer les fichiers de configuration d'un agent"""
+    import shutil
+    agent_dir = f"agents/{agent_id}"
+    if os.path.exists(agent_dir):
+        shutil.rmtree(agent_dir)
+
+async def initialize_agent_tools(agent_id: str, agent_config: AgentConfig):
+    """Initialiser les outils d'un agent selon sa configuration"""
+    # Créer le dossier des outils
+    tools_dir = f"agents/{agent_id}/tools"
+    os.makedirs(tools_dir, exist_ok=True)
+    
+    # Créer les fichiers de configuration pour chaque outil activé
+    for tool, enabled in agent_config.tools.items():
+        if enabled:
+            tool_config = {
+                "name": tool,
+                "enabled": True,
+                "config": {}
+            }
+            
+            tool_path = os.path.join(tools_dir, f"{tool}.json")
+            with open(tool_path, "w", encoding="utf-8") as f:
+                json.dump(tool_config, f, indent=2)
+
+async def index_document_for_agent(agent_id: str, file_path: str):
+    """Indexer un document pour le RAG d'un agent"""
+    try:
+        from core.chroma_client import collection, embedder
+        
+        # Lire le contenu du fichier
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        
+        # Créer l'embedding
+        embedding = embedder.encode(content)
+        
+        # Ajouter au ChromaDB avec l'ID de l'agent
         collection.add(
-            ids=[item.id],
-            embeddings=[item.embedding],
-            documents=[item.document]
+            documents=[content],
+            embeddings=[embedding.tolist()],
+            metadatas=[{
+                "agent_id": agent_id,
+                "filename": os.path.basename(file_path),
+                "timestamp": datetime.now().isoformat()
+            }],
+            ids=[f"{agent_id}_{os.path.basename(file_path)}_{uuid.uuid4()}"]
         )
-        return {"status": "embedding added", "id": item.id}
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur ajout embedding : {str(e)}")
+        print(f"Erreur lors de l'indexation: {e}")
 
-@app.post("/chroma/query/")
-async def query_embedding(request: QueryRequest):
+async def generate_agent_response(agent_data: dict, message: str, user_id: str):
+    """Générer une réponse avec un agent configuré"""
     try:
-        results = collection.query(
-            query_embeddings=[request.query_embedding],
-            n_results=request.n_results,
-            include=['documents', 'distances', 'metadatas']
-        )
-        return results
+        from core.llm_loader import ollama_generate
+        
+        # Construire le prompt avec la configuration de l'agent
+        system_prompt = agent_data["config"]["systemPrompt"]
+        
+        full_prompt = f"""
+{system_prompt}
+
+Question de l'utilisateur: {message}
+
+Réponse:
+"""
+        
+        # Générer la réponse avec Ollama
+        response = ollama_generate(full_prompt, model=agent_data["model"])
+        
+        return response
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erreur requête embeddings : {str(e)}")
-
-# --- Endpoints du routeur chat (assurez-vous qu'ils existent et sont conformes) ---
-# Si vous avez un fichier 'backend/api/routes_chat.py' qui gère le chat,
-# voici un rappel de ce à quoi il pourrait ressembler pour l'historique :
-
-# Contenu possible de backend/api/routes_chat.py
-# (Ce n'est qu'un exemple, assurez-vous que votre fichier réel est comme ceci ou adapté)
-
-# from fastapi import APIRouter, HTTPException
-# from pydantic import BaseModel
-# from typing import List, Dict
-
-# router = APIRouter(
-#     prefix="/chat",
-#     tags=["Chat"],
-# )
-
-# # Modèles de Pydantic pour les messages
-# class ChatMessage(BaseModel):
-#     user_id: str
-#     text: str
-#     timestamp: str # Ou datetime.datetime si vous voulez une vraie date
-
-# class SendMessageRequest(BaseModel):
-#     user_id: str
-#     text: str
-
-# class ChatHistoryResponse(BaseModel):
-#     history: List[ChatMessage] # <--- C'est cette structure qui est attendue si vous utilisez .get('history')
-
-# # Historique de chat en mémoire (pour les tests)
-# chat_history_db: List[ChatMessage] = []
-
-# @router.post("/send_message/")
-# async def send_message(message: SendMessageRequest):
-#     """Envoie un message au système de chat."""
-#     # Ici, vous traiteriez le message (par exemple, l'envoyer à un LLM, etc.)
-#     # Pour l'instant, on l'ajoute simplement à l'historique
-#     new_message = ChatMessage(
-#         user_id=message.user_id,
-#         text=message.text,
-#         timestamp=datetime.datetime.now().isoformat() + "Z"
-#     )
-#     chat_history_db.append(new_message)
-#     print(f"📥 Message reçu de {message.user_id}: {message.text}")
-#     return {"status": "Message received", "message": new_message}
-
-# @router.get("/history/", response_model=ChatHistoryResponse) # <-- Cette ligne indique que la réponse doit être un ChatHistoryResponse
-# async def get_chat_history():
-#     """Récupère l'historique des conversations."""
-#     print("🔄 Requête reçue pour l'historique du chat.")
-#     # Assurez-vous que le "return" correspond à ChatHistoryResponse
-#     return {"history": chat_history_db} # <--- Votre main.py attend que vous renvoyiez un dictionnaire ici
-
-# @router.get("/")
-# async def get_chat_status():
-#     return {"message": "Chat API is running", "status": "ok"}
+        return f"Désolé, je rencontre des difficultés techniques: {str(e)}"
