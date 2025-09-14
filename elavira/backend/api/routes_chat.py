@@ -343,13 +343,13 @@ async def send_message(message: MessageCreate):
 
                 loop = asyncio.get_running_loop()
                 response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
-                selected_agent = "Elavira"
+                selected_agent = "Elavira Assistant"
                 print(f"[DEBUG] Réponse Elavira générée: {response_text[:100]}...")
                 
             except Exception as e:
                 print(f"[ERROR] Erreur Elavira: {e}")
                 response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
-                selected_agent = "Elavira"
+                selected_agent = "Elavira Assistant"
                 
         elif agent_preference == "solenys":
             # Utiliser Solenys
@@ -358,13 +358,13 @@ async def send_message(message: MessageCreate):
                 from core.solenys_logic import ask_solenys
                 result = ask_solenys(question=message.text, user_id=message.user_id)
                 response_text = result.get("response", "Désolé, je ne peux pas répondre pour le moment.")
-                selected_agent = "Solenys"
+                selected_agent = "Solenys Assistant"
                 print(f"[DEBUG] Réponse Solenys générée: {response_text[:100]}...")
                 
             except Exception as e:
                 print(f"[ERROR] Erreur Solenys: {e}")
                 response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
-                selected_agent = "Solenys"
+                selected_agent = "Solenys Assistant"
         else:
             # Auto-routing basé sur le contenu
             print("[DEBUG] Auto-routing basé sur le contenu")
@@ -409,13 +409,13 @@ async def send_message(message: MessageCreate):
 
                     loop = asyncio.get_running_loop()
                     response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
-                    selected_agent = "Elavira (auto)"
+                    selected_agent = "Elavira Assistant"
                     print(f"[DEBUG] Réponse Elavira auto générée: {response_text[:100]}...")
                     
                 except Exception as e:
                     print(f"[ERROR] Erreur Elavira auto: {e}")
                     response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
-                    selected_agent = "Elavira (auto)"
+                    selected_agent = "Elavira Assistant"
                     
             elif any(keyword in message_lower for keyword in solenys_keywords):
                 # Router vers Solenys
@@ -424,13 +424,13 @@ async def send_message(message: MessageCreate):
                     from core.solenys_logic import ask_solenys
                     result = ask_solenys(question=message.text, user_id=message.user_id)
                     response_text = result.get("response", "Désolé, je ne peux pas répondre pour le moment.")
-                    selected_agent = "Solenys (auto)"
+                    selected_agent = "Solenys Assistant"
                     print(f"[DEBUG] Réponse Solenys auto générée: {response_text[:100]}...")
                     
                 except Exception as e:
                     print(f"[ERROR] Erreur Solenys auto: {e}")
                     response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
-                    selected_agent = "Solenys (auto)"
+                    selected_agent = "Solenys Assistant"
             else:
                 # Par défaut, utiliser Elavira
                 print("[DEBUG] Routing par défaut vers Elavira")

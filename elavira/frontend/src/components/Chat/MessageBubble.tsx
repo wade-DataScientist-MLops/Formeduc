@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Message } from '../../types';
+import { useApp } from '../../context/AppContext';
 
 const MessageRow = styled.div<{ isUser: boolean }>`
   display: flex;
@@ -102,10 +103,10 @@ const getAvatarContent = (message: Message) => {
   }
 };
 
-const getAvatarImage = (message: Message) => {
-  if (message.user_id === 'Elavira Assistant') {
+const getAvatarImage = (selectedAgentId: string) => {
+  if (selectedAgentId === 'elavira') {
     return '/images/elavira-real.png';
-  } else if (message.user_id === 'Solenys Assistant') {
+  } else if (selectedAgentId === 'solenys') {
     return '/images/solenys-banner.svg';
   }
   return null;
@@ -128,9 +129,10 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
+  const { state } = useApp();
   const isUser = !message.user_id.includes('Assistant');
-  const isElavira = message.user_id === 'Elavira Assistant';
-  const isSolenys = message.user_id === 'Solenys Assistant';
+  const isElavira = state.selected_agent_id === 'elavira';
+  const isSolenys = state.selected_agent_id === 'solenys';
 
   return (
     <MessageRow isUser={isUser}>
@@ -141,7 +143,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
           isSolenys={isSolenys}
         >
           {(() => {
-            const avatarImage = getAvatarImage(message);
+            const avatarImage = getAvatarImage(state.selected_agent_id || '');
             return avatarImage ? (
               <AvatarImage 
                 src={avatarImage} 
