@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { motion, AnimatePresence } from 'framer-motion';
+// import { motion } from 'framer-motion';
 
 interface AgentCreatorModalProps {
   isOpen: boolean;
@@ -8,7 +8,7 @@ interface AgentCreatorModalProps {
   onAgentCreated: (agent: any) => void;
 }
 
-const ModalOverlay = styled(motion.div)`
+const ModalOverlay = styled.div`
   position: fixed;
   top: 0;
   left: 0;
@@ -21,7 +21,7 @@ const ModalOverlay = styled(motion.div)`
   z-index: 1000;
 `;
 
-const ModalContent = styled(motion.div)`
+const ModalContent = styled.div`
   background: white;
   border-radius: 12px;
   width: 90%;
@@ -373,21 +373,11 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
     { id: 'tools', label: 'Outils', icon: '🔧' }
   ];
 
+  if (!isOpen) return null;
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <ModalOverlay
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-        >
-          <ModalContent
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-          >
+    <ModalOverlay onClick={onClose}>
+      <ModalContent onClick={(e) => e.stopPropagation()}>
             <ModalHeader>
               <ModalTitle>Créer un nouvel agent</ModalTitle>
               <CloseButton onClick={onClose}>×</CloseButton>
@@ -681,9 +671,7 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
               </Button>
             </ButtonGroup>
           </ModalContent>
-        </ModalOverlay>
-      )}
-    </AnimatePresence>
+    </ModalOverlay>
   );
 };
 
