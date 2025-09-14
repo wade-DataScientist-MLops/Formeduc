@@ -318,8 +318,10 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
 
   const handleSubmit = async () => {
     try {
+      console.log('Données du formulaire:', formData);
+      
       // Créer l'agent via l'API
-      const response = await fetch('/api/agents/create', {
+      const response = await fetch('http://localhost:8000/api/agents/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -327,8 +329,11 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
         body: JSON.stringify(formData),
       });
 
+      console.log('Réponse API:', response.status, response.statusText);
+
       if (response.ok) {
         const newAgent = await response.json();
+        console.log('Agent créé:', newAgent);
         onAgentCreated(newAgent);
         onClose();
         
@@ -363,6 +368,7 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
       }
     } catch (error) {
       console.error('Error creating agent:', error);
+      alert(`Erreur de connexion: ${error.message}`);
     }
   };
 
