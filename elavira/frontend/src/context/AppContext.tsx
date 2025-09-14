@@ -26,7 +26,7 @@ const initialState: AppState = {
   messages: [],
   access_token: localStorage.getItem('access_token'),
   logged_in_user: localStorage.getItem('logged_in_user'),
-  selected_agent_id: 'agent-001',
+  selected_agent_id: 'elavira',
   transcribing: false,
   thinking: false,
   last_suggested_prompts: [],
