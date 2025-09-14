@@ -5,74 +5,38 @@ import { AgentType } from '../../types';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
-  background: #f8fafc;
-  padding: 30px;
+  background: #ffffff;
 `;
 
 const DashboardHeader = styled.div`
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 `;
 
 const DashboardTitle = styled.h1`
-  font-size: 36px;
+  font-size: 32px;
   font-weight: 700;
   color: #1f2937;
   margin: 0 0 8px 0;
 `;
 
 const DashboardSubtitle = styled.p`
-  font-size: 18px;
+  font-size: 16px;
   color: #6b7280;
   margin: 0;
 `;
 
 const DashboardActions = styled.div`
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-`;
-
-const SearchContainer = styled.div`
-  position: relative;
-  width: 400px;
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  padding: 12px 16px 12px 44px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  font-size: 14px;
-  background: white;
-  transition: all 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-`;
-
-const SearchIcon = styled.div`
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  font-size: 16px;
+  justify-content: flex-end;
+  margin-bottom: 32px;
 `;
 
 const AddAgentButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #3b82f6;
   color: white;
   border: none;
   padding: 12px 24px;
-  border-radius: 12px;
+  border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -82,8 +46,8 @@ const AddAgentButton = styled.button`
   gap: 8px;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    background: #2563eb;
+    transform: translateY(-1px);
   }
 `;
 
@@ -93,20 +57,17 @@ const AgentsGrid = styled.div`
   gap: 24px;
 `;
 
-const AgentCard = styled.div<{ isSelected?: boolean }>`
+const AgentCard = styled.div`
   background: white;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 24px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 2px solid ${props => props.isSelected ? '#667eea' : '#e5e7eb'};
+  border: 1px solid #e2e8f0;
   transition: all 0.2s ease;
-  cursor: pointer;
-  position: relative;
 
   &:hover {
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     transform: translateY(-2px);
-    border-color: #667eea;
   }
 `;
 
@@ -117,21 +78,16 @@ const AgentHeader = styled.div`
   margin-bottom: 16px;
 `;
 
-const AgentAvatar = styled.div<{ backgroundImage?: string }>`
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: ${props => props.backgroundImage ? `url(${props.backgroundImage})` : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'};
-  background-size: cover;
-  background-position: center;
+const AgentIcon = styled.div`
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 24px;
-  font-weight: 700;
-  border: 3px solid white;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 `;
 
 const AgentInfo = styled.div`
@@ -139,8 +95,8 @@ const AgentInfo = styled.div`
 `;
 
 const AgentName = styled.h3`
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 600;
   color: #1f2937;
   margin: 0 0 4px 0;
 `;
@@ -152,22 +108,10 @@ const AgentRole = styled.p`
   font-weight: 500;
 `;
 
-const AgentStatus = styled.div<{ status: string }>`
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  background: ${props => props.status === 'Active' ? '#dcfce7' : '#fef3c7'};
-  color: ${props => props.status === 'Active' ? '#166534' : '#92400e'};
-`;
-
 const AgentDescription = styled.p`
   font-size: 14px;
   color: #4b5563;
-  line-height: 1.6;
+  line-height: 1.5;
   margin: 0 0 16px 0;
 `;
 
@@ -175,42 +119,34 @@ const CapabilitiesContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 `;
 
 const CapabilityTag = styled.span`
-  background: #f3f4f6;
-  color: #374151;
+  background: #f1f5f9;
+  color: #475569;
   padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 500;
+  border: 1px solid #e2e8f0;
 `;
 
-const AgentStats = styled.div`
+const AgentFooter = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 12px 0;
-  border-top: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 16px;
 `;
 
-const StatItem = styled.div`
-  text-align: center;
-`;
-
-const StatValue = styled.div`
-  font-size: 18px;
-  font-weight: 700;
-  color: #1f2937;
-`;
-
-const StatLabel = styled.div`
+const CreationDate = styled.span`
   font-size: 12px;
   color: #6b7280;
-  font-weight: 500;
+`;
+
+const KnowledgePacks = styled.span`
+  font-size: 12px;
+  color: #6b7280;
 `;
 
 const AgentActions = styled.div`
@@ -220,11 +156,11 @@ const AgentActions = styled.div`
 
 const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'danger' }>`
   flex: 1;
-  padding: 10px 16px;
+  padding: 8px 12px;
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   
@@ -232,11 +168,10 @@ const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'danger'
     switch (props.variant) {
       case 'primary':
         return `
-          background: #667eea;
+          background: #3b82f6;
           color: white;
           &:hover {
-            background: #5a67d8;
-            transform: translateY(-1px);
+            background: #2563eb;
           }
         `;
       case 'secondary':
@@ -259,95 +194,57 @@ const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'danger'
   }}
 `;
 
-const SelectedAgentInfo = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 2px solid #667eea;
-  margin-bottom: 30px;
-`;
-
-const SelectedAgentTitle = styled.h3`
-  font-size: 18px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 16px 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-`;
-
-const StartChatButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 16px 32px;
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 auto;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-  }
-`;
 
 const agents = [
   {
-    id: 'elavira',
-    name: 'Elavira',
-    role: 'Spécialiste Formeduc',
-    description: 'Professionnelle de la santé et de l\'éducation, Elavira vous accompagne dans vos formations de secourisme avec expertise et vigilance.',
-    capabilities: ['Formations certifiantes', 'Secourisme adapté', 'Prévention des risques', 'Accompagnement personnalisé'],
+    id: 'assistant',
+    name: 'Assistant',
+    role: 'Assistant général polyvalent',
+    description: 'Assistant capable d\'aider avec diverses tâches',
+    capabilities: ['qwen2.5:7b', 'rag.search', 'rag.answer', 'math.evaluate', '+2 autres'],
     status: 'Active',
-    avatar: '/images/elavira-real.png',
-    createdAt: '2024-09-01',
-    knowledgePacks: 3,
-    conversations: 127,
-    rating: 4.8
+    createdAt: '2025-09-03',
+    knowledgePacks: 0
+  },
+  {
+    id: 'prog',
+    name: 'Prog',
+    role: 'Programmeur',
+    description: 'Programmeur',
+    capabilities: ['qwen2.5:7b'],
+    status: 'Active',
+    createdAt: '2025-09-05',
+    knowledgePacks: 0
+  },
+  {
+    id: 'chef',
+    name: 'Chef',
+    role: 'Chef cuisinier spécialisé',
+    description: 'Grand chef cuisinier',
+    capabilities: ['qwen2.5:7b', 'rag.search', 'math.evaluate', 'rag.answer', '+1 autres'],
+    status: 'Active',
+    createdAt: '2025-09-03',
+    knowledgePacks: 2
   },
   {
     id: 'solenys',
     name: 'Solenys',
-    role: 'Professeur Académique',
-    description: 'Professeur québécois spécialisé dans l\'enseignement secondaire selon le programme PFEQ. Guide pédagogique pour mathématiques, sciences et français.',
-    capabilities: ['PFEQ Curriculum', 'Mathématiques', 'Sciences', 'Français'],
+    role: 'Professeur et tuteur',
+    description: 'Tuteur pédagogique qui explique clairement, guide pas à pas, crée des exercices et évalue la compréhension.',
+    capabilities: ['qwen2.5:7b', 'rag.search', 'rag.answer', 'math.evaluate', '+4 autres'],
     status: 'Active',
-    avatar: '/images/solenys-banner.svg',
-    createdAt: '2024-09-05',
-    knowledgePacks: 2,
-    conversations: 89,
-    rating: 4.6
+    createdAt: '2025-09-03',
+    knowledgePacks: 2
   }
 ];
 
 export const AgentsManagementDashboard: React.FC = () => {
   const { dispatch } = useApp();
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredAgents = agents.filter(agent =>
-    agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    agent.capabilities.some(cap => cap.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
 
   const handleAgentSelect = (agentId: string) => {
-    setSelectedAgent(selectedAgent === agentId ? null : agentId);
-  };
-
-  const handleStartChat = () => {
-    if (selectedAgent) {
-      dispatch({ type: 'SET_SELECTED_AGENT', payload: selectedAgent as AgentType });
-      dispatch({ type: 'SET_PAGE', payload: 'chat' });
-    }
+    dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });
+    dispatch({ type: 'SET_PAGE', payload: 'chat' });
   };
 
   const handleEditAgent = (agentId: string) => {
@@ -363,54 +260,26 @@ export const AgentsManagementDashboard: React.FC = () => {
   return (
     <DashboardContainer>
       <DashboardHeader>
-        <DashboardTitle>Gestion des Agents IA</DashboardTitle>
-        <DashboardSubtitle>Gérez vos assistants intelligents et leurs configurations</DashboardSubtitle>
+        <DashboardTitle>Agents</DashboardTitle>
+        <DashboardSubtitle>Gérez vos agents IA spécialisés</DashboardSubtitle>
       </DashboardHeader>
 
       <DashboardActions>
-        <SearchContainer>
-          <SearchIcon>🔍</SearchIcon>
-          <SearchInput
-            type="text"
-            placeholder="Rechercher un agent..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </SearchContainer>
-        
         <AddAgentButton>
           <span>+</span>
-          Nouvel Agent
+          Nouvel agent
         </AddAgentButton>
       </DashboardActions>
 
-      {selectedAgent && (
-        <SelectedAgentInfo>
-          <SelectedAgentTitle>
-            🎯 Agent sélectionné: {agents.find(a => a.id === selectedAgent)?.name}
-          </SelectedAgentTitle>
-          <StartChatButton onClick={handleStartChat}>
-            <span>💬</span>
-            Commencer la conversation
-          </StartChatButton>
-        </SelectedAgentInfo>
-      )}
 
       <AgentsGrid>
-        {filteredAgents.map((agent) => (
+        {agents.map((agent) => (
           <AgentCard
             key={agent.id}
-            isSelected={selectedAgent === agent.id}
             onClick={() => handleAgentSelect(agent.id)}
           >
-            <AgentStatus status={agent.status}>
-              {agent.status}
-            </AgentStatus>
-            
             <AgentHeader>
-              <AgentAvatar backgroundImage={agent.avatar}>
-                {!agent.avatar && agent.name.charAt(0)}
-              </AgentAvatar>
+              <AgentIcon>🤖</AgentIcon>
               <AgentInfo>
                 <AgentName>{agent.name}</AgentName>
                 <AgentRole>{agent.role}</AgentRole>
@@ -425,20 +294,12 @@ export const AgentsManagementDashboard: React.FC = () => {
               ))}
             </CapabilitiesContainer>
 
-            <AgentStats>
-              <StatItem>
-                <StatValue>{agent.knowledgePacks}</StatValue>
-                <StatLabel>Bases de connaissances</StatLabel>
-              </StatItem>
-              <StatItem>
-                <StatValue>{agent.conversations}</StatValue>
-                <StatLabel>Conversations</StatLabel>
-              </StatItem>
-              <StatItem>
-                <StatValue>{agent.rating}</StatValue>
-                <StatLabel>Note</StatLabel>
-              </StatItem>
-            </AgentStats>
+            <AgentFooter>
+              <CreationDate>Créé le {agent.createdAt}</CreationDate>
+              {agent.knowledgePacks > 0 && (
+                <KnowledgePacks>{agent.knowledgePacks} pack(s) de connaissances</KnowledgePacks>
+              )}
+            </AgentFooter>
 
             <AgentActions>
               <ActionButton 
@@ -448,7 +309,7 @@ export const AgentsManagementDashboard: React.FC = () => {
                   handleAgentSelect(agent.id);
                 }}
               >
-                💬 Chat
+                Chat
               </ActionButton>
               <ActionButton 
                 variant="secondary"
@@ -457,7 +318,7 @@ export const AgentsManagementDashboard: React.FC = () => {
                   handleEditAgent(agent.id);
                 }}
               >
-                ✏️ Modifier
+                Modifier
               </ActionButton>
               <ActionButton 
                 variant="danger"
@@ -466,7 +327,7 @@ export const AgentsManagementDashboard: React.FC = () => {
                   handleDeleteAgent(agent.id);
                 }}
               >
-                🗑️ Supprimer
+                Supprimer
               </ActionButton>
             </AgentActions>
           </AgentCard>
