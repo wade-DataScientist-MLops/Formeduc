@@ -4,6 +4,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { AuthWithCarousel } from './components/Auth/AuthWithCarousel';
 import { ChatInterface } from './components/Chat/ChatInterface';
 import { AgentsDashboard } from './components/Agents/AgentsDashboard';
+import { MainLayout } from './components/Layout/MainLayout';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -171,11 +172,23 @@ function AppContent() {
       case 'auth':
         return <AuthWithCarousel />;
       case 'agents':
-        return <AgentsDashboard />;
+        return (
+          <MainLayout>
+            <AgentsDashboard />
+          </MainLayout>
+        );
       case 'chat':
-        return <ChatInterface />;
+        return (
+          <MainLayout>
+            <ChatInterface />
+          </MainLayout>
+        );
       default:
-        return <AgentsDashboard />;
+        return (
+          <MainLayout>
+            <AgentsDashboard />
+          </MainLayout>
+        );
     }
   };
 

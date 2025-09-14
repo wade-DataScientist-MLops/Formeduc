@@ -146,13 +146,13 @@ const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' | 'danger
   }}
 `;
 
-interface Agent {
+export interface Agent {
   id: string;
   name: string;
-  type: string;
+  avatar: string;
   description: string;
   capabilities: string[];
-  avatar: string;
+  status: 'Active' | 'Inactive';
   createdAt: string;
   knowledgePacks: number;
 }
@@ -174,7 +174,7 @@ export const AgentCard: React.FC<AgentCardProps> = ({ agent, onChatClick }) => {
         </Avatar>
         <AgentInfo>
           <AgentName>{agent.name}</AgentName>
-          <AgentType>{agent.type}</AgentType>
+          <AgentType>{agent.id === 'elavira' ? 'Spécialiste Formeduc' : agent.id === 'solenys' ? 'Professeur Académique' : 'Assistant IA'}</AgentType>
         </AgentInfo>
       </CardHeader>
 

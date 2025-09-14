@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from api import routes_users
 from api import routes_chat
 from api import solenys_router
+from api import routes_external_api
 
 # --- ChromaDB ---
 import chromadb
@@ -46,6 +47,8 @@ app.include_router(routes_users.router)
 app.include_router(routes_chat.router)
 # Ajout d'un prefixe /solenys pour ce routeur
 app.include_router(solenys_router.router, prefix="/solenys")
+# API externe pour applications tierces
+app.include_router(routes_external_api.router)
 
 # --- ChromaDB Setup (CORRIGÉ) ---
 script_dir = os.path.dirname(__file__)

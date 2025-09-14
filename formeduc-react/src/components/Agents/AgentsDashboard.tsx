@@ -1,99 +1,56 @@
 import React from 'react';
 import styled from 'styled-components';
-import { AgentCard } from './AgentCard';
+import { AgentCard, Agent } from './AgentCard';
 import { useApp } from '../../context/AppContext';
 import { AgentType } from '../../types';
 
-const DashboardContainer = styled.div`
-  display: flex;
-  height: 100vh;
-  background: #f8fafc;
+const PageContainer = styled.div`
+  background: #ffffff;
+  min-height: calc(100vh - 64px);
 `;
 
-const Sidebar = styled.div`
-  width: 250px;
-  background: #1e293b;
-  color: white;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
+const PageHeader = styled.div`
+  margin-bottom: 32px;
 `;
 
-const Logo = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  margin-bottom: 30px;
-  color: #3b82f6;
+const PageTitle = styled.h1`
+  font-size: 32px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
 `;
 
-const NavItem = styled.div<{ active?: boolean }>`
-  padding: 12px 16px;
-  margin: 4px 0;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: ${props => props.active ? '#3b82f6' : 'transparent'};
-  transition: background 0.2s;
-
-  &:hover {
-    background: ${props => props.active ? '#3b82f6' : '#334155'};
-  }
-`;
-
-const MainContent = styled.div`
-  flex: 1;
-  padding: 30px;
-  overflow-y: auto;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
-`;
-
-const Title = styled.h1`
-  font-size: 2rem;
-  color: #1e293b;
+const PageSubtitle = styled.p`
+  font-size: 16px;
+  color: #6b7280;
   margin: 0;
 `;
 
-const Subtitle = styled.p`
-  color: #64748b;
-  margin: 8px 0 0 0;
+const HeaderActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
 `;
 
-const SearchBar = styled.input`
-  padding: 12px 16px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  width: 300px;
-  font-size: 14px;
-
-  &:focus {
-    outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  }
-`;
-
-const NewAgentButton = styled.button`
-  background: #3b82f6;
+const AddAgentButton = styled.button`
+  background: #667eea;
   color: white;
   border: none;
   padding: 12px 24px;
   border-radius: 8px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 8px;
 
   &:hover {
-    background: #2563eb;
+    background: #5a67d8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
   }
 `;
 
@@ -103,25 +60,25 @@ const AgentsGrid = styled.div`
   gap: 24px;
 `;
 
-const agents = [
+const agents: Agent[] = [
   {
     id: 'elavira',
     name: 'Elavira',
-    type: 'Assistant Formeduc',
-    description: 'Spécialiste en formations de secourisme et éducation. Aide avec les programmes RSGE, PSC1, SST et formations en ligne.',
-    capabilities: ['qwen2.5:7b', 'rag.search', 'rag.answer', 'voice.tts', 'voice.stt'],
     avatar: '/images/elavira-real.png',
-    createdAt: '2024-09-12',
+    description: 'Votre éducatrice spécialisée en secourisme et formations Formeduc.',
+    capabilities: ['Formeduc Content', 'Secourisme', 'Pédagogie', 'Support'],
+    status: 'Active',
+    createdAt: '2024-09-01',
     knowledgePacks: 3
   },
   {
     id: 'solenys',
     name: 'Solenys',
-    type: 'Professeur PFEQ',
-    description: 'Professeur spécialisé dans le programme de secondaire du Québec (PFEQ). Aide avec les mathématiques, sciences et français.',
-    capabilities: ['llama3.2:1b', 'rag.search', 'rag.answer', 'math.evaluate', 'voice.tts'],
     avatar: '/images/solenys-banner.svg',
-    createdAt: '2024-09-12',
+    description: 'Professeur académique pour les élèves du secondaire (PFEQ Québec).',
+    capabilities: ['PFEQ Curriculum', 'Mathématiques', 'Sciences', 'Français'],
+    status: 'Active',
+    createdAt: '2024-09-05',
     knowledgePacks: 2
   }
 ];
@@ -135,68 +92,29 @@ export const AgentsDashboard: React.FC = () => {
   };
 
   return (
-    <DashboardContainer>
-      <Sidebar>
-        <Logo>Elavira</Logo>
-        <NavItem active>
-          <span>📊</span>
-          Dashboard
-        </NavItem>
-        <NavItem active>
-          <span>🤖</span>
-          Agents
-        </NavItem>
-        <NavItem>
-          <span>💬</span>
-          Chat
-        </NavItem>
-        <NavItem>
-          <span>🔗</span>
-          Multi-Agents
-        </NavItem>
-        <NavItem>
-          <span>📚</span>
-          Connaissances
-        </NavItem>
-        <NavItem>
-          <span>📄</span>
-          Workflows
-        </NavItem>
-        <NavItem>
-          <span>📋</span>
-          Logs
-        </NavItem>
-        <NavItem>
-          <span>⚙️</span>
-          Paramètres
-        </NavItem>
-      </Sidebar>
+    <PageContainer>
+      <PageHeader>
+        <PageTitle>Agents</PageTitle>
+        <PageSubtitle>Gérez vos agents IA spécialisés</PageSubtitle>
+      </PageHeader>
 
-      <MainContent>
-        <Header>
-          <div>
-            <Title>Agents</Title>
-            <Subtitle>Gérez vos agents IA spécialisés</Subtitle>
-          </div>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <SearchBar placeholder="Rechercher..." />
-            <NewAgentButton>
-              <span>+</span>
-              Nouvel agent
-            </NewAgentButton>
-          </div>
-        </Header>
+      <HeaderActions>
+        <div />
+        <AddAgentButton>
+          <span>+</span>
+          Nouvel agent
+        </AddAgentButton>
+      </HeaderActions>
 
-        <AgentsGrid>
-          {agents.map(agent => (
-            <AgentCard 
-              key={agent.id} 
-              agent={agent} 
-              onChatClick={() => handleChatClick(agent.id)}
-            />
-          ))}
-        </AgentsGrid>
-      </MainContent>
-    </DashboardContainer>
+      <AgentsGrid>
+        {agents.map((agent) => (
+          <AgentCard
+            key={agent.id}
+            agent={agent}
+            onChatClick={() => handleChatClick(agent.id)}
+          />
+        ))}
+      </AgentsGrid>
+    </PageContainer>
   );
 };
