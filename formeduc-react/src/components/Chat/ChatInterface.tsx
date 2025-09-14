@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
-import { chatAPI, solenysAPI } from '../../services/api';
+import { chatAPI } from '../../services/api';
 import { Message } from '../../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';

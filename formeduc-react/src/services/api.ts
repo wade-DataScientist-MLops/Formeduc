@@ -36,7 +36,7 @@ export const authAPI = {
 };
 
 export const chatAPI = {
-  sendMessage: async (message: MessageCreate & { agent?: string }): Promise<Message> => {
+  sendMessage: async (message: MessageCreate): Promise<Message> => {
     const response = await api.post<Message>('/chat/send_message/', message);
     return response.data;
   },
@@ -58,13 +58,5 @@ export const chatAPI = {
   },
 };
 
-export const solenysAPI = {
-  query: async (query: string): Promise<{ answer: string }> => {
-    const response = await api.get<{ answer: string }>('/solenys/solenys_query', {
-      params: { q: query },
-    });
-    return response.data;
-  },
-};
 
 export default api;

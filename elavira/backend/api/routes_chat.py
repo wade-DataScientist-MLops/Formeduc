@@ -302,25 +302,169 @@ async def send_message(message: MessageCreate):
     }
     fake_db_messages.append(user_msg)
 
-    # Utiliser l'Agent Maître pour router vers le bon agent
+    # Routing manuel vers les agents
     try:
-        print(f"[DEBUG] Routage vers l'agent: {message.agent if hasattr(message, 'agent') else 'auto'}")
-        
         # Déterminer l'agent à utiliser
-        agent_preference = None
-        if hasattr(message, 'agent') and message.agent:
-            agent_preference = message.agent
-            print(f"[DEBUG] Agent spécifié: {agent_preference}")
+        agent_preference = getattr(message, 'agent', None)
+        print(f"[DEBUG] Agent spécifié: {agent_preference}")
         
-        # Utiliser l'Agent Maître pour dispatcher la tâche
-        result = master_agent.dispatch_task(
-            user_message=message.text,
-            user_id=message.user_id,
-            agent_preference=agent_preference
-        )
-        
-        response_text = result.get("response", "Désolé, une erreur est survenue.")
-        selected_agent = result.get("agent", "Unknown")
+        if agent_preference == "elavira":
+            # Utiliser Elavira
+            print("[DEBUG] Routage vers Elavira")
+            try:
+                # Recherche contextuelle avec ChromaDB
+                context_docs = query_documents(message.text, n_results=5)
+                context = "\n\n".join(context_docs) if context_docs else ""
+                
+                text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
+                
+                base_system_prompt = (
+                    "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable.\n\n"
+                    "Instructions importantes:\n"
+                    "- Réponds de manière concise et personnalisée\n"
+                    "- Si on te demande des formations, donne un aperçu général puis propose des détails\n"
+                    "- Si la question n'est pas claire, demande des clarifications\n"
+                    "- Reste toujours professionnel et serviable\n"
+                    "- Propose des alternatives si tu ne comprends pas\n"
+                    "- Utilise les informations du catalogue pour répondre de manière pertinente"
+                )
+
+                formation_keywords = ["formation", "cours", "prix", "tarif", "secourisme", "rsge", "programme"]
+                should_include_catalogue = any(keyword in message.text.lower() for keyword in formation_keywords)
+                
+                catalogue_context = f"\n\nCatalogue des formations Formeduc :\n{text_catalogue_for_ollama}" if should_include_catalogue else ""
+                
+                full_prompt = (
+                    f"{base_system_prompt}{catalogue_context}\n\n"
+                    f"Contexte pertinent (si disponible) : {context}\n"
+                    f"Question de l'utilisateur : {message.text}\n"
+                    "Réponse d'Elavira :"
+                )
+
+                loop = asyncio.get_running_loop()
+                response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+                selected_agent = "Elavira"
+                print(f"[DEBUG] Réponse Elavira générée: {response_text[:100]}...")
+                
+            except Exception as e:
+                print(f"[ERROR] Erreur Elavira: {e}")
+                response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+                selected_agent = "Elavira"
+                
+        elif agent_preference == "solenys":
+            # Utiliser Solenys
+            print("[DEBUG] Routage vers Solenys")
+            try:
+                from core.solenys_logic import ask_solenys
+                result = ask_solenys(question=message.text, user_id=message.user_id)
+                response_text = result.get("response", "Désolé, je ne peux pas répondre pour le moment.")
+                selected_agent = "Solenys"
+                print(f"[DEBUG] Réponse Solenys générée: {response_text[:100]}...")
+                
+            except Exception as e:
+                print(f"[ERROR] Erreur Solenys: {e}")
+                response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+                selected_agent = "Solenys"
+        else:
+            # Auto-routing basé sur le contenu
+            print("[DEBUG] Auto-routing basé sur le contenu")
+            message_lower = message.text.lower()
+            
+            # Mots-clés pour Elavira
+            elavira_keywords = ["formation", "secourisme", "rsge", "formeduc", "cours", "tarif", "prix"]
+            # Mots-clés pour Solenys
+            solenys_keywords = ["math", "mathématiques", "science", "français", "pfeq", "école", "élève", "devoir", "exercice", "calcul"]
+            
+            if any(keyword in message_lower for keyword in elavira_keywords):
+                # Router vers Elavira
+                print("[DEBUG] Auto-routing vers Elavira")
+                try:
+                    context_docs = query_documents(message.text, n_results=5)
+                    context = "\n\n".join(context_docs) if context_docs else ""
+                    
+                    text_catalogue_for_ollama = format_catalogue_text(catalogue_formations_data)
+                    
+                    base_system_prompt = (
+                        "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable.\n\n"
+                        "Instructions importantes:\n"
+                        "- Réponds de manière concise et personnalisée\n"
+                        "- Si on te demande des formations, donne un aperçu général puis propose des détails\n"
+                        "- Si la question n'est pas claire, demande des clarifications\n"
+                        "- Reste toujours professionnel et serviable\n"
+                        "- Propose des alternatives si tu ne comprends pas\n"
+                        "- Utilise les informations du catalogue pour répondre de manière pertinente"
+                    )
+
+                    formation_keywords = ["formation", "cours", "prix", "tarif", "secourisme", "rsge", "programme"]
+                    should_include_catalogue = any(keyword in message.text.lower() for keyword in formation_keywords)
+                    
+                    catalogue_context = f"\n\nCatalogue des formations Formeduc :\n{text_catalogue_for_ollama}" if should_include_catalogue else ""
+                    
+                    full_prompt = (
+                        f"{base_system_prompt}{catalogue_context}\n\n"
+                        f"Contexte pertinent (si disponible) : {context}\n"
+                        f"Question de l'utilisateur : {message.text}\n"
+                        "Réponse d'Elavira :"
+                    )
+
+                    loop = asyncio.get_running_loop()
+                    response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+                    selected_agent = "Elavira (auto)"
+                    print(f"[DEBUG] Réponse Elavira auto générée: {response_text[:100]}...")
+                    
+                except Exception as e:
+                    print(f"[ERROR] Erreur Elavira auto: {e}")
+                    response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+                    selected_agent = "Elavira (auto)"
+                    
+            elif any(keyword in message_lower for keyword in solenys_keywords):
+                # Router vers Solenys
+                print("[DEBUG] Auto-routing vers Solenys")
+                try:
+                    from core.solenys_logic import ask_solenys
+                    result = ask_solenys(question=message.text, user_id=message.user_id)
+                    response_text = result.get("response", "Désolé, je ne peux pas répondre pour le moment.")
+                    selected_agent = "Solenys (auto)"
+                    print(f"[DEBUG] Réponse Solenys auto générée: {response_text[:100]}...")
+                    
+                except Exception as e:
+                    print(f"[ERROR] Erreur Solenys auto: {e}")
+                    response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+                    selected_agent = "Solenys (auto)"
+            else:
+                # Par défaut, utiliser Elavira
+                print("[DEBUG] Routing par défaut vers Elavira")
+                try:
+                    context_docs = query_documents(message.text, n_results=5)
+                    context = "\n\n".join(context_docs) if context_docs else ""
+                    
+                    base_system_prompt = (
+                        "Tu es Elavira de Formeduc. Réponds de manière naturelle et serviable.\n\n"
+                        "Instructions importantes:\n"
+                        "- Réponds de manière concise et personnalisée\n"
+                        "- Si on te demande des formations, donne un aperçu général puis propose des détails\n"
+                        "- Si la question n'est pas claire, demande des clarifications\n"
+                        "- Reste toujours professionnel et serviable\n"
+                        "- Propose des alternatives si tu ne comprends pas\n"
+                        "- Utilise les informations du catalogue pour répondre de manière pertinente"
+                    )
+                    
+                    full_prompt = (
+                        f"{base_system_prompt}\n\n"
+                        f"Contexte pertinent (si disponible) : {context}\n"
+                        f"Question de l'utilisateur : {message.text}\n"
+                        "Réponse d'Elavira :"
+                    )
+
+                    loop = asyncio.get_running_loop()
+                    response_text = await loop.run_in_executor(executor, ollama_generate, full_prompt)
+                    selected_agent = "Elavira (défaut)"
+                    print(f"[DEBUG] Réponse Elavira défaut générée: {response_text[:100]}...")
+                    
+                except Exception as e:
+                    print(f"[ERROR] Erreur Elavira défaut: {e}")
+                    response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+                    selected_agent = "Elavira (défaut)"
         
         print(f"[DEBUG] Agent sélectionné: {selected_agent}")
         print(f"[DEBUG] Réponse générée: {response_text[:100]}...")
