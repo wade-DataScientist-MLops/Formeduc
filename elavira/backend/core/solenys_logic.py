@@ -17,35 +17,43 @@ def ask_solenys(question: str, user_id: str = "default") -> dict:
     # Récupération du contexte de conversation
     conversation_context = get_conversation_context(user_id, "solenys", max_messages=3)
     
-    # Construction du prompt avec mémoire de conversation
+    # Construction du prompt optimisé avec mémoire de conversation
     full_prompt = f"""
 Tu es Solenys, professeur québécois spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec.
 
 Contexte de conversation:
 {conversation_context}
 
-Instructions:
-- Réponds comme un professeur québécois bienveillant et compétent
-- Adapte ton niveau au secondaire (12-17 ans)
-- Utilise des exemples concrets et pratiques
-- Sois encourageant et motivant
+Ton rôle est de :
+- Accompagner les élèves du secondaire (12-17 ans) dans leur apprentissage
+- Enseigner selon le programme PFEQ (Programme de formation de l'école québécoise)
+- Adapter ton approche pédagogique au niveau de l'élève
+- Encourager et motiver dans l'apprentissage
+- Proposer des exercices pratiques et concrets
+
+Instructions pédagogiques :
+- Utilise un ton bienveillant, professionnel et motivant
+- Adapte ton langage au niveau secondaire
+- Propose des exemples concrets et pratiques
+- Encourage la participation et la réflexion
 - Reste dans le cadre du programme PFEQ
-- Sois concis et direct
-- Maximum 2-3 phrases
+- Sois clair et structuré dans tes explications
 
 Réponse:
 """
-    # Réponse personnalisée de Solenys
-    if "math" in question.lower() or "mathématiques" in question.lower():
-        response_text = f"Salut ! Je suis Solenys, ton prof de mathématiques ! 📐\n\nTu demandes : '{question}'\n\nJe peux t'aider avec :\n• Algèbre et équations\n• Géométrie\n• Statistiques et probabilités\n• Fonctions et graphiques\n• Calcul différentiel et intégral\n\nQuelle matière veux-tu qu'on travaille ?"
-    elif "science" in question.lower() or "physique" in question.lower() or "chimie" in question.lower():
-        response_text = f"Salut ! Je suis Solenys, ton prof de sciences ! 🔬\n\nTu demandes : '{question}'\n\nJe peux t'aider avec :\n• Physique (mécanique, électricité, ondes)\n• Chimie (réactions, liaisons, équilibres)\n• Biologie (cellules, génétique, évolution)\n\nQuelle matière scientifique t'intéresse ?"
-    elif "français" in question.lower() or "littérature" in question.lower():
-        response_text = f"Salut ! Je suis Solenys, ton prof de français ! 📚\n\nTu demandes : '{question}'\n\nJe peux t'aider avec :\n• Grammaire et syntaxe\n• Littérature québécoise\n• Analyse de textes\n• Rédaction et composition\n• Communication orale\n\nQuel aspect du français veux-tu travailler ?"
-    elif "bonjour" in question.lower() or "salut" in question.lower():
-        response_text = "Salut ! Je suis Solenys, ton professeur québécois ! 👋\n\nJe suis spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec. Je peux t'aider en mathématiques, sciences, français, et autres matières.\n\nQuelle matière veux-tu qu'on travaille ensemble ?"
+    # Réponses optimisées selon le programme PFEQ
+    if "math" in question.lower() or "mathématiques" in question.lower() or "algèbre" in question.lower():
+        response_text = f"Bonjour ! Je suis Solenys, votre professeur de mathématiques ! 📐\n\nJe vois que vous vous intéressez aux mathématiques. Selon le programme PFEQ, je peux vous accompagner dans plusieurs domaines :\n\n• **Algèbre et équations** - Résolution d'équations, fonctions\n• **Géométrie** - Formes, angles, calculs d'aires\n• **Statistiques et probabilités** - Analyse de données\n• **Fonctions** - Représentation graphique et analyse\n• **Calcul différentiel et intégral** - Pour les niveaux avancés\n\nQuel niveau êtes-vous et sur quel aspect aimeriez-vous travailler ? Je peux adapter mes explications à votre niveau !"
+    elif "science" in question.lower() or "physique" in question.lower() or "chimie" in question.lower() or "biologie" in question.lower():
+        response_text = f"Bonjour ! Je suis Solenys, votre professeur de sciences ! 🔬\n\nExcellent choix ! Les sciences sont fascinantes. Selon le programme PFEQ, je peux vous accompagner dans :\n\n• **Physique** - Mécanique, électricité, ondes, énergie\n• **Chimie** - Réactions chimiques, liaisons, équilibres\n• **Biologie** - Cellules, génétique, évolution, écosystèmes\n\nLes sciences permettent de comprendre le monde qui nous entoure. Quel domaine vous passionne le plus ? Et à quel niveau scolaire êtes-vous ?"
+    elif "français" in question.lower() or "littérature" in question.lower() or "grammaire" in question.lower():
+        response_text = f"Bonjour ! Je suis Solenys, votre professeur de français ! 📚\n\nLe français est une langue magnifique ! Selon le programme PFEQ, je peux vous aider avec :\n\n• **Grammaire et syntaxe** - Structure de la langue française\n• **Littérature québécoise** - Auteurs et œuvres du Québec\n• **Analyse de textes** - Compréhension et interprétation\n• **Rédaction et composition** - Techniques d'écriture\n• **Communication orale** - Expression et présentation\n\nLa maîtrise du français est essentielle pour réussir. Sur quel aspect aimeriez-vous vous concentrer ?"
+    elif "histoire" in question.lower() or "géographie" in question.lower():
+        response_text = f"Bonjour ! Je suis Solenys, votre professeur d'histoire et géographie ! 🗺️\n\nL'histoire et la géographie nous aident à comprendre notre monde ! Selon le programme PFEQ :\n\n• **Histoire du Québec** - De la Nouvelle-France à aujourd'hui\n• **Histoire mondiale** - Civilisations et événements marquants\n• **Géographie du Québec** - Territoire, ressources, population\n• **Géographie mondiale** - Pays, cultures, enjeux contemporains\n\nCes matières nous connectent à notre héritage et à notre place dans le monde. Quel aspect vous intéresse ?"
+    elif "bonjour" in question.lower() or "salut" in question.lower() or "bonsoir" in question.lower():
+        response_text = "Bonjour et bienvenue ! 👋\n\nJe suis Solenys, votre professeur québécois spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec.\n\nJe suis là pour vous accompagner dans votre apprentissage et vous aider à réussir ! Je peux vous assister en :\n\n• **Mathématiques** - Algèbre, géométrie, statistiques\n• **Sciences** - Physique, chimie, biologie\n• **Français** - Littérature, grammaire, rédaction\n• **Histoire et géographie** - Québec et monde\n\nQuelle matière aimeriez-vous explorer ensemble aujourd'hui ?"
     else:
-        response_text = f"Salut ! Je suis Solenys, ton professeur québécois ! 🎓\n\nTu me demandes : '{question}'\n\nJe suis spécialisé dans l'enseignement secondaire selon le programme PFEQ. Je peux t'aider en mathématiques, sciences, français, histoire, géographie, et plus encore !\n\nQuelle matière veux-tu qu'on explore ?"
+        response_text = f"Bonjour ! Je suis Solenys, votre professeur québécois ! 🎓\n\nJe vois que vous me demandez : '{question}'\n\nSelon le programme PFEQ, je peux vous accompagner dans plusieurs matières du secondaire :\n\n• **Mathématiques** - Tous niveaux, du calcul de base au calcul avancé\n• **Sciences** - Physique, chimie, biologie avec expériences pratiques\n• **Français** - Littérature québécoise, grammaire, communication\n• **Histoire et géographie** - Du Québec et du monde\n\nJe m'adapte à votre niveau et votre style d'apprentissage. Sur quelle matière aimeriez-vous vous concentrer ?"
 
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, "solenys", "user", question)

@@ -94,9 +94,19 @@ def rag_generate(query: str, system_persona: str = None, user_id: str = "default
     Génère une réponse en combinant le contexte ChromaDB Formeduc et le modèle Ollama.
     Spécialement conçu pour Elavira avec les données de Formeduc.
     """
-    # Persona par défaut pour Elavira
+    # Persona optimisée pour Elavira selon le cahier des charges
     if system_persona is None:
-        system_persona = """Tu es Elavira de Formeduc. Réponds simplement et brièvement."""
+        system_persona = """Tu es Elavira, l'assistante virtuelle de FormEduc, spécialisée dans les formations professionnelles. 
+
+Ton rôle est de :
+- Accueillir chaleureusement les visiteurs du site
+- Répondre aux questions fréquentes sur les formations
+- Accompagner les utilisateurs dans leur navigation
+- Proposer des formations adaptées selon leur profil
+- Assister tout au long du processus d'exploration ou d'achat
+
+Ton style : Professionnel, chaleureux, bienveillant et motivant.
+Réponds de manière claire, concise et contextualisée."""
     
     # Récupération du contexte de conversation
     conversation_context = get_conversation_context(user_id, agent_id, max_messages=3)
@@ -125,13 +135,17 @@ Instructions importantes:
 Réponse:
 """
     
-    # Réponse personnalisée d'Elavira
-    if "formation" in query.lower() or "programme" in query.lower():
-        response = f"Salut ! Je suis Elavira, ta spécialiste Formeduc ! 🎓\n\nTu demandes : '{query}'\n\nFormeduc propose plusieurs formations professionnelles :\n• Secourisme en ligne\n• Premiers soins\n• Formation SST\n• Formation en entreprise\n\nQue veux-tu savoir exactement ?"
-    elif "bonjour" in query.lower() or "salut" in query.lower():
-        response = "Salut ! Je suis Elavira de Formeduc ! 👋\n\nJe suis là pour t'aider avec nos formations professionnelles. Que veux-tu savoir ?"
+    # Réponses optimisées selon le cahier des charges
+    if "formation" in query.lower() or "programme" in query.lower() or "cours" in query.lower():
+        response = f"Bonjour ! Je suis Elavira, votre assistante FormEduc ! 🎓\n\nJe vois que vous vous intéressez à nos formations. FormEduc propose un large éventail de formations professionnelles adaptées à vos besoins :\n\n• **Secourisme en ligne** - Formation complète avec certification\n• **Premiers soins** - Techniques d'urgence essentielles\n• **Formation SST** - Santé et sécurité au travail\n• **Formations en entreprise** - Programmes sur mesure\n\nPouvez-vous me dire quel est votre profil ? (éducateur, parent, professionnel de la santé, etc.) Cela m'aiderait à vous proposer la formation la plus adaptée !"
+    elif "bonjour" in query.lower() or "salut" in query.lower() or "bonsoir" in query.lower():
+        response = "Bonjour et bienvenue sur FormEduc ! 👋\n\nJe suis Elavira, votre assistante virtuelle. Je suis là pour vous accompagner dans votre recherche de formations professionnelles de qualité.\n\nComment puis-je vous aider aujourd'hui ? Vous pouvez me poser des questions sur nos formations, nos tarifs, nos certifications, ou tout simplement me dire ce que vous cherchez !"
+    elif "tarif" in query.lower() or "prix" in query.lower() or "coût" in query.lower():
+        response = f"Excellente question ! 💰\n\nNos tarifs varient selon le type de formation et votre profil :\n\n• **Formations individuelles** : Tarifs préférentiels pour les particuliers\n• **Formations en entreprise** : Devis personnalisés selon vos besoins\n• **Formations en ligne** : Accès flexible et économique\n\nPour obtenir un devis précis, pourriez-vous me préciser :\n- Le type de formation qui vous intéresse\n- Votre profil (particulier, entreprise, organisme)\n- Le nombre de participants\n\nJe pourrai alors vous orienter vers la meilleure option !"
+    elif "certification" in query.lower() or "certificat" in query.lower() or "diplôme" in query.lower():
+        response = f"Excellente question ! 🏆\n\nToutes nos formations délivrent des certifications reconnues :\n\n• **Certificats officiels** - Reconnus par les organismes compétents\n• **Attestations de formation** - Pour vos dossiers professionnels\n• **Certifications numériques** - Accessibles en ligne 24h/24\n• **Suivi post-formation** - Support continu après certification\n\nNos certifications sont reconnues dans votre domaine d'activité. Quelle formation vous intéresse pour que je vous donne plus de détails sur la certification spécifique ?"
     else:
-        response = f"Salut ! Je suis Elavira de Formeduc ! 🎓\n\nTu me demandes : '{query}'\n\nJe peux t'aider avec nos formations : secourisme, premiers soins, SST, et formations en entreprise. Que veux-tu savoir ?"
+        response = f"Bonjour ! Je suis Elavira, votre assistante FormEduc ! 🎓\n\nJe vois que vous me demandez : '{query}'\n\nJe suis là pour vous accompagner dans vos besoins de formation professionnelle. Je peux vous aider avec :\n\n• **Nos formations** : Secourisme, premiers soins, SST, formations en entreprise\n• **Nos tarifs** : Devis personnalisés selon votre profil\n• **Nos certifications** : Diplômes et attestations reconnus\n• **Le processus d'inscription** : Guide complet étape par étape\n\nQue souhaitez-vous savoir en particulier ?"
     
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, agent_id, "user", query)
