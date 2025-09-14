@@ -240,6 +240,9 @@ const TipText = styled.p`
 
 const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, onAgentCreated }) => {
   const [activeTab, setActiveTab] = useState('general');
+  
+  // Debug
+  console.log('AgentCreatorModal - isOpen:', isOpen);
   const [formData, setFormData] = useState({
     // General
     name: '',

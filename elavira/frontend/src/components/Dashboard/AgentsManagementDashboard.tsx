@@ -196,33 +196,34 @@ const ActionButton = styled.button<{ variant: 'primary' | 'secondary' | 'danger'
 `;
 
 
-const agents = [
-  {
-    id: 'elavira',
-    name: 'Elavira',
-    role: 'Spécialiste Formeduc',
-    description: 'Spécialiste des formations professionnelles Formeduc : secourisme, premiers soins, SST et formations en entreprise.',
-    capabilities: ['Formations professionnelles', 'Secourisme', 'Premiers soins', 'SST', 'Formations entreprise'],
-    status: 'Active',
-    createdAt: '2025-09-14',
-    knowledgePacks: 3
-  },
-  {
-    id: 'solenys',
-    name: 'Solenys',
-    role: 'Professeur québécois',
-    description: 'Professeur spécialisé dans l\'enseignement secondaire selon le programme PFEQ du Québec.',
-    capabilities: ['Mathématiques', 'Sciences', 'Français', 'Programme PFEQ', 'Enseignement secondaire'],
-    status: 'Active',
-    createdAt: '2025-09-14',
-    knowledgePacks: 2
-  }
-];
-
 export const AgentsManagementDashboard: React.FC = () => {
   const { dispatch } = useApp();
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
+  
+  // Données des agents (en production, récupérer depuis l'API)
+  const [agents, setAgents] = useState([
+    {
+      id: 'elavira',
+      name: 'Elavira',
+      role: 'Spécialiste Formeduc',
+      description: 'Spécialiste des formations professionnelles Formeduc : secourisme, premiers soins, SST et formations en entreprise.',
+      capabilities: ['Formations professionnelles', 'Secourisme', 'Premiers soins', 'SST', 'Formations entreprise'],
+      status: 'Active',
+      createdAt: '2025-09-14',
+      knowledgePacks: 3
+    },
+    {
+      id: 'solenys',
+      name: 'Solenys',
+      role: 'Professeur québécois',
+      description: 'Professeur spécialisé dans l\'enseignement secondaire selon le programme PFEQ du Québec.',
+      capabilities: ['Mathématiques', 'Sciences', 'Français', 'Programme PFEQ', 'Enseignement secondaire'],
+      status: 'Active',
+      createdAt: '2025-09-14',
+      knowledgePacks: 2
+    }
+  ]);
 
   const handleAgentSelect = (agentId: string) => {
     dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });
@@ -241,7 +242,7 @@ export const AgentsManagementDashboard: React.FC = () => {
 
   const handleAgentCreated = (newAgent: any) => {
     // Ajouter le nouvel agent à la liste
-    agents.push(newAgent);
+    setAgents(prev => [...prev, newAgent]);
     console.log('Nouvel agent créé:', newAgent);
   };
 
@@ -253,7 +254,10 @@ export const AgentsManagementDashboard: React.FC = () => {
       </DashboardHeader>
 
       <DashboardActions>
-        <AddAgentButton onClick={() => setIsCreatorOpen(true)}>
+        <AddAgentButton onClick={() => {
+          console.log('Bouton cliqué, ouverture du modal...');
+          setIsCreatorOpen(true);
+        }}>
           <span>+</span>
           Créer un agent
         </AddAgentButton>
@@ -326,9 +330,15 @@ export const AgentsManagementDashboard: React.FC = () => {
 
       <AgentCreatorModal
         isOpen={isCreatorOpen}
-        onClose={() => setIsCreatorOpen(false)}
+        onClose={() => {
+          console.log('Fermeture du modal...');
+          setIsCreatorOpen(false);
+        }}
         onAgentCreated={handleAgentCreated}
       />
+      
+      {/* Debug */}
+      {console.log('État du modal:', isCreatorOpen)}
     </DashboardContainer>
   );
 };
