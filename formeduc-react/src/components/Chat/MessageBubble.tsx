@@ -134,14 +134,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
   const isUser = !isAssistant;
 
-  // Debug logging to understand the issue
-  console.log('MessageBubble Debug:', {
-    user_id: message.user_id,
-    isElavira,
-    isSolenys,
-    isAssistant,
-    isUser
-  });
 
   return (
     <MessageRow isUser={isUser}>
