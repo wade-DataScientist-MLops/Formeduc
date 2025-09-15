@@ -211,7 +211,7 @@ export const AgentsManagementDashboard: React.FC = () => {
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   
   // Données des agents (en production, récupérer depuis l'API)
-  const [agents, setAgents] = useState([
+  const [agents, setAgents] = useState<any[]>([
     {
       id: 'elavira',
       name: 'Elavira',
@@ -275,7 +275,7 @@ export const AgentsManagementDashboard: React.FC = () => {
 
 
       <AgentsGrid>
-        {(agents || []).map((agent) => (
+        {Array.isArray(agents) ? agents.map((agent) => (
           <AgentCard
             key={agent.id}
             onClick={() => handleAgentSelect(agent.id)}
@@ -349,7 +349,7 @@ export const AgentsManagementDashboard: React.FC = () => {
               </ActionButton>
             </AgentActions>
           </AgentCard>
-        ))}
+        )) : null}
       </AgentsGrid>
 
       <SimpleAgentCreator
