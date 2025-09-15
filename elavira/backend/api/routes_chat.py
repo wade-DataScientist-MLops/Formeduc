@@ -17,6 +17,7 @@ from core.chroma_client import collection, embedder, ollama_generate, query_docu
 from core.llm_loader import rag_generate
 from core.conversation_memory import add_message
 from core.master_agent import master_agent
+from core.agent_manager import agent_manager
 
 router = APIRouter(prefix="/chat", tags=["Chat"])
 
@@ -366,6 +367,29 @@ async def send_message(message: MessageCreate):
                 print(f"[ERROR] Erreur Solenys: {e}")
                 response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
                 selected_agent = "Solenys Assistant"
+        
+        elif agent_preference and agent_preference.startswith("agent_"):
+            # Utiliser un agent créé dynamiquement
+            print(f"[DEBUG] Routage vers agent créé: {agent_preference}")
+            try:
+                # Récupérer l'agent depuis le gestionnaire
+                agent = agent_manager.get_agent(agent_preference)
+                if not agent:
+                    raise Exception(f"Agent {agent_preference} non trouvé")
+                
+                # Recherche contextuelle avec ChromaDB
+                context_docs = query_documents(message.text, n_results=5)
+                context = "\n\n".join(context_docs) if context_docs else ""
+                
+                # Générer la réponse avec l'agent
+                response_text = agent_manager.generate_response(agent_preference, message.text, context)
+                selected_agent = f"{agent['name']} Assistant"
+                print(f"[DEBUG] Réponse {agent['name']} générée: {response_text[:100]}...")
+                
+            except Exception as e:
+                print(f"[ERROR] Erreur agent créé {agent_preference}: {e}")
+                response_text = "Désolé, je rencontre des difficultés techniques. Veuillez réessayer."
+                selected_agent = f"Agent {agent_preference}"
         else:
             # Auto-routing basé sur le contenu
             print("[DEBUG] Auto-routing basé sur le contenu")

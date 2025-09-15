@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { AgentType } from '../../types';
@@ -210,8 +210,8 @@ export const AgentsManagementDashboard: React.FC = () => {
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [isCreatorOpen, setIsCreatorOpen] = useState(false);
   
-  // Données des agents (en production, récupérer depuis l'API)
-  const [agents, setAgents] = useState<any[]>([
+  // Agents par défaut
+  const defaultAgents = [
     {
       id: 'elavira',
       name: 'Elavira',
@@ -232,7 +232,34 @@ export const AgentsManagementDashboard: React.FC = () => {
       createdAt: '2025-09-14',
       knowledgePacks: 2
     }
-  ]);
+  ];
+
+  // État pour les agents (par défaut + créés dynamiquement)
+  const [agents, setAgents] = useState<any[]>(defaultAgents);
+  const [loading, setLoading] = useState(false);
+
+  // Charger les agents depuis l'API au montage du composant
+  useEffect(() => {
+    loadAgents();
+  }, []);
+
+  const loadAgents = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('http://104.254.182.118:8000/api/agents/');
+      if (response.ok) {
+        const createdAgents = await response.json();
+        // Combiner les agents par défaut avec les agents créés
+        setAgents([...defaultAgents, ...createdAgents]);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des agents:', error);
+      // En cas d'erreur, garder seulement les agents par défaut
+      setAgents(defaultAgents);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAgentSelect = (agentId: string) => {
     dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });
@@ -250,8 +277,8 @@ export const AgentsManagementDashboard: React.FC = () => {
   };
 
   const handleAgentCreated = (newAgent: any) => {
-    // Ajouter le nouvel agent à la liste
-    setAgents(prev => [...(prev || []), newAgent]);
+    // Recharger tous les agents depuis l'API
+    loadAgents();
     console.log('Nouvel agent créé:', newAgent);
   };
 
