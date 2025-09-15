@@ -58,5 +58,36 @@ export const chatAPI = {
   },
 };
 
+export const agentsAPI = {
+  getAgents: async (): Promise<any[]> => {
+    const response = await api.get<any[]>('/agents');
+    return response.data;
+  },
+
+  createAgent: async (agentData: any): Promise<any> => {
+    const response = await api.post<any>('/agents', agentData);
+    return response.data;
+  },
+
+  updateAgent: async (agentId: string, agentData: any): Promise<any> => {
+    const response = await api.put<any>(`/agents/${agentId}`, agentData);
+    return response.data;
+  },
+
+  deleteAgent: async (agentId: string): Promise<void> => {
+    await api.delete(`/agents/${agentId}`);
+  },
+
+  toggleAgentStatus: async (agentId: string): Promise<any> => {
+    const response = await api.patch<any>(`/agents/${agentId}/toggle`);
+    return response.data;
+  },
+
+  getAgentTemplates: async (): Promise<any[]> => {
+    const response = await api.get<any[]>('/agents/templates');
+    return response.data;
+  },
+};
+
 
 export default api;
