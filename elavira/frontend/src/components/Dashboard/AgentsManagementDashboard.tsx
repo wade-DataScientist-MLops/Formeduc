@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { AgentType } from '../../types';
-import AgentCreatorModal from '../AgentCreator/AgentCreatorModal';
+import SimpleAgentCreator from '../AgentCreator/SimpleAgentCreator';
 
 const DashboardContainer = styled.div`
   min-height: 100vh;
@@ -351,7 +351,7 @@ export const AgentsManagementDashboard: React.FC = () => {
         ))}
       </AgentsGrid>
 
-      <AgentCreatorModal
+      <SimpleAgentCreator
         isOpen={isCreatorOpen}
         onClose={() => {
           console.log('Fermeture du modal...');
