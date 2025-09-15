@@ -107,6 +107,7 @@ const SimpleAgentCreator: React.FC<SimpleAgentCreatorProps> = ({ isOpen, onClose
 
   const handleSubmit = async () => {
     try {
+      alert('handleSubmit appelé !'); // Test immédiat
       console.log('SimpleAgentCreator - Données du formulaire:', formData);
       
       const response = await fetch('http://104.254.182.118:8000/api/agents/create', {
@@ -203,7 +204,10 @@ const SimpleAgentCreator: React.FC<SimpleAgentCreatorProps> = ({ isOpen, onClose
 
         <ButtonGroup>
           <Button onClick={onClose}>Annuler</Button>
-          <Button variant="primary" onClick={handleSubmit}>
+          <Button variant="primary" onClick={() => {
+            alert('Bouton cliqué !'); // Test du bouton
+            handleSubmit();
+          }}>
             Créer l'agent
           </Button>
         </ButtonGroup>
