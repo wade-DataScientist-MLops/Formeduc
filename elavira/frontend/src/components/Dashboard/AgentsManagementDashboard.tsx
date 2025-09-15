@@ -235,7 +235,7 @@ export const AgentsManagementDashboard: React.FC = () => {
   ];
 
   // État pour les agents (par défaut + créés dynamiquement)
-  const [agents, setAgents] = useState<any[]>([]);
+  const [agents, setAgents] = useState<any[]>(defaultAgents);
   const [loading, setLoading] = useState(false);
 
   // Charger les agents depuis l'API au montage du composant
@@ -246,10 +246,7 @@ export const AgentsManagementDashboard: React.FC = () => {
   const loadAgents = async () => {
     try {
       setLoading(true);
-      // D'abord, initialiser avec les agents par défaut
-      setAgents(defaultAgents);
-      
-      // Ensuite, charger les agents créés depuis l'API
+      // Charger les agents créés depuis l'API
       const response = await fetch('http://104.254.182.118:8000/api/agents/');
       if (response.ok) {
         const createdAgents = await response.json();
