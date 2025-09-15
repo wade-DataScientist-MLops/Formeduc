@@ -128,7 +128,7 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
-  // More robust detection of assistant messages
+  // Detection robuste des messages d'assistant
   const isElavira = message.user_id === 'Elavira Assistant';
   const isSolenys = message.user_id === 'Solenys Assistant';
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
@@ -136,6 +136,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
 
   // Debug pour vérifier la détection
   console.log(`[MessageBubble] user_id: "${message.user_id}", isElavira: ${isElavira}, isSolenys: ${isSolenys}, isAssistant: ${isAssistant}, isUser: ${isUser}`);
+  console.log(`[MessageBubble] Alignement: ${isUser ? 'DROITE (utilisateur)' : 'GAUCHE (assistant)'}`);
+  
+  // CORRECTION: S'assurer que la logique est cohérente
+  // isUser=true → Droite (utilisateur)
+  // isUser=false → Gauche (assistant - Elavira ou Solenys)
 
 
 
