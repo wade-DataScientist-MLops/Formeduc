@@ -263,7 +263,15 @@ export const AgentsManagementDashboard: React.FC = () => {
   };
 
   const handleAgentSelect = (agentId: string) => {
-    dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });
+    // Mapper les IDs d'agents vers les noms corrects
+    let mappedAgentId = agentId;
+    if (agentId === 'elavira') {
+      mappedAgentId = 'elavira';
+    } else if (agentId === 'solenys') {
+      mappedAgentId = 'solenys';
+    }
+    
+    dispatch({ type: 'SET_SELECTED_AGENT', payload: mappedAgentId as AgentType });
     dispatch({ type: 'SET_PAGE', payload: 'chat' });
   };
 
