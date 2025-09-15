@@ -131,3 +131,8 @@ async def query_embedding(request: QueryRequest):
         return results
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur requête embeddings : {str(e)}")
+
+if __name__ == "__main__":
+    import uvicorn
+    print("🚀 Démarrage du serveur Elavira...")
+    uvicorn.run(app, host="0.0.0.0", port=8000)
