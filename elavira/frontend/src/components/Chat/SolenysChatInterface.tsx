@@ -7,9 +7,12 @@ import { Message } from '../../types';
 const ChatContainer = styled.div`
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: calc(100vh - 80px);
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 `;
 
 const ChatHeader = styled.div`
@@ -20,6 +23,25 @@ const ChatHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 16px;
+`;
+
+const BackButton = styled.button`
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+  }
 `;
 
 const AgentAvatar = styled.div`
@@ -320,9 +342,16 @@ export const SolenysChatInterface: React.FC = () => {
     }
   };
 
+  const handleBackToAgents = () => {
+    dispatch({ type: 'SET_PAGE', payload: 'agents' });
+  };
+
   return (
     <ChatContainer>
       <ChatHeader>
+        <BackButton onClick={handleBackToAgents}>
+          ← Retour aux agents
+        </BackButton>
         <AgentAvatar>👨‍🏫</AgentAvatar>
         <AgentInfo>
           <AgentName>Solenys</AgentName>

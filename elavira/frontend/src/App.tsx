@@ -178,7 +178,11 @@ function AppContent() {
           </MainLayout>
         );
       case 'chat':
-        return <AgentChatRouter />;
+        return (
+          <MainLayout>
+            <AgentChatRouter />
+          </MainLayout>
+        );
       default:
         return (
           <MainLayout>
