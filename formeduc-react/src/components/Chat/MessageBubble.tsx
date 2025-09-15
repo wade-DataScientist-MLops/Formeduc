@@ -134,13 +134,6 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
   const isUser = !isAssistant;
 
-  // Debug pour vérifier l'alignement
-  console.log(`[MessageBubble] user_id: "${message.user_id}", isElavira: ${isElavira}, isSolenys: ${isSolenys}, isAssistant: ${isAssistant}, isUser: ${isUser}`);
-  console.log(`[MessageBubble] Alignement: ${isUser ? 'DROITE (utilisateur)' : 'GAUCHE (assistant)'}`);
-  
-  // CORRECTION: Les assistants doivent être à gauche (isUser=false), les utilisateurs à droite (isUser=true)
-  // isUser=true → Droite (utilisateur)
-  // isUser=false → Gauche (assistant)
 
 
 
