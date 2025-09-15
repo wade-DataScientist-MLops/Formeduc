@@ -8,6 +8,7 @@ import { MessageInput } from './MessageInput';
 import { AgentSelector } from './AgentSelector';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { AssistantShowcase } from './AssistantShowcase';
+import { SolenysShowcase } from './SolenysShowcase';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 const ChatContainer = styled.div`
@@ -314,7 +315,14 @@ export const ChatInterface: React.FC = () => {
                 Aucun message dans l'historique. Commencez la conversation ci-dessous !
               </EmptyStateText>
             </EmptyState>
-            <AssistantShowcase />
+            {state.selected_agent_id === 'agent-001' ? (
+              <AssistantShowcase />
+            ) : (
+              <SolenysShowcase 
+                onSubjectClick={handleSendMessage}
+                onTopicClick={handleSendMessage}
+              />
+            )}
           </>
         ) : (
           <>
