@@ -18,6 +18,15 @@ export interface Message {
   suggested_prompts?: string[];
 }
 
+export interface Conversation {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: string;
+  agent: string;
+  messages: Message[];
+}
+
 export interface MessageCreate {
   text: string;
   user_id: string;
@@ -43,5 +52,8 @@ export interface AppState {
   display_suggestions: boolean;
   message_input: string;
   audio_enabled: boolean;
+  conversations: Conversation[];
+  active_conversation_id: string | null;
+  sidebar_open: boolean;
 }
 

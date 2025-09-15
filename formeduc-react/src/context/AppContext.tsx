@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
-import { AppState, Message, AgentType } from '../types';
+import { AppState, Message, AgentType, Conversation } from '../types';
 
 interface AppContextType {
   state: AppState;
@@ -19,6 +19,11 @@ type AppAction =
   | { type: 'SET_DISPLAY_SUGGESTIONS'; payload: boolean }
   | { type: 'SET_MESSAGE_INPUT'; payload: string }
   | { type: 'SET_AUDIO_ENABLED'; payload: boolean }
+  | { type: 'SET_CONVERSATIONS'; payload: Conversation[] }
+  | { type: 'ADD_CONVERSATION'; payload: Conversation }
+  | { type: 'UPDATE_CONVERSATION'; payload: Conversation }
+  | { type: 'SET_ACTIVE_CONVERSATION'; payload: string | null }
+  | { type: 'SET_SIDEBAR_OPEN'; payload: boolean }
   | { type: 'LOGOUT' };
 
 const initialState: AppState = {
@@ -33,6 +38,9 @@ const initialState: AppState = {
   display_suggestions: false,
   message_input: '',
   audio_enabled: true,
+  conversations: [],
+  active_conversation_id: null,
+  sidebar_open: true,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -61,6 +69,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, message_input: action.payload };
     case 'SET_AUDIO_ENABLED':
       return { ...state, audio_enabled: action.payload };
+    case 'SET_CONVERSATIONS':
+      return { ...state, conversations: action.payload };
+    case 'ADD_CONVERSATION':
+      return { ...state, conversations: [...state.conversations, action.payload] };
+    case 'UPDATE_CONVERSATION':
+      return {
+        ...state,
+        conversations: state.conversations.map(conv =>
+          conv.id === action.payload.id ? action.payload : conv
+        ),
+      };
+    case 'SET_ACTIVE_CONVERSATION':
+      return { ...state, active_conversation_id: action.payload };
+    case 'SET_SIDEBAR_OPEN':
+      return { ...state, sidebar_open: action.payload };
     case 'LOGOUT':
       localStorage.removeItem('access_token');
       localStorage.removeItem('logged_in_user');

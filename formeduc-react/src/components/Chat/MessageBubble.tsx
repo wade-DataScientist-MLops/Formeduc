@@ -128,9 +128,11 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
-  const isUser = !message.user_id.includes('Assistant');
+  // More robust detection of assistant messages
   const isElavira = message.user_id === 'Elavira Assistant';
   const isSolenys = message.user_id === 'Solenys Assistant';
+  const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
+  const isUser = !isAssistant;
 
   return (
     <MessageRow isUser={isUser}>

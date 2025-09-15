@@ -2,19 +2,26 @@ import React, { useEffect, useRef, useCallback } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { chatAPI } from '../../services/api';
-import { Message } from '../../types';
+import { Message, Conversation } from '../../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
 import { AgentSelector } from './AgentSelector';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { AssistantShowcase } from './AssistantShowcase';
+import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 const ChatContainer = styled.div`
   display: flex;
-  flex-direction: column;
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: 'Segoe UI', sans-serif;
+`;
+
+const MainContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-left: 260px; /* Width of sidebar */
 `;
 
 const ChatHeader = styled.div`
@@ -190,6 +197,19 @@ export const ChatInterface: React.FC = () => {
 
       dispatch({ type: 'ADD_MESSAGE', payload: response });
       
+      // Sauvegarder la conversation
+      const updatedMessages = [...state.messages, userMessage, response];
+      const conversation = createConversationFromMessages(updatedMessages);
+      
+      if (state.active_conversation_id) {
+        // Mettre à jour la conversation existante
+        dispatch({ type: 'UPDATE_CONVERSATION', payload: conversation });
+      } else {
+        // Créer une nouvelle conversation
+        dispatch({ type: 'ADD_CONVERSATION', payload: conversation });
+        dispatch({ type: 'SET_ACTIVE_CONVERSATION', payload: conversation.id });
+      }
+      
       if (response.suggested_prompts) {
         dispatch({ type: 'SET_LAST_SUGGESTED_PROMPTS', payload: response.suggested_prompts });
       }
@@ -231,20 +251,59 @@ export const ChatInterface: React.FC = () => {
     dispatch({ type: 'SET_DISPLAY_SUGGESTIONS', payload: false });
   };
 
+  const handleNewChat = () => {
+    dispatch({ type: 'SET_MESSAGES', payload: [] });
+    dispatch({ type: 'SET_ACTIVE_CONVERSATION', payload: null });
+    dispatch({ type: 'SET_LAST_SUGGESTED_PROMPTS', payload: [] });
+    dispatch({ type: 'SET_DISPLAY_SUGGESTIONS', payload: false });
+  };
+
+  const handleConversationSelect = (conversationId: string) => {
+    const conversation = state.conversations.find(c => c.id === conversationId);
+    if (conversation) {
+      dispatch({ type: 'SET_MESSAGES', payload: conversation.messages });
+      dispatch({ type: 'SET_ACTIVE_CONVERSATION', payload: conversationId });
+    }
+  };
+
+  const createConversationFromMessages = (messages: Message[]): Conversation => {
+    const firstUserMessage = messages.find(m => !m.user_id.includes('Assistant'));
+    const lastMessage = messages[messages.length - 1];
+    
+    return {
+      id: `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title: firstUserMessage?.text.slice(0, 50) + '...' || 'Nouvelle conversation',
+      lastMessage: lastMessage?.text.slice(0, 100) + '...' || '',
+      timestamp: lastMessage?.timestamp || new Date().toISOString(),
+      agent: state.selected_agent_id,
+      messages: messages,
+    };
+  };
+
   return (
     <ChatContainer>
-      <ChatHeader>
-        <HeaderLeft>
-          <Title>Messagerie intelligente 💬</Title>
-          <AgentSelector />
-        </HeaderLeft>
-        <HeaderRight>
-          <UserInfo>Connecté en tant que <strong>{state.logged_in_user}</strong></UserInfo>
-          <LogoutButton onClick={handleLogout}>
-            Se déconnecter
-          </LogoutButton>
-        </HeaderRight>
-      </ChatHeader>
+      {state.sidebar_open && (
+        <ChatHistorySidebar
+          conversations={state.conversations}
+          activeConversationId={state.active_conversation_id}
+          onConversationSelect={handleConversationSelect}
+          onNewChat={handleNewChat}
+        />
+      )}
+      
+      <MainContent>
+        <ChatHeader>
+          <HeaderLeft>
+            <Title>Messagerie intelligente 💬</Title>
+            <AgentSelector />
+          </HeaderLeft>
+          <HeaderRight>
+            <UserInfo>Connecté en tant que <strong>{state.logged_in_user}</strong></UserInfo>
+            <LogoutButton onClick={handleLogout}>
+              Se déconnecter
+            </LogoutButton>
+          </HeaderRight>
+        </ChatHeader>
 
       <MessagesContainer>
         {state.messages.length === 0 && !state.thinking && !state.transcribing ? (
@@ -298,15 +357,16 @@ export const ChatInterface: React.FC = () => {
         />
       )}
 
-      <InputContainer>
-        <MessageInput
-          onSendMessage={handleSendMessage}
-          onTranscribeAudio={handleTranscribeAudio}
-          disabled={state.thinking || state.transcribing}
-          audioEnabled={state.audio_enabled}
-          onToggleAudio={() => dispatch({ type: 'SET_AUDIO_ENABLED', payload: !state.audio_enabled })}
-        />
-      </InputContainer>
+        <InputContainer>
+          <MessageInput
+            onSendMessage={handleSendMessage}
+            onTranscribeAudio={handleTranscribeAudio}
+            disabled={state.thinking || state.transcribing}
+            audioEnabled={state.audio_enabled}
+            onToggleAudio={() => dispatch({ type: 'SET_AUDIO_ENABLED', payload: !state.audio_enabled })}
+          />
+        </InputContainer>
+      </MainContent>
     </ChatContainer>
   );
 };
