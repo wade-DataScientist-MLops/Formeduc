@@ -10,6 +10,7 @@ import { SuggestedPrompts } from './SuggestedPrompts';
 import { AssistantShowcase } from './AssistantShowcase';
 import { SolenysShowcase } from './SolenysShowcase';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
+import { AgentManager } from '../Agents/AgentManager';
 
 const ChatContainer = styled.div`
   display: flex;

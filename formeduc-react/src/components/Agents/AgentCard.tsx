@@ -1,107 +1,120 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
+import { Agent, UpdateAgentRequest } from '../../types/agent';
 
-const Card = styled.div`
+const Card = styled.div<{ selected: boolean; isActive: boolean }>`
   background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  border: 1px solid #e2e8f0;
-  transition: all 0.2s;
+  border: 2px solid ${props => props.selected ? '#3b82f6' : '#e1e8ed'};
+  border-radius: 15px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  opacity: ${props => props.isActive ? 1 : 0.6};
+  position: relative;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: #3b82f6;
     transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   }
 `;
 
 const CardHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 15px;
+  margin-bottom: 15px;
 `;
 
-const Avatar = styled.div<{ src?: string }>`
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  background: ${props => props.src ? `url(${props.src})` : '#3b82f6'};
-  background-size: cover;
-  background-position: center;
+const Avatar = styled.div<{ color: string }>`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: ${props => props.color};
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   color: white;
-  font-weight: bold;
-  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
 `;
 
 const AgentInfo = styled.div`
   flex: 1;
+  min-width: 0;
 `;
 
 const AgentName = styled.h3`
-  font-size: 1.25rem;
+  color: #2c3e50;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 4px 0;
+  margin: 0 0 5px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 `;
 
-const AgentType = styled.span`
-  background: #e0f2fe;
-  color: #0369a1;
+const AgentRole = styled.p`
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const StatusBadge = styled.div<{ isActive: boolean }>`
+  position: absolute;
+  top: 15px;
+  right: 15px;
   padding: 4px 8px;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  background: ${props => props.isActive ? '#10b981' : '#ef4444'};
+  color: white;
+`;
+
+const CardBody = styled.div`
+  margin-bottom: 15px;
+`;
+
+const Specialty = styled.div`
+  color: #3b82f6;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  background: #f0f8ff;
+  border-radius: 8px;
+  display: inline-block;
 `;
 
 const Description = styled.p`
-  color: #64748b;
+  color: #495057;
   font-size: 0.9rem;
-  line-height: 1.5;
-  margin: 12px 0;
+  line-height: 1.4;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 `;
 
-const Capabilities = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 12px 0;
-`;
-
-const CapabilityTag = styled.span`
-  background: #f1f5f9;
-  color: #475569;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-`;
-
-const MoreTag = styled.span`
-  background: #e2e8f0;
-  color: #64748b;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  font-weight: 500;
-`;
-
-const Footer = styled.div`
+const CardFooter = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e2e8f0;
+  padding-top: 15px;
+  border-top: 1px solid #e1e8ed;
 `;
 
-const CreatedInfo = styled.div`
+const ModelInfo = styled.div`
+  color: #6c757d;
   font-size: 0.8rem;
-  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 `;
 
 const Actions = styled.div`
@@ -109,108 +122,184 @@ const Actions = styled.div`
   gap: 8px;
 `;
 
-const ActionButton = styled.button<{ variant?: 'primary' | 'secondary' | 'danger' }>`
-  padding: 8px 16px;
+const ActionButton = styled.button<{ variant: 'edit' | 'delete' | 'toggle' }>`
+  padding: 6px 10px;
+  border: none;
   border-radius: 6px;
   font-size: 0.8rem;
-  font-weight: 500;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid transparent;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
 
   ${props => {
     switch (props.variant) {
-      case 'primary':
+      case 'edit':
         return `
-          background: #3b82f6;
-          color: white;
-          &:hover { background: #2563eb; }
+          background: #f8f9fa;
+          color: #6c757d;
+          border: 1px solid #e1e8ed;
+          
+          &:hover {
+            background: #e9ecef;
+            color: #2c3e50;
+          }
         `;
-      case 'danger':
+      case 'delete':
         return `
-          background: #ef4444;
-          color: white;
-          &:hover { background: #dc2626; }
+          background: #fef2f2;
+          color: #ef4444;
+          border: 1px solid #fecaca;
+          
+          &:hover {
+            background: #fee2e2;
+          }
         `;
-      default:
+      case 'toggle':
         return `
-          background: white;
-          color: #64748b;
-          border-color: #e2e8f0;
-          &:hover { background: #f8fafc; }
+          background: #f0f8ff;
+          color: #3b82f6;
+          border: 1px solid #b3d9ff;
+          
+          &:hover {
+            background: #e1f0ff;
+          }
         `;
     }
   }}
 `;
 
-export interface Agent {
-  id: string;
-  name: string;
-  avatar: string;
-  description: string;
-  capabilities: string[];
-  status: 'Active' | 'Inactive';
-  createdAt: string;
-  knowledgePacks: number;
-}
+const DropdownMenu = styled.div<{ isOpen: boolean }>`
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: ${props => props.isOpen ? 'block' : 'none'};
+  min-width: 120px;
+`;
+
+const DropdownItem = styled.button`
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: #2c3e50;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f8f9fa;
+  }
+
+  &:first-child {
+    border-radius: 8px 8px 0 0;
+  }
+
+  &:last-child {
+    border-radius: 0 0 8px 8px;
+  }
+`;
 
 interface AgentCardProps {
   agent: Agent;
-  onChatClick?: () => void;
+  isSelected: boolean;
+  onSelect: () => void;
+  onUpdate: (agent: UpdateAgentRequest) => void;
+  onDelete: (agentId: string) => void;
+  onToggleActive: (agentId: string) => void;
 }
 
-export const AgentCard: React.FC<AgentCardProps> = ({ agent, onChatClick }) => {
-  const visibleCapabilities = agent.capabilities.slice(0, 4);
-  const remainingCapabilities = agent.capabilities.length - 4;
+export const AgentCard: React.FC<AgentCardProps> = ({
+  agent,
+  isSelected,
+  onSelect,
+  onUpdate,
+  onDelete,
+  onToggleActive
+}) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const handleEdit = () => {
+    // TODO: Ouvrir le formulaire d'édition
+    setShowDropdown(false);
+  };
+
+  const handleDelete = () => {
+    onDelete(agent.id);
+    setShowDropdown(false);
+  };
+
+  const handleToggle = () => {
+    onToggleActive(agent.id);
+    setShowDropdown(false);
+  };
 
   return (
-    <Card>
+    <Card 
+      selected={isSelected} 
+      isActive={agent.isActive}
+      onClick={onSelect}
+    >
+      <StatusBadge isActive={agent.isActive}>
+        {agent.isActive ? 'Actif' : 'Inactif'}
+      </StatusBadge>
+
       <CardHeader>
-        <Avatar src={agent.avatar}>
-          {!agent.avatar && agent.name.charAt(0)}
+        <Avatar color={agent.color}>
+          {agent.avatar}
         </Avatar>
         <AgentInfo>
           <AgentName>{agent.name}</AgentName>
-          <AgentType>{agent.id === 'elavira' ? 'Spécialiste Formeduc' : agent.id === 'solenys' ? 'Professeur Académique' : 'Assistant IA'}</AgentType>
+          <AgentRole>{agent.role}</AgentRole>
         </AgentInfo>
       </CardHeader>
 
-      <Description>{agent.description}</Description>
+      <CardBody>
+        <Specialty>{agent.specialty}</Specialty>
+        <Description>{agent.description}</Description>
+      </CardBody>
 
-      <Capabilities>
-        {visibleCapabilities.map((capability, index) => (
-          <CapabilityTag key={index}>{capability}</CapabilityTag>
-        ))}
-        {remainingCapabilities > 0 && (
-          <MoreTag>+{remainingCapabilities} autres</MoreTag>
-        )}
-      </Capabilities>
-
-      <Footer>
-        <CreatedInfo>
-          Créé le {agent.createdAt}
-          {agent.knowledgePacks > 0 && (
-            <div>{agent.knowledgePacks} pack(s) de connaissances</div>
-          )}
-        </CreatedInfo>
+      <CardFooter>
+        <ModelInfo>
+          <span>🤖</span>
+          <span>{agent.model}</span>
+        </ModelInfo>
+        
         <Actions>
-          <ActionButton variant="primary" onClick={onChatClick}>
-            <span>💬</span>
-            Chat
+          <ActionButton
+            variant="toggle"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggle();
+            }}
+          >
+            {agent.isActive ? 'Désactiver' : 'Activer'}
           </ActionButton>
-          <ActionButton>
-            <span>✏️</span>
-            Modifier
-          </ActionButton>
-          <ActionButton variant="danger">
-            <span>🗑️</span>
-            Supprimer
+          
+          <ActionButton
+            variant="edit"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDropdown(!showDropdown);
+            }}
+          >
+            ⋯
           </ActionButton>
         </Actions>
-      </Footer>
+
+        <DropdownMenu isOpen={showDropdown}>
+          <DropdownItem onClick={handleEdit}>
+            ✏️ Modifier
+          </DropdownItem>
+          <DropdownItem onClick={handleDelete}>
+            🗑️ Supprimer
+          </DropdownItem>
+        </DropdownMenu>
+      </CardFooter>
     </Card>
   );
 };

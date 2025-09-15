@@ -1,35 +1,76 @@
-
-# backend/db/schemas.py
-
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 from typing import Optional
-import datetime
+from datetime import datetime
 
-# Schéma de base pour un utilisateur
-class UserBase(BaseModel):
-    email: EmailStr
-    username: str
+# Schémas pour les agents
+class AgentBase(BaseModel):
+    name: str
+    role: str
+    specialty: str
+    description: str
+    prompt: str
+    model: str
+    avatar: str
+    color: str
+    knowledge_base: str
 
-# Schéma pour la création d'un nouvel utilisateur (inclut le mot de passe)
-class UserCreate(UserBase):
-    password: str
+class AgentCreate(AgentBase):
+    pass
 
-# Schéma pour la mise à jour d'un utilisateur (tous les champs sont optionnels)
-class UserUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    username: Optional[str] = None
-    password: Optional[str] = None
+class AgentUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    specialty: Optional[str] = None
+    description: Optional[str] = None
+    prompt: Optional[str] = None
+    model: Optional[str] = None
+    avatar: Optional[str] = None
+    color: Optional[str] = None
+    knowledge_base: Optional[str] = None
     is_active: Optional[bool] = None
-    is_admin: Optional[bool] = None
 
-# Schéma pour un utilisateur tel qu'il sera retourné par l'API
-# (n'inclut pas le mot de passe pour des raisons de sécurité)
-class User(UserBase):
-    id: int
+class AgentResponse(AgentBase):
+    id: str
     is_active: bool
-    is_admin: bool
-    created_at: datetime.datetime
-    updated_at: datetime.datetime
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
-        orm_mode = True # Permet à Pydantic de lire les données d'un objet ORM SQLAlchemy
+        from_attributes = True
+
+# Schémas pour les conversations
+class ConversationBase(BaseModel):
+    title: str
+    agent_id: str
+
+class ConversationCreate(ConversationBase):
+    pass
+
+class ConversationUpdate(BaseModel):
+    title: Optional[str] = None
+    agent_id: Optional[str] = None
+
+class ConversationResponse(ConversationBase):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+# Schémas pour les messages
+class MessageBase(BaseModel):
+    text: str
+    user_id: str
+    agent_id: Optional[str] = None
+
+class MessageCreate(MessageBase):
+    pass
+
+class MessageResponse(MessageBase):
+    id: str
+    timestamp: datetime
+    conversation_id: Optional[str] = None
+
+    class Config:
+        from_attributes = True

@@ -1,128 +1,215 @@
-"""
-Routes pour la gestion des agents
-"""
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
+from typing import List, Optional
+from datetime import datetime
+import uuid
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Dict, Any, List
-from core.agent_manager import agent_manager
+from ..db.database import get_db
+from ..db.models import Agent as AgentModel
+from ..db.schemas import AgentCreate, AgentUpdate, AgentResponse
+from ..core.auth import get_current_user
 
-router = APIRouter(prefix="/api/agents", tags=["Agents"])
+router = APIRouter()
 
-class AgentCreate(BaseModel):
-    name: str
-    role: str
-    description: str
-    model: str = "qwen2.5:7b"
-    systemPrompt: str = "You are a helpful assistant"
-    timeout: int = 30000
-    temperature: float = 0.6
-    maxTokens: int = 400
-    topK: int = 40
-    topP: float = 0.9
-    repetitionPenalty: float = 1.0
-    stopWords: str = "User:\nAssistant:"
-    tools: Dict[str, Any] = {}
-    knowledgePacks: Dict[str, Any] = {}
+@router.get("/agents", response_model=List[AgentResponse])
+async def get_agents(
+    skip: int = 0,
+    limit: int = 100,
+    active_only: bool = False,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Récupérer la liste des agents"""
+    query = db.query(AgentModel)
+    
+    if active_only:
+        query = query.filter(AgentModel.is_active == True)
+    
+    agents = query.offset(skip).limit(limit).all()
+    return agents
 
-class AgentResponse(BaseModel):
-    id: str
-    name: str
-    role: str
-    description: str
-    model: str
-    status: str
-    created_at: str
+@router.get("/agents/{agent_id}", response_model=AgentResponse)
+async def get_agent(
+    agent_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Récupérer un agent par son ID"""
+    agent = db.query(AgentModel).filter(AgentModel.id == agent_id).first()
+    
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    return agent
 
-@router.post("/create", response_model=AgentResponse)
-async def create_agent(agent_data: AgentCreate):
-    """Crée un nouvel agent"""
-    try:
-        # Convertir en dictionnaire
-        agent_dict = agent_data.dict()
-        
-        # Générer un ID unique
-        agent_id = f"agent_{len(agent_manager.agents) + 1}_{agent_data.name.lower().replace(' ', '_')}"
-        agent_dict['id'] = agent_id
-        
-        # Créer l'agent
-        created_id = agent_manager.create_agent(agent_dict)
-        
-        # Récupérer l'agent créé
-        agent = agent_manager.get_agent(created_id)
-        
-        if not agent:
-            raise HTTPException(status_code=500, detail="Erreur lors de la création de l'agent")
-        
-        return AgentResponse(
-            id=agent['id'],
-            name=agent['name'],
-            role=agent['role'],
-            description=agent['description'],
-            model=agent['model'],
-            status=agent['status'],
-            created_at=agent['created_at']
+@router.post("/agents", response_model=AgentResponse)
+async def create_agent(
+    agent_data: AgentCreate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Créer un nouvel agent"""
+    
+    # Vérifier que le nom est unique
+    existing_agent = db.query(AgentModel).filter(
+        AgentModel.name.ilike(agent_data.name)
+    ).first()
+    
+    if existing_agent:
+        raise HTTPException(
+            status_code=400, 
+            detail="Un agent avec ce nom existe déjà"
         )
-        
-    except Exception as e:
-        print(f"Erreur lors de la création de l'agent: {e}")
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la création de l'agent: {str(e)}")
+    
+    # Créer l'agent
+    agent = AgentModel(
+        id=f"agent-{uuid.uuid4().hex[:8]}",
+        name=agent_data.name,
+        role=agent_data.role,
+        specialty=agent_data.specialty,
+        description=agent_data.description,
+        prompt=agent_data.prompt,
+        model=agent_data.model,
+        avatar=agent_data.avatar,
+        color=agent_data.color,
+        knowledge_base=agent_data.knowledge_base,
+        is_active=True,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    
+    db.add(agent)
+    db.commit()
+    db.refresh(agent)
+    
+    return agent
 
-@router.get("/", response_model=List[AgentResponse])
-async def get_all_agents():
-    """Récupère tous les agents"""
-    try:
-        agents = agent_manager.get_all_agents()
-        return [
-            AgentResponse(
-                id=agent['id'],
-                name=agent['name'],
-                role=agent['role'],
-                description=agent['description'],
-                model=agent['model'],
-                status=agent['status'],
-                created_at=agent['created_at']
+@router.put("/agents/{agent_id}", response_model=AgentResponse)
+async def update_agent(
+    agent_id: str,
+    agent_data: AgentUpdate,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Mettre à jour un agent"""
+    
+    agent = db.query(AgentModel).filter(AgentModel.id == agent_id).first()
+    
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    # Vérifier que le nom est unique (si modifié)
+    if agent_data.name and agent_data.name != agent.name:
+        existing_agent = db.query(AgentModel).filter(
+            AgentModel.name.ilike(agent_data.name),
+            AgentModel.id != agent_id
+        ).first()
+        
+        if existing_agent:
+            raise HTTPException(
+                status_code=400, 
+                detail="Un agent avec ce nom existe déjà"
             )
-            for agent in agents
-        ]
-    except Exception as e:
-        print(f"Erreur lors de la récupération des agents: {e}")
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération des agents: {str(e)}")
+    
+    # Mettre à jour les champs fournis
+    update_data = agent_data.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(agent, field, value)
+    
+    agent.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(agent)
+    
+    return agent
 
-@router.get("/{agent_id}", response_model=AgentResponse)
-async def get_agent(agent_id: str):
-    """Récupère un agent par son ID"""
-    try:
-        agent = agent_manager.get_agent(agent_id)
-        if not agent:
-            raise HTTPException(status_code=404, detail="Agent non trouvé")
-        
-        return AgentResponse(
-            id=agent['id'],
-            name=agent['name'],
-            role=agent['role'],
-            description=agent['description'],
-            model=agent['model'],
-            status=agent['status'],
-            created_at=agent['created_at']
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Erreur lors de la récupération de l'agent: {e}")
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la récupération de l'agent: {str(e)}")
+@router.delete("/agents/{agent_id}")
+async def delete_agent(
+    agent_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Supprimer un agent"""
+    
+    agent = db.query(AgentModel).filter(AgentModel.id == agent_id).first()
+    
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    db.delete(agent)
+    db.commit()
+    
+    return {"message": "Agent supprimé avec succès"}
 
-@router.delete("/{agent_id}")
-async def delete_agent(agent_id: str):
-    """Supprime un agent"""
-    try:
-        success = agent_manager.delete_agent(agent_id)
-        if not success:
-            raise HTTPException(status_code=404, detail="Agent non trouvé")
-        
-        return {"message": "Agent supprimé avec succès"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Erreur lors de la suppression de l'agent: {e}")
-        raise HTTPException(status_code=500, detail=f"Erreur lors de la suppression de l'agent: {str(e)}")
+@router.patch("/agents/{agent_id}/toggle")
+async def toggle_agent_status(
+    agent_id: str,
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    """Activer/Désactiver un agent"""
+    
+    agent = db.query(AgentModel).filter(AgentModel.id == agent_id).first()
+    
+    if not agent:
+        raise HTTPException(status_code=404, detail="Agent non trouvé")
+    
+    agent.is_active = not agent.is_active
+    agent.updated_at = datetime.utcnow()
+    
+    db.commit()
+    db.refresh(agent)
+    
+    return {
+        "message": f"Agent {'activé' if agent.is_active else 'désactivé'} avec succès",
+        "is_active": agent.is_active
+    }
+
+@router.get("/agents/templates")
+async def get_agent_templates():
+    """Récupérer les templates d'agents disponibles"""
+    # Retourner les templates prédéfinis
+    templates = [
+        {
+            "id": "teaching",
+            "name": "Professeur/Enseignant",
+            "category": "Éducation",
+            "description": "Agent spécialisé dans l'enseignement et l'éducation",
+            "default_prompt": "Tu es un professeur expérimenté et bienveillant...",
+            "default_model": "llama3.2:1b",
+            "default_avatar": "👨‍🏫",
+            "default_color": "#3b82f6"
+        },
+        {
+            "id": "technical_support",
+            "name": "Support Technique",
+            "category": "Technique",
+            "description": "Agent spécialisé dans le support technique",
+            "default_prompt": "Tu es un expert en support technique...",
+            "default_model": "llama3.2:1b",
+            "default_avatar": "🔧",
+            "default_color": "#10b981"
+        },
+        {
+            "id": "administrative",
+            "name": "Assistant Administratif",
+            "category": "Administration",
+            "description": "Agent spécialisé dans les tâches administratives",
+            "default_prompt": "Tu es un assistant administratif professionnel...",
+            "default_model": "llama3.2:1b",
+            "default_avatar": "📋",
+            "default_color": "#8b5cf6"
+        },
+        {
+            "id": "customer_service",
+            "name": "Service Client",
+            "category": "Commercial",
+            "description": "Agent spécialisé dans le service client",
+            "default_prompt": "Tu es un agent de service client professionnel...",
+            "default_model": "llama3.2:1b",
+            "default_avatar": "🎧",
+            "default_color": "#f59e0b"
+        }
+    ]
+    
+    return templates
