@@ -134,6 +134,11 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
   const isUser = !isAssistant;
 
+  // Debug pour vérifier l'alignement de Solenys
+  if (isSolenys) {
+    console.log(`[Solenys Debug] user_id: ${message.user_id}, isSolenys: ${isSolenys}, isUser: ${isUser}, isAssistant: ${isAssistant}`);
+  }
+
 
   return (
     <MessageRow isUser={isUser}>
