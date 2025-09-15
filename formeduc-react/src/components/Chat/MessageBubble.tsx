@@ -7,6 +7,7 @@ const MessageRow = styled.div<{ isUser: boolean }>`
   width: 100%;
   margin-bottom: 12px;
   justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
+  /* FORCER l'alignement : isUser=true → droite, isUser=false → gauche */
 `;
 
 const MessageContainer = styled.div<{ isUser: boolean }>`
@@ -128,19 +129,19 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
-  // Detection robuste des messages d'assistant
+  // Detection FORCÉE des messages d'assistant
   const isElavira = message.user_id === 'Elavira Assistant';
   const isSolenys = message.user_id === 'Solenys Assistant';
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
+  
+  // FORCER l'alignement : assistants à gauche, utilisateurs à droite
   const isUser = !isAssistant;
-
+  
   // Debug pour vérifier la détection
   console.log(`[MessageBubble] user_id: "${message.user_id}", isElavira: ${isElavira}, isSolenys: ${isSolenys}, isAssistant: ${isAssistant}, isUser: ${isUser}`);
   console.log(`[MessageBubble] Alignement: ${isUser ? 'DROITE (utilisateur)' : 'GAUCHE (assistant)'}`);
   
-  // CORRECTION: S'assurer que la logique est cohérente
-  // isUser=true → Droite (utilisateur)
-  // isUser=false → Gauche (assistant - Elavira ou Solenys)
+  // GARANTIE: isUser=true → Droite (utilisateur), isUser=false → Gauche (assistant)
 
 
 
