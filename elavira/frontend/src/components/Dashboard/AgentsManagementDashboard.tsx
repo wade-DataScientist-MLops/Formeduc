@@ -251,7 +251,7 @@ export const AgentsManagementDashboard: React.FC = () => {
 
   const handleAgentCreated = (newAgent: any) => {
     // Ajouter le nouvel agent à la liste
-    setAgents(prev => [...prev, newAgent]);
+    setAgents(prev => [...(prev || []), newAgent]);
     console.log('Nouvel agent créé:', newAgent);
   };
 
@@ -275,7 +275,7 @@ export const AgentsManagementDashboard: React.FC = () => {
 
 
       <AgentsGrid>
-        {agents.map((agent) => (
+        {(agents || []).map((agent) => (
           <AgentCard
             key={agent.id}
             onClick={() => handleAgentSelect(agent.id)}
