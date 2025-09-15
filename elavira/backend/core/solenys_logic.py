@@ -71,27 +71,23 @@ Réponse:
 
 Question de l'élève: {question}
 
-Réponds de manière pédagogique et encourageante. Explique le calcul étape par étape selon le programme PFEQ.
+Réponds de manière concise et pédagogique. Donne la réponse directe puis une explication courte.
 
-Exemple de réponse:
-"Excellente question ! Calculons ensemble : 2 × 2 = 4
+Format de réponse:
+"**Résultat :** [réponse]
 
-Voici comment procéder :
-1. 2 × 2 = (2 + 2) = 4
-2. Ou directement : 2 × 2 = 4
+**Explication :** [explication courte]
 
-En mathématiques, la multiplication est une addition répétée. 2 × 2 signifie '2 répété 2 fois', ce qui donne 4.
-
-As-tu d'autres calculs à faire ensemble ?"
+**Autre calcul ?**"
 
 Réponse:"""
             
             response_text = ollama_generate_simple(math_prompt, "Tu es Solenys, professeur de mathématiques québécois spécialisé dans le programme PFEQ.")
         except Exception as e:
             print(f"[Solenys] Erreur calcul: {e}")
-            response_text = f"Bonjour ! Je suis Solenys, votre professeur de mathématiques ! 📐\n\nJe vois que vous me demandez : '{question}'\n\nMalheureusement, je rencontre des difficultés techniques pour effectuer ce calcul. Pouvez-vous reformuler votre question ?\n\nJe peux vous aider avec :\n• **Calculs de base** - Addition, soustraction, multiplication, division\n• **Algèbre** - Équations, fonctions\n• **Géométrie** - Formes, angles, aires\n• **Statistiques** - Moyennes, probabilités"
+            response_text = f"📐 **Erreur de calcul**\n\n**Question :** {question}\n\n**Problème technique** - Reformulez votre question.\n\n**Calculs disponibles :**\n• **Addition, soustraction, multiplication, division**\n• **Algèbre, géométrie, statistiques**\n\n**Autre calcul ?**"
     elif "math" in question.lower() or "mathématiques" in question.lower() or "algèbre" in question.lower() or "en mathematiques" in question.lower():
-        response_text = f"Bonjour ! Je suis Solenys, votre professeur de mathématiques ! 📐\n\nJe vois que vous vous intéressez aux mathématiques. Selon le programme PFEQ, je peux vous accompagner dans plusieurs domaines :\n\n• **Algèbre et équations** - Résolution d'équations, fonctions\n• **Géométrie** - Formes, angles, calculs d'aires\n• **Statistiques et probabilités** - Analyse de données\n• **Fonctions** - Représentation graphique et analyse\n• **Calcul différentiel et intégral** - Pour les niveaux avancés\n\nQuel niveau êtes-vous et sur quel aspect aimeriez-vous travailler ? Je peux adapter mes explications à votre niveau !"
+        response_text = f"📐 **Mathématiques - Programme PFEQ**\n\n**Domaines disponibles :**\n• **Algèbre** - Équations, fonctions, polynômes\n• **Géométrie** - Formes, angles, aires, volumes\n• **Statistiques** - Moyennes, probabilités, graphiques\n• **Calcul** - Dérivées, intégrales (niveaux avancés)\n\n**Quel est votre niveau ?** (Secondaire 1-5)\n**Sur quoi voulez-vous travailler ?**"
     elif "science" in question.lower() or "physique" in question.lower() or "chimie" in question.lower() or "biologie" in question.lower() or "eau" in question.lower() or "composition" in question.lower():
         # Utiliser Ollama avec les documents PFEQ pour les questions scientifiques
         try:
@@ -99,15 +95,15 @@ Réponse:"""
             response_text = ollama_generate_simple(full_prompt, "Tu es Solenys, professeur de sciences québécois spécialisé dans le programme PFEQ.")
         except Exception as e:
             print(f"[Solenys] Erreur sciences: {e}")
-            response_text = f"Bonjour ! Je suis Solenys, votre professeur de sciences ! 🔬\n\nExcellent choix ! Les sciences sont fascinantes. Selon le programme PFEQ, je peux vous accompagner dans :\n\n• **Physique** - Mécanique, électricité, ondes, énergie\n• **Chimie** - Réactions chimiques, liaisons, équilibres\n• **Biologie** - Cellules, génétique, évolution, écosystèmes\n\nLes sciences permettent de comprendre le monde qui nous entoure. Quel domaine vous passionne le plus ? Et à quel niveau scolaire êtes-vous ?"
+            response_text = f"🔬 **Sciences - Programme PFEQ**\n\n**Matières disponibles :**\n• **Physique** - Mécanique, électricité, ondes\n• **Chimie** - Réactions, liaisons, équilibres\n• **Biologie** - Cellules, génétique, écosystèmes\n\n**Quel domaine vous intéresse ?**\n**Quel est votre niveau ?** (Secondaire 1-5)"
     elif "français" in question.lower() or "littérature" in question.lower() or "grammaire" in question.lower():
-        response_text = f"Bonjour ! Je suis Solenys, votre professeur de français ! 📚\n\nLe français est une langue magnifique ! Selon le programme PFEQ, je peux vous aider avec :\n\n• **Grammaire et syntaxe** - Structure de la langue française\n• **Littérature québécoise** - Auteurs et œuvres du Québec\n• **Analyse de textes** - Compréhension et interprétation\n• **Rédaction et composition** - Techniques d'écriture\n• **Communication orale** - Expression et présentation\n\nLa maîtrise du français est essentielle pour réussir. Sur quel aspect aimeriez-vous vous concentrer ?"
+        response_text = f"📚 **Français - Programme PFEQ**\n\n**Domaines disponibles :**\n• **Grammaire** - Syntaxe, conjugaisons, orthographe\n• **Littérature** - Auteurs québécois, analyse de textes\n• **Rédaction** - Composition, techniques d'écriture\n• **Communication** - Expression orale, présentation\n\n**Quel aspect vous intéresse ?**\n**Quel est votre niveau ?** (Secondaire 1-5)"
     elif "probabilité" in question.lower() or "probabilite" in question.lower() or "probabilités" in question.lower() or "en probabilite" in question.lower() or "en probabilité" in question.lower():
-        response_text = f"Excellent ! Les probabilités sont fascinantes ! 🎲\n\nSelon le programme PFEQ, je peux vous accompagner dans :\n\n• **Probabilités simples** - Lancer de dés, pièces de monnaie\n• **Probabilités composées** - Événements indépendants et dépendants\n• **Arbres de probabilités** - Visualisation des résultats possibles\n• **Espérance mathématique** - Valeur attendue d'un événement\n• **Applications pratiques** - Jeux, statistiques, prise de décision\n\nLes probabilités nous aident à comprendre le hasard et à prendre de meilleures décisions ! Quel niveau êtes-vous et quel aspect vous intéresse le plus ?"
+        response_text = f"🎲 **Probabilités - Programme PFEQ**\n\n**Concepts disponibles :**\n• **Probabilités simples** - Dés, pièces, cartes\n• **Probabilités composées** - Événements multiples\n• **Arbres de probabilités** - Visualisation\n• **Espérance mathématique** - Valeur attendue\n\n**Quel niveau ?** (Secondaire 1-5)\n**Quel concept vous intéresse ?**"
     elif "histoire" in question.lower() or "géographie" in question.lower():
-        response_text = f"Bonjour ! Je suis Solenys, votre professeur d'histoire et géographie ! 🗺️\n\nL'histoire et la géographie nous aident à comprendre notre monde ! Selon le programme PFEQ :\n\n• **Histoire du Québec** - De la Nouvelle-France à aujourd'hui\n• **Histoire mondiale** - Civilisations et événements marquants\n• **Géographie du Québec** - Territoire, ressources, population\n• **Géographie mondiale** - Pays, cultures, enjeux contemporains\n\nCes matières nous connectent à notre héritage et à notre place dans le monde. Quel aspect vous intéresse ?"
+        response_text = f"🗺️ **Histoire & Géographie - Programme PFEQ**\n\n**Domaines disponibles :**\n• **Histoire du Québec** - Nouvelle-France à aujourd'hui\n• **Histoire mondiale** - Civilisations, événements\n• **Géographie du Québec** - Territoire, ressources\n• **Géographie mondiale** - Pays, cultures\n\n**Quel domaine vous intéresse ?**\n**Quel est votre niveau ?** (Secondaire 1-5)"
     elif "bonjour" in question.lower() or "salut" in question.lower() or "bonsoir" in question.lower():
-        response_text = "Bonjour et bienvenue ! 👋\n\nJe suis Solenys, votre professeur québécois spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec.\n\nJe suis là pour vous accompagner dans votre apprentissage et vous aider à réussir ! Je peux vous assister en :\n\n• **Mathématiques** - Algèbre, géométrie, statistiques\n• **Sciences** - Physique, chimie, biologie\n• **Français** - Littérature, grammaire, rédaction\n• **Histoire et géographie** - Québec et monde\n\nQuelle matière aimeriez-vous explorer ensemble aujourd'hui ?"
+        response_text = "👋 **Bonjour ! Je suis Solenys**\n\n**Professeur québécois - Programme PFEQ**\n\n**Matières disponibles :**\n• **Mathématiques** - Algèbre, géométrie, statistiques\n• **Sciences** - Physique, chimie, biologie\n• **Français** - Littérature, grammaire, rédaction\n• **Histoire & Géographie** - Québec et monde\n\n**Quelle matière vous intéresse ?**"
     else:
         # Utiliser Ollama avec les documents PFEQ pour les questions éducatives
         try:
@@ -115,7 +111,7 @@ Réponse:"""
             response_text = ollama_generate_simple(full_prompt, "Tu es Solenys, professeur québécois spécialisé dans le programme PFEQ.")
         except Exception as e:
             print(f"[Solenys] Erreur Ollama: {e}")
-            response_text = f"Bonjour ! Je suis Solenys, votre professeur québécois ! 🎓\n\nJe vois que vous me demandez : '{question}'\n\nSelon le programme PFEQ, je peux vous accompagner dans plusieurs matières du secondaire :\n\n• **Mathématiques** - Tous niveaux, du calcul de base au calcul avancé\n• **Sciences** - Physique, chimie, biologie avec expériences pratiques\n• **Français** - Littérature québécoise, grammaire, communication\n• **Histoire et géographie** - Du Québec et du monde\n\nJe m'adapte à votre niveau et votre style d'apprentissage. Sur quelle matière aimeriez-vous vous concentrer ?"
+            response_text = f"🎓 **Solenys - Professeur PFEQ**\n\n**Question :** {question}\n\n**Matières disponibles :**\n• **Mathématiques** - Calcul, algèbre, géométrie\n• **Sciences** - Physique, chimie, biologie\n• **Français** - Littérature, grammaire\n• **Histoire & Géographie** - Québec et monde\n\n**Quelle matière vous intéresse ?**"
 
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, "solenys", "user", question)
