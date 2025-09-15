@@ -335,14 +335,14 @@ export const AgentsManagementDashboard: React.FC = () => {
             <AgentDescription>{agent.description}</AgentDescription>
 
             <CapabilitiesContainer>
-              {agent.capabilities.map((capability: string, index: number) => (
+              {(agent.capabilities || []).map((capability: string, index: number) => (
                 <CapabilityTag key={index}>{capability}</CapabilityTag>
               ))}
             </CapabilitiesContainer>
 
             <AgentFooter>
-              <CreationDate>Créé le {agent.createdAt}</CreationDate>
-              {agent.knowledgePacks > 0 && (
+              <CreationDate>Créé le {agent.createdAt || 'N/A'}</CreationDate>
+              {(agent.knowledgePacks || 0) > 0 && (
                 <KnowledgePacks>{agent.knowledgePacks} pack(s) de connaissances</KnowledgePacks>
               )}
             </AgentFooter>
