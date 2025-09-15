@@ -18,9 +18,13 @@ def get_chroma_client(persistent: bool = True, path: str = "./backend/chroma_dat
         print("🧪 Client ChromaDB en mémoire (non persistant)")
         return chromadb.Client()
 
-# Client et collection globale
+# Client et collections globales
 chroma_client = get_chroma_client()
-collection = chroma_client.get_or_create_collection("elavira_collection")
+elavira_collection = chroma_client.get_or_create_collection("elavira_collection")
+solenys_collection = chroma_client.get_or_create_collection("solenys_collection")
+
+# Collection par défaut pour compatibilité
+collection = elavira_collection
 
 # --- Embedder SentenceTransformer ---
 try:
@@ -32,29 +36,35 @@ except Exception as e:
 
 # --- Fonctions utilitaires ---
 
-def index_documents(texts: List[str], ids: List[str] = None):
+def index_documents(texts: List[str], ids: List[str] = None, collection_name: str = "elavira"):
     if not texts:
         print("Aucun texte à indexer.")
         return []
+
+    # Sélectionner la bonne collection
+    target_collection = elavira_collection if collection_name == "elavira" else solenys_collection
 
     embeddings = embedder.encode(texts).tolist()
     metadatas = [{"source": f"doc_{i}"} for i in range(len(texts))]
 
     if ids is None:
-        current_count = collection.count()
+        current_count = target_collection.count()
         ids = [f"doc_{current_count + i}" for i in range(len(texts))]
 
-    collection.add(documents=texts, embeddings=embeddings, metadatas=metadatas, ids=ids)
-    print(f"✅ {len(texts)} documents indexés dans ChromaDB.")
+    target_collection.add(documents=texts, embeddings=embeddings, metadatas=metadatas, ids=ids)
+    print(f"✅ {len(texts)} documents indexés dans la collection {collection_name}.")
     return ids
 
-def query_documents(query_text: str, n_results: int = 3) -> List[str]:
+def query_documents(query_text: str, n_results: int = 3, collection_name: str = "elavira") -> List[str]:
     if not query_text:
         return []
 
+    # Sélectionner la bonne collection
+    target_collection = elavira_collection if collection_name == "elavira" else solenys_collection
+
     query_embedding = embedder.encode([query_text]).tolist()
 
-    results = collection.query(
+    results = target_collection.query(
         query_embeddings=query_embedding,
         n_results=n_results,
         include=['documents']

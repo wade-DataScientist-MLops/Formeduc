@@ -128,8 +128,8 @@ STYLE : Toujours professionnel, chaleureux, bienveillant et motivant. Pose des q
     # Récupération du contexte de conversation
     conversation_context = get_conversation_context(user_id, agent_id, max_messages=3)
     
-    # Récupération des documents les plus pertinents de Formeduc
-    context_docs = query_documents(query, n_results=3)
+    # Récupération des documents les plus pertinents de Formeduc (collection Elavira uniquement)
+    context_docs = query_documents(query, n_results=3, collection_name="elavira")
     context = "\n\n".join(context_docs) if context_docs else "Aucun contexte Formeduc disponible."
 
     # Construction du prompt avec mémoire de conversation

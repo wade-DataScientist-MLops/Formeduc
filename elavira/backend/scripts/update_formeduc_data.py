@@ -11,7 +11,7 @@ from datetime import datetime
 # Ajouter le répertoire parent au path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.chroma_client import index_documents, get_chroma_client
+from core.chroma_client import index_documents, get_chroma_client, elavira_collection, embedder
 
 def get_updated_formeduc_knowledge_base():
     """Base de connaissances Formeduc mise à jour avec les vraies informations du site"""
@@ -305,16 +305,15 @@ def main():
             })
             ids.append(f"formeduc_{i}_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
         
-        # Utiliser la fonction index_documents existante
-        from core.chroma_client import collection, embedder
+        # Utiliser la collection Elavira spécifiquement
         embeddings = embedder.encode(texts).tolist()
-        collection.add(documents=texts, embeddings=embeddings, metadatas=metadatas, ids=ids)
+        elavira_collection.add(documents=texts, embeddings=embeddings, metadatas=metadatas, ids=ids)
         print("✅ Base de connaissances Formeduc mise à jour avec succès!")
         
         # Afficher un résumé
         print(f"\n📊 Résumé de la mise à jour:")
         print(f"- Nombre total de documents: {len(knowledge_base)}")
-        print(f"- Collection: elavira_collection")
+        print(f"- Collection: {elavira_collection.name}")
         print(f"- Date de mise à jour: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         
         # Afficher les catégories

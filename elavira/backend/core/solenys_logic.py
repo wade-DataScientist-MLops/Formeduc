@@ -17,12 +17,12 @@ def ask_solenys(question: str, user_id: str = "default") -> dict:
     # Récupération du contexte de conversation
     conversation_context = get_conversation_context(user_id, "solenys", max_messages=3)
     
-    # Recherche dans les documents PFEQ pour les questions éducatives
+    # Recherche dans les documents PFEQ pour les questions éducatives (collection Solenys uniquement)
     from .chroma_client import query_documents
     pfeq_context = ""
     try:
-        # Rechercher dans les documents PFEQ
-        pfeq_docs = query_documents(question, n_results=3)
+        # Rechercher dans les documents PFEQ (collection solenys)
+        pfeq_docs = query_documents(question, n_results=3, collection_name="solenys")
         if pfeq_docs:
             pfeq_context = "\n\nDocuments PFEQ pertinents:\n" + "\n".join(pfeq_docs)
             print(f"[Solenys] Contexte PFEQ trouvé: {len(pfeq_docs)} documents")
