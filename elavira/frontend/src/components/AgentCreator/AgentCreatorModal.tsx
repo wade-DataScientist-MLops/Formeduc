@@ -368,7 +368,7 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
       }
     } catch (error) {
       console.error('Error creating agent:', error);
-      alert(`Erreur de connexion: ${error.message}`);
+      alert(`Erreur de connexion: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 

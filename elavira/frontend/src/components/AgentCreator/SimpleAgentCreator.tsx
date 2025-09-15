@@ -144,7 +144,7 @@ const SimpleAgentCreator: React.FC<SimpleAgentCreatorProps> = ({ isOpen, onClose
       }
     } catch (error) {
       console.error('SimpleAgentCreator - Erreur:', error);
-      alert(`Erreur de connexion: ${error.message}`);
+      alert(`Erreur de connexion: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
     }
   };
 
