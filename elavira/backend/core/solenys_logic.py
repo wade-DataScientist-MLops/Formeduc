@@ -17,12 +17,27 @@ def ask_solenys(question: str, user_id: str = "default") -> dict:
     # Récupération du contexte de conversation
     conversation_context = get_conversation_context(user_id, "solenys", max_messages=3)
     
-    # Construction du prompt optimisé avec mémoire de conversation
+    # Recherche dans les documents PFEQ pour les questions éducatives
+    from .chroma_client import query_documents
+    pfeq_context = ""
+    try:
+        # Rechercher dans les documents PFEQ
+        pfeq_docs = query_documents(question, n_results=3)
+        if pfeq_docs:
+            pfeq_context = "\n\nDocuments PFEQ pertinents:\n" + "\n".join(pfeq_docs)
+            print(f"[Solenys] Contexte PFEQ trouvé: {len(pfeq_docs)} documents")
+    except Exception as e:
+        print(f"[Solenys] Erreur recherche PFEQ: {e}")
+        pfeq_context = ""
+    
+    # Construction du prompt optimisé avec mémoire de conversation et documents PFEQ
     full_prompt = f"""
 Tu es Solenys, professeur québécois spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec.
 
 Contexte de conversation:
 {conversation_context}
+
+{pfeq_context}
 
 Ton rôle est de :
 - Accompagner les élèves du secondaire (12-17 ans) dans leur apprentissage
@@ -30,6 +45,7 @@ Ton rôle est de :
 - Adapter ton approche pédagogique au niveau de l'élève
 - Encourager et motiver dans l'apprentissage
 - Proposer des exercices pratiques et concrets
+- Utiliser les documents PFEQ pour donner des réponses précises et conformes
 
 Instructions pédagogiques :
 - Utilise un ton bienveillant, professionnel et motivant
@@ -38,6 +54,10 @@ Instructions pédagogiques :
 - Encourage la participation et la réflexion
 - Reste dans le cadre du programme PFEQ
 - Sois clair et structuré dans tes explications
+- Référence les documents PFEQ quand c'est pertinent
+- Donne des réponses basées sur le programme officiel
+
+Question de l'élève: {question}
 
 Réponse:
 """
@@ -83,7 +103,13 @@ Réponse:"""
     elif "bonjour" in question.lower() or "salut" in question.lower() or "bonsoir" in question.lower():
         response_text = "Bonjour et bienvenue ! 👋\n\nJe suis Solenys, votre professeur québécois spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec.\n\nJe suis là pour vous accompagner dans votre apprentissage et vous aider à réussir ! Je peux vous assister en :\n\n• **Mathématiques** - Algèbre, géométrie, statistiques\n• **Sciences** - Physique, chimie, biologie\n• **Français** - Littérature, grammaire, rédaction\n• **Histoire et géographie** - Québec et monde\n\nQuelle matière aimeriez-vous explorer ensemble aujourd'hui ?"
     else:
-        response_text = f"Bonjour ! Je suis Solenys, votre professeur québécois ! 🎓\n\nJe vois que vous me demandez : '{question}'\n\nSelon le programme PFEQ, je peux vous accompagner dans plusieurs matières du secondaire :\n\n• **Mathématiques** - Tous niveaux, du calcul de base au calcul avancé\n• **Sciences** - Physique, chimie, biologie avec expériences pratiques\n• **Français** - Littérature québécoise, grammaire, communication\n• **Histoire et géographie** - Du Québec et du monde\n\nJe m'adapte à votre niveau et votre style d'apprentissage. Sur quelle matière aimeriez-vous vous concentrer ?"
+        # Utiliser Ollama avec les documents PFEQ pour les questions éducatives
+        try:
+            print(f"[Solenys] Utilisation d'Ollama avec contexte PFEQ")
+            response_text = ollama_generate_simple(full_prompt, "Tu es Solenys, professeur québécois spécialisé dans le programme PFEQ.")
+        except Exception as e:
+            print(f"[Solenys] Erreur Ollama: {e}")
+            response_text = f"Bonjour ! Je suis Solenys, votre professeur québécois ! 🎓\n\nJe vois que vous me demandez : '{question}'\n\nSelon le programme PFEQ, je peux vous accompagner dans plusieurs matières du secondaire :\n\n• **Mathématiques** - Tous niveaux, du calcul de base au calcul avancé\n• **Sciences** - Physique, chimie, biologie avec expériences pratiques\n• **Français** - Littérature québécoise, grammaire, communication\n• **Histoire et géographie** - Du Québec et du monde\n\nJe m'adapte à votre niveau et votre style d'apprentissage. Sur quelle matière aimeriez-vous vous concentrer ?"
 
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, "solenys", "user", question)
