@@ -253,7 +253,11 @@ export const ElaviraChatInterface: React.FC = () => {
   const loadChatHistory = async () => {
     try {
       const history = await chatAPI.getHistory('elavira', state.logged_in_user || 'Guest');
-      setMessages(history);
+      // Filtrer seulement les messages d'Elavira
+      const elaviraMessages = history.filter(msg => 
+        msg.user_id === 'Elavira Assistant' || msg.user_id === state.logged_in_user || msg.user_id === 'Vous'
+      );
+      setMessages(elaviraMessages);
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }

@@ -264,7 +264,11 @@ export const GenericAgentChatInterface: React.FC<GenericAgentChatInterfaceProps>
   const loadChatHistory = async () => {
     try {
       const history = await chatAPI.getHistory(agentId, state.logged_in_user || 'Guest');
-      setMessages(history);
+      // Filtrer seulement les messages de cet agent
+      const agentMessages = history.filter(msg => 
+        msg.user_id === `${agentName} Assistant` || msg.user_id === state.logged_in_user || msg.user_id === 'Vous'
+      );
+      setMessages(agentMessages);
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }

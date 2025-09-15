@@ -281,7 +281,11 @@ export const SolenysChatInterface: React.FC = () => {
   const loadChatHistory = async () => {
     try {
       const history = await chatAPI.getHistory('solenys', state.logged_in_user || 'Guest');
-      setMessages(history);
+      // Filtrer seulement les messages de Solenys
+      const solenysMessages = history.filter(msg => 
+        msg.user_id === 'Solenys Assistant' || msg.user_id === state.logged_in_user || msg.user_id === 'Vous'
+      );
+      setMessages(solenysMessages);
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }
