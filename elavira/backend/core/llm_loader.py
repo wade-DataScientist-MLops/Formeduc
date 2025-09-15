@@ -15,21 +15,8 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 OLLAMA_API_URL = "http://ollama:11434/api/generate"
 MODEL_NAME = "llama3.2:1b"  # Modèle utilisé (plus rapide)
 
-# --- Initialisation du client ChromaDB ---
-script_dir = os.path.dirname(__file__)
-chroma_db_path = os.path.join(script_dir, "..", "chroma_data")
-os.makedirs(chroma_db_path, exist_ok=True)
-
-chroma_client = chromadb.PersistentClient(path=chroma_db_path)
-collection = chroma_client.get_or_create_collection(name="elavira_collection")
-print(f"✅ ChromaDB persistant à : {os.path.abspath(chroma_db_path)}")
-
-# --- Initialisation du modèle d'embeddings SentenceTransformer ---
-try:
-    embedder = SentenceTransformer('all-MiniLM-L6-v2')
-    print("✅ Embedder (SentenceTransformer 'all-MiniLM-L6-v2') initialisé.")
-except Exception as e:
-    raise RuntimeError(f"❌ Échec de l'initialisation de l'embedder : {e}")
+# --- Import des composants ChromaDB depuis chroma_client ---
+from .chroma_client import elavira_collection, embedder, query_documents
 
 # --- Fonctions pour indexer et requêter les documents ---
 def index_documents(texts: List[str], ids: List[str] = None):
@@ -38,22 +25,11 @@ def index_documents(texts: List[str], ids: List[str] = None):
     embeddings = embedder.encode(texts).tolist()
     metadatas = [{"source": f"doc_{i}"} for i in range(len(texts))]
     if ids is None:
-        current_count = collection.count()
+        current_count = elavira_collection.count()
         ids = [f"doc_{current_count + i}" for i in range(len(texts))]
-    collection.add(documents=texts, embeddings=embeddings, metadatas=metadatas, ids=ids)
+    elavira_collection.add(documents=texts, embeddings=embeddings, metadatas=metadatas, ids=ids)
     print(f"✅ {len(texts)} documents indexés dans ChromaDB.")
     return ids
-
-def query_documents(query_text: str, n_results: int = 3) -> List[str]:
-    if not query_text:
-        return []
-    query_embedding = embedder.encode([query_text]).tolist()
-    results = collection.query(
-        query_embeddings=query_embedding,
-        n_results=n_results,
-        include=['documents']
-    )
-    return results.get('documents', [[]])[0] if results.get('documents') else []
 
 # --- Fonction pour générer la réponse avec Ollama via CLI ---
 def ollama_generate(prompt: str) -> str:
@@ -129,7 +105,7 @@ STYLE : Toujours professionnel, chaleureux, bienveillant et motivant. Pose des q
     conversation_context = get_conversation_context(user_id, agent_id, max_messages=3)
     
     # Récupération des documents les plus pertinents de Formeduc (collection Elavira uniquement)
-    context_docs = query_documents(query, n_results=3, collection_name="elavira")
+    context_docs = query_documents(query, n_results=3)
     context = "\n\n".join(context_docs) if context_docs else "Aucun contexte Formeduc disponible."
 
     # Construction du prompt avec mémoire de conversation
