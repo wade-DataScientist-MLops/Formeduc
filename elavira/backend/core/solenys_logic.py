@@ -41,8 +41,36 @@ Instructions pédagogiques :
 
 Réponse:
 """
-    # Réponses optimisées selon le programme PFEQ
-    if "math" in question.lower() or "mathématiques" in question.lower() or "algèbre" in question.lower() or "en mathematiques" in question.lower():
+    # Détecter les calculs mathématiques simples
+    import re
+    math_pattern = r'(\d+)\s*[+\-*/]\s*(\d+)|(\d+)\s*(fois|×|x)\s*(\d+)|(\d+)\s*(plus|moins|divisé|divisé par)\s*(\d+)'
+    if re.search(math_pattern, question.lower()):
+        # Utiliser Ollama pour les calculs mathématiques
+        try:
+            math_prompt = f"""Tu es Solenys, professeur de mathématiques québécois. 
+
+Question de l'élève: {question}
+
+Réponds de manière pédagogique et encourageante. Explique le calcul étape par étape selon le programme PFEQ.
+
+Exemple de réponse:
+"Excellente question ! Calculons ensemble : 2 × 2 = 4
+
+Voici comment procéder :
+1. 2 × 2 = (2 + 2) = 4
+2. Ou directement : 2 × 2 = 4
+
+En mathématiques, la multiplication est une addition répétée. 2 × 2 signifie '2 répété 2 fois', ce qui donne 4.
+
+As-tu d'autres calculs à faire ensemble ?"
+
+Réponse:"""
+            
+            response_text = ollama_generate_simple(math_prompt, "Tu es Solenys, professeur de mathématiques québécois spécialisé dans le programme PFEQ.")
+        except Exception as e:
+            print(f"[Solenys] Erreur calcul: {e}")
+            response_text = f"Bonjour ! Je suis Solenys, votre professeur de mathématiques ! 📐\n\nJe vois que vous me demandez : '{question}'\n\nMalheureusement, je rencontre des difficultés techniques pour effectuer ce calcul. Pouvez-vous reformuler votre question ?\n\nJe peux vous aider avec :\n• **Calculs de base** - Addition, soustraction, multiplication, division\n• **Algèbre** - Équations, fonctions\n• **Géométrie** - Formes, angles, aires\n• **Statistiques** - Moyennes, probabilités"
+    elif "math" in question.lower() or "mathématiques" in question.lower() or "algèbre" in question.lower() or "en mathematiques" in question.lower():
         response_text = f"Bonjour ! Je suis Solenys, votre professeur de mathématiques ! 📐\n\nJe vois que vous vous intéressez aux mathématiques. Selon le programme PFEQ, je peux vous accompagner dans plusieurs domaines :\n\n• **Algèbre et équations** - Résolution d'équations, fonctions\n• **Géométrie** - Formes, angles, calculs d'aires\n• **Statistiques et probabilités** - Analyse de données\n• **Fonctions** - Représentation graphique et analyse\n• **Calcul différentiel et intégral** - Pour les niveaux avancés\n\nQuel niveau êtes-vous et sur quel aspect aimeriez-vous travailler ? Je peux adapter mes explications à votre niveau !"
     elif "science" in question.lower() or "physique" in question.lower() or "chimie" in question.lower() or "biologie" in question.lower():
         response_text = f"Bonjour ! Je suis Solenys, votre professeur de sciences ! 🔬\n\nExcellent choix ! Les sciences sont fascinantes. Selon le programme PFEQ, je peux vous accompagner dans :\n\n• **Physique** - Mécanique, électricité, ondes, énergie\n• **Chimie** - Réactions chimiques, liaisons, équilibres\n• **Biologie** - Cellules, génétique, évolution, écosystèmes\n\nLes sciences permettent de comprendre le monde qui nous entoure. Quel domaine vous passionne le plus ? Et à quel niveau scolaire êtes-vous ?"
