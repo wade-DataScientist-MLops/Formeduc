@@ -264,7 +264,7 @@ export const AgentsManagementDashboard: React.FC = () => {
 
       <DashboardActions>
         <AddAgentButton onClick={() => {
-          alert('Bouton cliqué !'); // Test simple
+          alert('Bouton principal cliqué !'); // Test du bouton principal
           console.log('Bouton cliqué, ouverture du modal...');
           setIsCreatorOpen(true);
         }}>
