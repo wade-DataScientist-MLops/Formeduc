@@ -79,6 +79,16 @@ def index_pfeq_documents():
             - Univers vivant (biologie, écologie)
             - Techniques et instrumentation
             - Applications technologiques
+            
+            CHIMIE - COMPOSITION DE L'EAU:
+            L'eau (H2O) est composée de:
+            - 2 atomes d'hydrogène (H)
+            - 1 atome d'oxygène (O)
+            - Liaison covalente polaire
+            - Masse molaire: 18 g/mol
+            - Point d'ébullition: 100°C
+            - Point de fusion: 0°C
+            - Solvant universel
             """,
             "metadata": {"subject": "sciences", "level": "secondaire 1-2", "source": "pfeq"}
         },
