@@ -307,7 +307,7 @@ export const AgentsManagementDashboard: React.FC = () => {
             <AgentDescription>{agent.description}</AgentDescription>
 
             <CapabilitiesContainer>
-              {agent.capabilities.map((capability, index) => (
+              {agent.capabilities.map((capability: string, index: number) => (
                 <CapabilityTag key={index}>{capability}</CapabilityTag>
               ))}
             </CapabilitiesContainer>
