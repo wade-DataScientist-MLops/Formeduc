@@ -146,24 +146,83 @@ Réponse:
     # Vérifier si c'est le premier message ou une conversation continue
     is_first_message = len(conversation_context.split('\n')) <= 2
     
-    # Utiliser la base de connaissances ChromaDB pour générer une réponse personnalisée
-    if context_docs and len(context_docs) > 0:
-        # Construire une réponse basée sur les documents récupérés
-        response = f"""Basé sur les informations FormEduc, voici ce que je peux vous dire :
+    # Logique de réponse intelligente et précise
+    query_lower = query.lower()
+    
+    # Salutations simples - réponse directe et chaleureuse
+    if any(greeting in query_lower for greeting in ["salut", "bonjour", "bonsoir", "coucou", "hello"]):
+        if is_first_message:
+            response = """Bonjour ! 👋 Je suis Elavira, votre assistante FormEduc !
 
-{context}
+Je suis là pour vous accompagner dans vos besoins de formation professionnelle. Comment puis-je vous aider aujourd'hui ?
 
-**Comment puis-je vous aider davantage ?**
-• Plus d'informations sur une formation spécifique
+**Je peux vous aider avec :**
+• Informations sur nos formations
 • Processus d'inscription
 • Tarifs et certifications
-• Contact et support
+• Support technique
 
-N'hésitez pas à me poser des questions plus précises !"""
+Que souhaitez-vous savoir ?"""
+        else:
+            response = "Salut ! 😊 Comment puis-je vous aider aujourd'hui ?"
+    
+    # Questions spécifiques - utiliser la base de connaissances
+    elif context_docs and len(context_docs) > 0:
+        # Analyser le contexte pour donner une réponse précise
+        if "prix" in query_lower or "tarif" in query_lower or "coût" in query_lower:
+            response = f"""💰 **Tarifs FormEduc :**
+
+Basé sur nos informations actuelles, nos formations offrent :
+• **Prix compétitifs** - Tarifs abordables pour tous les budgets
+• **Meilleur rapport qualité-prix** du marché
+• **Formations 100% en ligne** - Économies sur les déplacements
+
+**Pour obtenir un devis précis :**
+📞 **418 842-7523**
+📧 **info@formeduc.ca**
+
+Quelle formation vous intéresse ? Je peux vous orienter vers la meilleure option !"""
+        
+        elif "certification" in query_lower or "certificat" in query_lower:
+            response = f"""🏆 **Certifications FormEduc :**
+
+Toutes nos formations délivrent des **certifications reconnues** :
+• Conformes au **Règlement sur les services de garde éducatifs**
+• Conformes à la **Loi sur l'instruction publique** (chapitre l-13.3, a. 454.1)
+• **Certifications numériques** - Accessibles en ligne 24h/24
+• **Reconnaissance par les employeurs**
+
+Nos certifications valorisent vos compétences professionnelles !"""
+        
+        elif "formation" in query_lower or "cours" in query_lower:
+            response = f"""📚 **Formations FormEduc disponibles :**
+
+{context[:500]}...
+
+**Contactez-nous pour plus d'informations :**
+📞 **418 842-7523** | 📧 **info@formeduc.ca**"""
+        
+        else:
+            # Réponse générale basée sur le contexte
+            response = f"""Basé sur les informations FormEduc :
+
+{context[:300]}...
+
+**Besoin d'aide ?** 📞 418 842-7523 | 📧 info@formeduc.ca"""
+    
     else:
-        # Fallback si aucun document n'est trouvé
-        greeting = "Bonjour ! Je suis Elavira, votre assistante FormEduc ! 🎓\n\n" if is_first_message else ""
-        response = f"{greeting}Je suis là pour vous accompagner dans vos besoins de formation professionnelle. FormEduc vous propose :\n\n• **Secourisme** - Service de garde, petite enfance, milieu scolaire\n• **Formations 45h** - Pour RSG et RSGE\n• **Perfectionnements** - Développement de l'enfant, allergies, maltraitance\n• **Familles d'accueil** - Formations hybrides spécialisées\n• **Programme jeunesse** - Gardien futé et animateur de camp\n• **Formations en ligne** - 100% à distance, certifications reconnues\n\nNos formations sont développées par des experts du terrain avec une vraie expérience pratique. Que souhaitez-vous savoir en particulier ?"
+        # Fallback pour questions non reconnues
+        response = f"""Bonjour ! Je suis Elavira, votre assistante FormEduc ! 🎓
+
+Je ne trouve pas d'informations spécifiques sur votre question. 
+
+**Comment puis-je vous aider ?**
+• Informations sur nos formations
+• Processus d'inscription  
+• Tarifs et certifications
+• Support technique
+
+**Contact direct :** 📞 418 842-7523 | 📧 info@formeduc.ca"""
     
     # Ajouter le message utilisateur et la réponse à la mémoire
     add_message(user_id, agent_id, "user", query)
