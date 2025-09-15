@@ -134,6 +134,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
   const isUser = !isAssistant;
 
+  // Debug pour vérifier la détection
+  console.log(`[MessageBubble] user_id: "${message.user_id}", isElavira: ${isElavira}, isSolenys: ${isSolenys}, isAssistant: ${isAssistant}, isUser: ${isUser}`);
+
 
 
 
