@@ -1,34 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
-import { chatAPI } from '../../services/api';
-import { Message } from '../../types';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 const ChatContainer = styled.div`
   display: flex;
-  height: 100vh;
-  background: #f0f2f5;
-  font-family: 'Segoe UI', sans-serif;
-`;
-
-const MainContent = styled.div`
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  height: 100%;
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  position: relative;
 `;
 
 const ToggleSidebarButton = styled.button`
-  position: fixed;
+  position: absolute;
   top: 20px;
   left: 20px;
   z-index: 1000;
   padding: 10px;
-  background: #f093fb;
+  background: #e91e63;
   color: white;
   border: none;
   border-radius: 50%;
@@ -42,45 +33,48 @@ const ToggleSidebarButton = styled.button`
   }
 `;
 
+const MainContent = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  overflow: hidden;
+`;
+
 const ChatHeader = styled.div`
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  background: linear-gradient(135deg, #e91e63 0%, #f06292 100%);
   color: white;
   padding: 20px 30px;
   display: flex;
   align-items: center;
   gap: 15px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px 10px 0 0;
 `;
 
 const BackButton = styled.button`
   background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
   color: white;
+  border: none;
   padding: 8px 16px;
   border-radius: 20px;
-  font-size: 14px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+
   &:hover {
     background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
   }
 `;
 
 const AgentAvatar = styled.div`
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  font-size: 1.5rem;
 `;
 
 const AgentInfo = styled.div`
@@ -89,30 +83,26 @@ const AgentInfo = styled.div`
 
 const AgentName = styled.h2`
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
 `;
 
 const AgentRole = styled.p`
-  margin: 4px 0 0 0;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 500;
+  margin: 5px 0 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
 `;
 
 const AgentDescription = styled.p`
-  margin: 8px 0 0 0;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  line-height: 1.4;
+  margin: 5px 0 0 0;
+  font-size: 0.8rem;
+  opacity: 0.8;
 `;
 
 const MessagesContainer = styled.div`
   flex: 1;
-  overflow-y: auto;
   padding: 20px;
-  background: #f8f9fa;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -120,98 +110,84 @@ const MessagesContainer = styled.div`
 
 const MessageBubble = styled.div<{ isUser: boolean }>`
   max-width: 70%;
-  padding: 12px 16px;
-  border-radius: 18px;
+  padding: 15px 20px;
+  border-radius: 20px;
   word-wrap: break-word;
-  line-height: 1.4;
-  
-  ${props => props.isUser ? `
-    background: #f093fb;
-    color: white;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-  ` : `
-    background: white;
-    color: #333;
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-    border: 1px solid #e1e8ed;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  `}
+  align-self: ${props => props.isUser ? 'flex-end' : 'flex-start'};
+  background: ${props => props.isUser ? '#e91e63' : '#f1f3f4'};
+  color: ${props => props.isUser ? 'white' : '#333'};
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 `;
 
-const MessageTime = styled.div<{ isUser: boolean }>`
-  font-size: 11px;
-  color: ${props => props.isUser ? 'rgba(255, 255, 255, 0.8)' : '#666'};
-  margin-top: 4px;
-  text-align: ${props => props.isUser ? 'right' : 'left'};
+const MessageTime = styled.div`
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-top: 5px;
 `;
 
 const InputContainer = styled.div`
-  padding: 20px 30px;
-  background: white;
-  border-top: 1px solid #e1e8ed;
+  padding: 20px;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
   display: flex;
-  gap: 15px;
+  gap: 10px;
   align-items: center;
 `;
 
 const MessageInput = styled.input`
   flex: 1;
-  padding: 15px 20px;
-  border: 2px solid #e1e8ed;
+  padding: 12px 20px;
+  border: 2px solid #e9ecef;
   border-radius: 25px;
   font-size: 1rem;
   outline: none;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.2s ease;
 
   &:focus {
-    border-color: #f093fb;
+    border-color: #e91e63;
   }
 `;
 
 const SendButton = styled.button`
-  padding: 15px 25px;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  padding: 12px 24px;
+  background: #e91e63;
   color: white;
   border: none;
   border-radius: 25px;
+  cursor: pointer;
   font-size: 1rem;
   font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease;
+  transition: background 0.2s ease;
 
   &:hover {
-    transform: translateY(-2px);
+    background: #c2185b;
   }
 
   &:disabled {
-    opacity: 0.6;
+    background: #ccc;
     cursor: not-allowed;
-    transform: none;
   }
 `;
 
 const ThinkingIndicator = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 14px;
+  gap: 5px;
+  color: #666;
   font-style: italic;
 `;
 
 const Dot = styled.div`
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
+  background: #e91e63;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  animation: pulse 1.4s infinite ease-in-out;
-  
+  animation: bounce 1.4s infinite ease-in-out both;
+
   &:nth-child(1) { animation-delay: -0.32s; }
   &:nth-child(2) { animation-delay: -0.16s; }
-  
-  @keyframes pulse {
+
+  @keyframes bounce {
     0%, 80%, 100% { transform: scale(0); }
     40% { transform: scale(1); }
   }
@@ -219,56 +195,39 @@ const Dot = styled.div`
 
 const QuickActions = styled.div`
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
   flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 10px;
 `;
 
 const QuickActionButton = styled.button`
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
   padding: 8px 16px;
+  background: rgba(233, 30, 99, 0.1);
+  color: #e91e63;
+  border: 1px solid #e91e63;
   border-radius: 20px;
-  font-size: 12px;
   cursor: pointer;
+  font-size: 0.9rem;
   transition: all 0.2s ease;
-  
+
   &:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateY(-1px);
+    background: #e91e63;
+    color: white;
   }
 `;
 
-const SubjectTabs = styled.div`
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
-`;
-
-const SubjectTab = styled.button`
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 11px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background: rgba(255, 255, 255, 0.25);
-    transform: translateY(-1px);
-  }
-`;
+interface Message {
+  id: string;
+  content: string;
+  isUser: boolean;
+  timestamp: Date;
+}
 
 interface Conversation {
   id: string;
   title: string;
   lastMessage: string;
-  timestamp: string;
-  agent: string;
+  timestamp: Date;
 }
 
 export const SolenysChatInterface: React.FC = () => {
@@ -276,48 +235,33 @@ export const SolenysChatInterface: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const quickActions = [
-    "Aide en mathématiques",
-    "Problèmes de physique",
-    "Questions de chimie",
-    "Français et littérature",
-    "Histoire du Québec",
-    "Géographie"
-  ];
-
-  const subjects = [
-    "Mathématiques", "Physique", "Chimie", "Biologie", 
-    "Français", "Histoire", "Géographie", "Anglais"
+    "Mathématiques",
+    "Sciences",
+    "Français",
+    "Histoire-Géographie",
+    "Probabilités",
+    "Géométrie"
   ];
 
   useEffect(() => {
     loadChatHistory();
   }, []);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
   const loadChatHistory = async () => {
     try {
-      const history = await chatAPI.getHistory('solenys', state.logged_in_user || 'Guest');
-      // Filtrer seulement les messages de Solenys
-      const solenysMessages = history.filter(msg => 
-        msg.user_id === 'Solenys Assistant' || msg.user_id === state.logged_in_user || msg.user_id === 'Vous'
-      );
-      setMessages(solenysMessages);
+      const response = await fetch('http://localhost:8000/chat/conversations/');
+      if (response.ok) {
+        const data = await response.json();
+        setConversations(data);
+      }
     } catch (error) {
       console.error('Erreur lors du chargement de l\'historique:', error);
     }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSendMessage = async (text: string) => {
@@ -325,9 +269,9 @@ export const SolenysChatInterface: React.FC = () => {
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: text.trim(),
-      user_id: state.logged_in_user || 'Vous',
-      timestamp: new Date().toISOString()
+      content: text,
+      isUser: true,
+      timestamp: new Date()
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -335,33 +279,47 @@ export const SolenysChatInterface: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const response = await chatAPI.sendMessage({
-        text: text.trim(),
-        user_id: state.logged_in_user || 'Guest',
-        agent: 'solenys'
+      const response = await fetch('http://localhost:8000/chat/send_message/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: text,
+          agent_id: 'solenys'
+        }),
       });
 
-      setMessages(prev => [...prev, response]);
+      if (response.ok) {
+        const data = await response.json();
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.response,
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
+          isUser: false,
+          timestamp: new Date()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       const errorMessage: Message = {
-        id: Date.now().toString(),
-        text: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
-        user_id: 'Solenys Assistant',
-        timestamp: new Date().toISOString()
+        id: (Date.now() + 1).toString(),
+        content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
+        isUser: false,
+        timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsThinking(false);
     }
-  };
-
-  const handleQuickAction = (action: string) => {
-    handleSendMessage(action);
-  };
-
-  const handleSubjectClick = (subject: string) => {
-    handleSendMessage(`J'ai besoin d'aide en ${subject.toLowerCase()}`);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -371,24 +329,19 @@ export const SolenysChatInterface: React.FC = () => {
     }
   };
 
+  const handleQuickAction = (action: string) => {
+    handleSendMessage(action);
+  };
+
   const handleNewChat = () => {
-    const newConversation: Conversation = {
-      id: `conv_${Date.now()}`,
-      title: 'Nouvelle conversation',
-      lastMessage: '',
-      timestamp: new Date().toISOString(),
-      agent: 'Solenys'
-    };
-    setConversations(prev => [newConversation, ...prev]);
-    setActiveConversationId(newConversation.id);
     setMessages([]);
+    setActiveConversationId(null);
   };
 
   const handleConversationSelect = (conversationId: string) => {
     setActiveConversationId(conversationId);
-    // Charger les messages de cette conversation
-    // Pour l'instant, on vide les messages
-    setMessages([]);
+    // Charger les messages de la conversation sélectionnée
+    // TODO: Implémenter le chargement des messages
   };
 
   const handleBackToAgents = () => {
@@ -396,85 +349,76 @@ export const SolenysChatInterface: React.FC = () => {
   };
 
   return (
-    <div style={{ height: 'calc(100vh - 64px - 64px)', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <ChatContainer style={{ height: '100%', position: 'relative' }}>
-        <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
-          ☰
-        </ToggleSidebarButton>
-        
-        {sidebarOpen && (
-          <ChatHistorySidebar
-            conversations={conversations}
-            activeConversationId={activeConversationId || undefined}
-            onConversationSelect={handleConversationSelect}
-            onNewChat={handleNewChat}
-          />
-        )}
+    <ChatContainer>
+      <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
+        ☰
+      </ToggleSidebarButton>
+      
+      {sidebarOpen && (
+        <ChatHistorySidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId || undefined}
+          onConversationSelect={handleConversationSelect}
+          onNewChat={handleNewChat}
+        />
+      )}
 
-        <MainContent style={{ height: '100%' }}>
+      <MainContent>
         <ChatHeader>
           <BackButton onClick={handleBackToAgents}>
             ← Retour aux agents
           </BackButton>
           <AgentAvatar>👨‍🏫</AgentAvatar>
           <AgentInfo>
-            <AgentName>Solenys</AgentName>
-            <AgentRole>Professeur québécois</AgentRole>
-            <AgentDescription>
-              Votre professeur spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec
-            </AgentDescription>
+            <AgentName>Professeur Solenys</AgentName>
+            <AgentRole>Professeur PFEQ</AgentRole>
+            <AgentDescription>Votre professeur pour le Programme de formation de l'école québécoise</AgentDescription>
           </AgentInfo>
         </ChatHeader>
 
-      <MessagesContainer>
-        <SubjectTabs>
-          {subjects.map((subject, index) => (
-            <SubjectTab
-              key={index}
-              onClick={() => handleSubjectClick(subject)}
-              disabled={isThinking}
-            >
-              {subject}
-            </SubjectTab>
+        <MessagesContainer>
+          {messages.length === 0 && (
+            <div style={{ textAlign: 'center', marginTop: '50px' }}>
+              <h3 style={{ color: '#e91e63', marginBottom: '20px' }}>
+                Bonjour! 👋 Je suis le Professeur Solenys !
+              </h3>
+              <p style={{ color: '#666', marginBottom: '20px' }}>
+                Je suis là pour vous aider avec le Programme de formation de l'école québécoise (PFEQ).
+              </p>
+              <QuickActions>
+                {quickActions.map((action, index) => (
+                  <QuickActionButton
+                    key={index}
+                    onClick={() => handleQuickAction(action)}
+                  >
+                    {action}
+                  </QuickActionButton>
+                ))}
+              </QuickActions>
+            </div>
+          )}
+
+          {messages.map((message) => (
+            <MessageBubble key={message.id} isUser={message.isUser}>
+              <div>{message.content}</div>
+              <MessageTime>
+                {message.timestamp.toLocaleTimeString()}
+              </MessageTime>
+            </MessageBubble>
           ))}
-        </SubjectTabs>
 
-        <QuickActions>
-          {quickActions.map((action, index) => (
-            <QuickActionButton
-              key={index}
-              onClick={() => handleQuickAction(action)}
-              disabled={isThinking}
-            >
-              {action}
-            </QuickActionButton>
-          ))}
-        </QuickActions>
-
-        {messages.map((message) => (
-          <MessageBubble key={message.id} isUser={message.user_id !== 'Solenys Assistant'}>
-            {message.text}
-            <MessageTime isUser={message.user_id !== 'Solenys Assistant'}>
-              {new Date(message.timestamp).toLocaleTimeString()}
-            </MessageTime>
-          </MessageBubble>
-        ))}
-
-        {isThinking && (
-          <ThinkingIndicator>
-            <span>Solenys réfléchit</span>
-            <Dot />
-            <Dot />
-            <Dot />
-          </ThinkingIndicator>
-        )}
-
-        <div ref={messagesEndRef} />
-      </MessagesContainer>
+          {isThinking && (
+            <ThinkingIndicator>
+              <span>Solenys réfléchit</span>
+              <Dot />
+              <Dot />
+              <Dot />
+            </ThinkingIndicator>
+          )}
+        </MessagesContainer>
 
         <InputContainer>
           <MessageInput
-            type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
@@ -490,6 +434,5 @@ export const SolenysChatInterface: React.FC = () => {
         </InputContainer>
       </MainContent>
     </ChatContainer>
-    </div>
   );
 };
