@@ -130,7 +130,7 @@ function AppContent() {
       if (token && user) {
         try {
           // Vérifier la validité du token
-          const response = await fetch('http://localhost:8000/users/me/', {
+          const response = await fetch('http://104.254.182.118:8000/users/me/', {
             headers: {
               'Authorization': `Bearer ${token}`,
             },

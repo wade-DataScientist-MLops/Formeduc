@@ -254,7 +254,7 @@ export const ElaviraChatInterface: React.FC = () => {
 
   const loadChatHistory = async () => {
     try {
-      const response = await fetch('http://localhost:8000/chat/conversations/');
+      const response = await fetch('http://104.254.182.118:8000/chat/conversations/');
       if (response.ok) {
         const data = await response.json();
         setConversations(data);
@@ -279,7 +279,7 @@ export const ElaviraChatInterface: React.FC = () => {
     setIsThinking(true);
 
     try {
-      const response = await fetch('http://localhost:8000/chat/send_message/', {
+      const response = await fetch('http://104.254.182.118:8000/chat/send_message/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
