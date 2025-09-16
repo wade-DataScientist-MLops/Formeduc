@@ -10,7 +10,6 @@ import { SuggestedPrompts } from './SuggestedPrompts';
 import { AssistantShowcase } from './AssistantShowcase';
 import { SolenysShowcase } from './SolenysShowcase';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
-import { AgentManager } from '../Agents/AgentManager';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -287,7 +286,7 @@ export const ChatInterface: React.FC = () => {
       {state.sidebar_open && (
         <ChatHistorySidebar
           conversations={state.conversations}
-          activeConversationId={state.active_conversation_id}
+          activeConversationId={state.active_conversation_id || undefined}
           onConversationSelect={handleConversationSelect}
           onNewChat={handleNewChat}
         />
