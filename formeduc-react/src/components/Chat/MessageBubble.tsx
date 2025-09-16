@@ -6,8 +6,8 @@ const MessageRow = styled.div<{ isUser: boolean }>`
   display: flex;
   width: 100%;
   margin-bottom: 12px;
-  justify-content: ${props => props.isUser ? 'flex-end' : 'flex-start'};
-  /* FORCER l'alignement : isUser=true → droite, isUser=false → gauche */
+  justify-content: ${props => props.isUser ? 'flex-start' : 'flex-end'};
+  /* CORRECTION: isUser=true → gauche (utilisateur), isUser=false → droite (assistant) */
 `;
 
 const MessageContainer = styled.div<{ isUser: boolean }>`
@@ -21,9 +21,9 @@ const MessageContainer = styled.div<{ isUser: boolean }>`
   gap: 12px;
   line-height: 1.4;
   background-color: ${props => props.isUser ? '#dcfce7' : '#e1f0ff'};
-  border-bottom-right-radius: ${props => props.isUser ? '5px' : '20px'};
-  border-bottom-left-radius: ${props => props.isUser ? '20px' : '5px'};
-  flex-direction: ${props => props.isUser ? 'row-reverse' : 'row'};
+  border-bottom-right-radius: ${props => props.isUser ? '20px' : '5px'};
+  border-bottom-left-radius: ${props => props.isUser ? '5px' : '20px'};
+  flex-direction: ${props => props.isUser ? 'row' : 'row-reverse'};
 `;
 
 const Avatar = styled.div<{ isUser: boolean; isElavira?: boolean; isSolenys?: boolean }>`
@@ -134,14 +134,14 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isSolenys = message.user_id === 'Solenys Assistant';
   const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
   
-  // FORCER l'alignement : assistants à gauche, utilisateurs à droite
+  // CORRECTION: assistants à droite, utilisateurs à gauche
   const isUser = !isAssistant;
   
   // Debug pour vérifier la détection
   console.log(`[MessageBubble] user_id: "${message.user_id}", isElavira: ${isElavira}, isSolenys: ${isSolenys}, isAssistant: ${isAssistant}, isUser: ${isUser}`);
-  console.log(`[MessageBubble] Alignement: ${isUser ? 'DROITE (utilisateur)' : 'GAUCHE (assistant)'}`);
+  console.log(`[MessageBubble] Alignement: ${isUser ? 'GAUCHE (utilisateur)' : 'DROITE (assistant)'}`);
   
-  // GARANTIE: isUser=true → Droite (utilisateur), isUser=false → Gauche (assistant)
+  // CORRECTION: isUser=true → Gauche (utilisateur), isUser=false → Droite (assistant)
 
 
 
