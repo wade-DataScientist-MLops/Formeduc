@@ -42,4 +42,10 @@ def init_db():
     Base.metadata.create_all(bind=engine)
     print("Base de données initialisée.")
 
-# ... (le reste de votre code, par exemple, la fonction get_db)
+def get_db():
+    """Dependency pour obtenir une session de base de données"""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -3,26 +3,54 @@ import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { chatAPI } from '../../services/api';
 import { Message } from '../../types';
+import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 const ChatContainer = styled.div`
   display: flex;
+  height: 100vh;
+  background: #f0f2f5;
+  font-family: 'Segoe UI', sans-serif;
+`;
+
+const MainContent = styled.div`
+  flex: 1;
+  display: flex;
   flex-direction: column;
-  height: calc(100vh - 80px);
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  color: white;
-  border-radius: 12px;
+  margin-left: 260px;
+  background: white;
+  border-radius: 20px 0 0 20px;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+`;
+
+const ToggleSidebarButton = styled.button`
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 1000;
+  padding: 10px;
+  background: #f093fb;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
 `;
 
 const ChatHeader = styled.div`
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  padding: 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 20px 30px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 `;
 
 const BackButton = styled.button`
@@ -85,9 +113,10 @@ const MessagesContainer = styled.div`
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 15px;
 `;
 
 const MessageBubble = styled.div<{ isUser: boolean }>`
@@ -98,81 +127,67 @@ const MessageBubble = styled.div<{ isUser: boolean }>`
   line-height: 1.4;
   
   ${props => props.isUser ? `
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
+    background: #f093fb;
+    color: white;
     align-self: flex-end;
     border-bottom-right-radius: 4px;
   ` : `
-    background: rgba(255, 255, 255, 0.15);
-    color: white;
+    background: white;
+    color: #333;
     align-self: flex-start;
     border-bottom-left-radius: 4px;
-    backdrop-filter: blur(10px);
+    border: 1px solid #e1e8ed;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   `}
 `;
 
 const MessageTime = styled.div<{ isUser: boolean }>`
   font-size: 11px;
-  color: ${props => props.isUser ? '#666' : 'rgba(255, 255, 255, 0.6)'};
+  color: ${props => props.isUser ? 'rgba(255, 255, 255, 0.8)' : '#666'};
   margin-top: 4px;
   text-align: ${props => props.isUser ? 'right' : 'left'};
 `;
 
 const InputContainer = styled.div`
-  padding: 20px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-`;
-
-const InputWrapper = styled.div`
+  padding: 20px 30px;
+  background: white;
+  border-top: 1px solid #e1e8ed;
   display: flex;
-  gap: 12px;
-  align-items: flex-end;
+  gap: 15px;
+  align-items: center;
 `;
 
-const MessageInput = styled.textarea`
+const MessageInput = styled.input`
   flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border: none;
-  border-radius: 20px;
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #333;
-  resize: none;
-  min-height: 44px;
-  max-height: 120px;
-  
-  &::placeholder {
-    color: #999;
-  }
-  
+  padding: 15px 20px;
+  border: 2px solid #e1e8ed;
+  border-radius: 25px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.3s ease;
+
   &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    border-color: #f093fb;
   }
 `;
 
 const SendButton = styled.button`
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border: none;
-  border-radius: 50%;
-  width: 44px;
-  height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 15px 25px;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  
+  transition: transform 0.2s ease;
+
   &:hover {
-    transform: scale(1.05);
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    transform: translateY(-2px);
   }
-  
+
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.6;
     cursor: not-allowed;
     transform: none;
   }
@@ -249,11 +264,22 @@ const SubjectTab = styled.button`
   }
 `;
 
+interface Conversation {
+  id: string;
+  title: string;
+  lastMessage: string;
+  timestamp: string;
+  agent: string;
+}
+
 export const SolenysChatInterface: React.FC = () => {
   const { state, dispatch } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const quickActions = [
@@ -346,25 +372,59 @@ export const SolenysChatInterface: React.FC = () => {
     }
   };
 
+  const handleNewChat = () => {
+    const newConversation: Conversation = {
+      id: `conv_${Date.now()}`,
+      title: 'Nouvelle conversation',
+      lastMessage: '',
+      timestamp: new Date().toISOString(),
+      agent: 'Solenys'
+    };
+    setConversations(prev => [newConversation, ...prev]);
+    setActiveConversationId(newConversation.id);
+    setMessages([]);
+  };
+
+  const handleConversationSelect = (conversationId: string) => {
+    setActiveConversationId(conversationId);
+    // Charger les messages de cette conversation
+    // Pour l'instant, on vide les messages
+    setMessages([]);
+  };
+
   const handleBackToAgents = () => {
     dispatch({ type: 'SET_PAGE', payload: 'agents' });
   };
 
   return (
     <ChatContainer>
-      <ChatHeader>
-        <BackButton onClick={handleBackToAgents}>
-          ← Retour aux agents
-        </BackButton>
-        <AgentAvatar>👨‍🏫</AgentAvatar>
-        <AgentInfo>
-          <AgentName>Solenys</AgentName>
-          <AgentRole>Professeur québécois</AgentRole>
-          <AgentDescription>
-            Votre professeur spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec
-          </AgentDescription>
-        </AgentInfo>
-      </ChatHeader>
+      <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
+        ☰
+      </ToggleSidebarButton>
+      
+      {sidebarOpen && (
+        <ChatHistorySidebar
+          conversations={conversations}
+          activeConversationId={activeConversationId}
+          onConversationSelect={handleConversationSelect}
+          onNewChat={handleNewChat}
+        />
+      )}
+
+      <MainContent>
+        <ChatHeader>
+          <BackButton onClick={handleBackToAgents}>
+            ← Retour aux agents
+          </BackButton>
+          <AgentAvatar>👨‍🏫</AgentAvatar>
+          <AgentInfo>
+            <AgentName>Solenys</AgentName>
+            <AgentRole>Professeur québécois</AgentRole>
+            <AgentDescription>
+              Votre professeur spécialisé dans l'enseignement secondaire selon le programme PFEQ du Québec
+            </AgentDescription>
+          </AgentInfo>
+        </ChatHeader>
 
       <MessagesContainer>
         <SubjectTabs>
@@ -412,23 +472,23 @@ export const SolenysChatInterface: React.FC = () => {
         <div ref={messagesEndRef} />
       </MessagesContainer>
 
-      <InputContainer>
-        <InputWrapper>
+        <InputContainer>
           <MessageInput
+            type="text"
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Posez votre question sur les matières scolaires..."
+            placeholder="Posez votre question à Solenys..."
             disabled={isThinking}
           />
           <SendButton
             onClick={() => handleSendMessage(inputText)}
             disabled={!inputText.trim() || isThinking}
           >
-            ➤
+            Envoyer
           </SendButton>
-        </InputWrapper>
-      </InputContainer>
+        </InputContainer>
+      </MainContent>
     </ChatContainer>
   );
 };
