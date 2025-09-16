@@ -9,7 +9,7 @@ from db.models import Agent as AgentModel
 from db.schemas import AgentCreate, AgentUpdate, AgentResponse
 from core.auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(prefix="/api")
 
 @router.get("/agents", response_model=List[AgentResponse])
 async def get_agents(
