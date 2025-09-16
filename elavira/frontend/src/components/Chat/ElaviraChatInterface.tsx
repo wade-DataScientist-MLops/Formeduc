@@ -5,7 +5,7 @@ import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 const ChatContainer = styled.div`
   display: flex;
-  height: 100%;
+  height: calc(100vh - 64px);
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -49,7 +49,6 @@ const ChatHeader = styled.div`
   align-items: center;
   gap: 15px;
   border-radius: 10px 10px 0 0;
-  margin-top: 40px;
 `;
 
 const BackButton = styled.button`
