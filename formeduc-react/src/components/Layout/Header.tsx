@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 
 const HeaderContainer = styled.header`
@@ -7,6 +7,7 @@ const HeaderContainer = styled.header`
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   padding: 0 32px;
   margin-left: 280px; /* Pour laisser place à la sidebar */
   position: fixed;
@@ -15,44 +16,6 @@ const HeaderContainer = styled.header`
   left: 280px;
   z-index: 99;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-`;
-
-const SearchContainer = styled.div`
-  flex: 1;
-  max-width: 600px;
-  margin: 0 auto;
-  position: relative;
-`;
-
-const SearchInput = styled.input`
-  width: 100%;
-  height: 40px;
-  padding: 0 16px 0 44px;
-  border: 1px solid #d1d5db;
-  border-radius: 20px;
-  font-size: 14px;
-  background: #f9fafb;
-  transition: all 0.2s ease;
-
-  &:focus {
-    outline: none;
-    border-color: #667eea;
-    background: #ffffff;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  &::placeholder {
-    color: #9ca3af;
-  }
-`;
-
-const SearchIcon = styled.div`
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-  font-size: 16px;
 `;
 
 const RightSection = styled.div`
@@ -103,28 +66,8 @@ const ProfileButton = styled.button`
 `;
 
 export const Header: React.FC = () => {
-  const [searchValue, setSearchValue] = useState('');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implémenter la recherche
-    console.log('Recherche:', searchValue);
-  };
-
   return (
     <HeaderContainer>
-      <SearchContainer>
-        <form onSubmit={handleSearch}>
-          <SearchIcon>🔍</SearchIcon>
-          <SearchInput
-            type="text"
-            placeholder="Rechercher..."
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-          />
-        </form>
-      </SearchContainer>
-
       <RightSection>
         <IconButton title="Notifications">
           🔔
