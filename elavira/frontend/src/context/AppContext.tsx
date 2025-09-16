@@ -7,7 +7,7 @@ interface AppContextType {
 }
 
 type AppAction =
-  | { type: 'SET_PAGE'; payload: 'auth' | 'chat' | 'agents' | 'register' | 'login' }
+  | { type: 'SET_PAGE'; payload: 'auth' | 'chat' | 'agents' | 'register' | 'login' | 'logs' }
   | { type: 'SET_MESSAGES'; payload: Message[] }
   | { type: 'ADD_MESSAGE'; payload: Message }
   | { type: 'SET_ACCESS_TOKEN'; payload: string | null }
