@@ -49,6 +49,7 @@ const ChatHeader = styled.div`
   align-items: center;
   gap: 15px;
   border-radius: 10px 10px 0 0;
+  margin-top: 40px;
 `;
 
 const BackButton = styled.button`
