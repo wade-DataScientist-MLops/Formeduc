@@ -5,7 +5,7 @@ import { ChatHistorySidebar } from './ChatHistorySidebar';
 
 const ChatContainer = styled.div`
   display: flex;
-  height: calc(100vh - 64px);
+  height: calc(100vh - 128px);
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
