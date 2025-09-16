@@ -135,6 +135,8 @@ export const Sidebar: React.FC = () => {
       dispatch({ type: 'SET_PAGE', payload: 'agents' });
     } else if (itemId === 'chat') {
       dispatch({ type: 'SET_PAGE', payload: 'chat' });
+    } else if (itemId === 'logs') {
+      dispatch({ type: 'SET_PAGE', payload: 'logs' });
     } else if (itemId === 'dashboard') {
       dispatch({ type: 'SET_PAGE', payload: 'agents' }); // Pour l'instant, dashboard = agents
     }
@@ -144,6 +146,7 @@ export const Sidebar: React.FC = () => {
   const getCurrentPage = () => {
     if (state.page === 'agents') return 'agents';
     if (state.page === 'chat') return 'chat';
+    if (state.page === 'logs') return 'logs';
     return 'agents'; // Par défaut
   };
 

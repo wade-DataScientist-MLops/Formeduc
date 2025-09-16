@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { AppProvider, useApp } from './context/AppContext';
+import { LogsProvider } from './context/LogsContext';
 import { AuthWithCarousel } from './components/Auth/AuthWithCarousel';
 import { AgentChatRouter } from './components/Chat/AgentChatRouter';
 import { AgentsManagementDashboard } from './components/Dashboard/AgentsManagementDashboard';
 import { MainLayout } from './components/Layout/MainLayout';
+import { LogsPage } from './components/Logs/LogsPage';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -183,6 +185,12 @@ function AppContent() {
             <AgentChatRouter />
           </MainLayout>
         );
+      case 'logs':
+        return (
+          <MainLayout>
+            <LogsPage />
+          </MainLayout>
+        );
       default:
         return (
           <MainLayout>
@@ -202,8 +210,10 @@ function AppContent() {
 function App() {
   return (
     <AppProvider>
-      <GlobalStyle />
-      <AppContent />
+      <LogsProvider>
+        <GlobalStyle />
+        <AppContent />
+      </LogsProvider>
     </AppProvider>
   );
 }

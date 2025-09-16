@@ -3,7 +3,7 @@ import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
 import { AgentLogs } from '../Logs/AgentLogs';
-import { useAgentLogs } from '../../hooks/useAgentLogs';
+import { useLogs } from '../../context/LogsContext';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -241,7 +241,7 @@ export const ElaviraChatInterface: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
-  const { logs, clearLogs, logRequest, logResponse, logError, logInfo } = useAgentLogs();
+  const { logs, clearLogs, logRequest, logResponse, logError, logInfo } = useLogs();
 
   const quickActions = [
     "Prix des formations",
