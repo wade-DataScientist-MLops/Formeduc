@@ -180,7 +180,9 @@ function AppContent() {
       case 'chat':
         return (
           <MainLayout>
-            <AgentChatRouter />
+            <div style={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
+              <AgentChatRouter />
+            </div>
           </MainLayout>
         );
       default:

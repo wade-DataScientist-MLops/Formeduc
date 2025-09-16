@@ -365,8 +365,8 @@ export const ElaviraChatInterface: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <ChatContainer>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <ChatContainer style={{ height: '100%', position: 'relative' }}>
         <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
           ☰
         </ToggleSidebarButton>
@@ -380,7 +380,7 @@ export const ElaviraChatInterface: React.FC = () => {
           />
         )}
 
-        <MainContent>
+        <MainContent style={{ height: '100%' }}>
         <ChatHeader>
           <BackButton onClick={handleBackToAgents}>
             ← Retour aux agents
