@@ -287,8 +287,8 @@ export const SolenysChatInterface: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: text,
-          agent_id: 'solenys'
+          text: text,
+          agent: 'solenys'
         }),
       });
 

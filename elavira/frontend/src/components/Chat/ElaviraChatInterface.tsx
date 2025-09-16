@@ -285,8 +285,8 @@ export const ElaviraChatInterface: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          message: text,
-          agent_id: 'elavira'
+          text: text,
+          agent: 'elavira'
         }),
       });
 
