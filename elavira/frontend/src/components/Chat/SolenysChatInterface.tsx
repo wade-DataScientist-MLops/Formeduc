@@ -228,7 +228,8 @@ interface Conversation {
   id: string;
   title: string;
   lastMessage: string;
-  timestamp: Date;
+  timestamp: string;
+  agent: string;
 }
 
 export const SolenysChatInterface: React.FC = () => {
