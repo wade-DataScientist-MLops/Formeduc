@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
+import { AgentLogs } from '../Logs/AgentLogs';
+import { useAgentLogs } from '../../hooks/useAgentLogs';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -240,6 +242,7 @@ export const SolenysChatInterface: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const { logs, clearLogs, logRequest, logResponse, logError, logInfo } = useAgentLogs();
 
   const quickActions = [
     "Mathématiques",
@@ -280,6 +283,10 @@ export const SolenysChatInterface: React.FC = () => {
     setInputText('');
     setIsThinking(true);
 
+    // Log de la requête
+    logRequest('http://104.254.182.118:8000/chat/send_message/', 'POST', 'Solenys');
+    logInfo(`Envoi du message: "${text}"`, 'Solenys');
+
     try {
       const response = await fetch('http://104.254.182.118:8000/chat/send_message/', {
         method: 'POST',
@@ -294,14 +301,18 @@ export const SolenysChatInterface: React.FC = () => {
 
       if (response.ok) {
         const data = await response.json();
+        logResponse(response.status, `Réponse reçue (${data.text?.length || 0} caractères)`, 'Solenys');
+        
         const assistantMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: data.response,
+          content: data.text || 'Réponse vide',
           isUser: false,
           timestamp: new Date()
         };
         setMessages(prev => [...prev, assistantMessage]);
+        logInfo('Message affiché dans l\'interface', 'Solenys');
       } else {
+        logResponse(response.status, `Erreur HTTP: ${response.statusText}`, 'Solenys');
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
@@ -312,6 +323,7 @@ export const SolenysChatInterface: React.FC = () => {
       }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
+      logError(`Erreur réseau: ${error}`, 'Solenys');
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
@@ -435,6 +447,8 @@ export const SolenysChatInterface: React.FC = () => {
           </SendButton>
         </InputContainer>
       </MainContent>
+      
+      <AgentLogs logs={logs} onClearLogs={clearLogs} />
     </ChatContainer>
   );
 };
