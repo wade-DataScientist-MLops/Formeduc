@@ -5,7 +5,6 @@ import { chatAPI } from '../../services/api';
 import { Message, Conversation } from '../../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { AgentSelector } from './AgentSelector';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { AssistantShowcase } from './AssistantShowcase';
 import { SolenysShowcase } from './SolenysShowcase';
@@ -296,7 +295,6 @@ export const ChatInterface: React.FC = () => {
         <ChatHeader>
           <HeaderLeft>
             <Title>Messagerie intelligente 💬</Title>
-            <AgentSelector />
           </HeaderLeft>
           <HeaderRight>
             <UserInfo>Connecté en tant que <strong>{state.logged_in_user}</strong></UserInfo>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styled, { createGlobalStyle } from 'styled-components';
 import { AppProvider, useApp } from './context/AppContext';
 import { AuthWithCarousel } from './components/Auth/AuthWithCarousel';
-import { ChatInterface } from './components/Chat/ChatInterface';
+import { ChatApp } from './components/Chat/ChatApp';
 import { AgentsManagementDashboard } from './components/Dashboard/AgentsManagementDashboard';
 import { MainLayout } from './components/Layout/MainLayout';
 
@@ -178,11 +178,7 @@ function AppContent() {
           </MainLayout>
         );
       case 'chat':
-        return (
-          <MainLayout>
-            <ChatInterface />
-          </MainLayout>
-        );
+        return <ChatApp />;
       default:
         return (
           <MainLayout>

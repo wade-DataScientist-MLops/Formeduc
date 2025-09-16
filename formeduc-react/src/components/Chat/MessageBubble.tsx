@@ -129,10 +129,10 @@ interface MessageBubbleProps {
 }
 
 export const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
-  // Detection FORCÉE des messages d'assistant
+  // Detection des messages d'assistant
   const isElavira = message.user_id === 'Elavira Assistant' || message.user_id === 'Elavira';
   const isSolenys = message.user_id === 'Solenys Assistant' || message.user_id === 'Solenys';
-  const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant') || message.user_id.includes('Solenys') || message.user_id.includes('Elavira');
+  const isAssistant = isElavira || isSolenys || message.user_id.includes('Assistant');
   
   // CORRECTION: assistants à droite, utilisateurs à gauche
   const isUser = !isAssistant;
