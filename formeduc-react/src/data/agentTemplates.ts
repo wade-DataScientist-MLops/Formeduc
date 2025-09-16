@@ -104,5 +104,5 @@ export const getTemplatesByCategory = (category: string): AgentTemplate[] => {
 };
 
 export const getCategories = (): string[] => {
-  return [...new Set(agentTemplates.map(template => template.category))];
+  return Array.from(new Set(agentTemplates.map(template => template.category)));
 };

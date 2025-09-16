@@ -1,3 +1,56 @@
-venv/
+# Fichiers binaires et données générées
+elavira/backend/backend/chroma_data/
+elavira/backend/chroma_data/
+elavira/backend/data/sqlite.db
+elavira/backend/.env
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build directories
+build/
+dist/
+*.tgz
+*.tar.gz
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Additional binary files to ignore
+backend/backend/chroma_data/
+backend/chroma_data/
+backend/data/sqlite.db
+backend/.env
+__pycache__/

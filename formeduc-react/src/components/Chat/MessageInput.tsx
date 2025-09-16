@@ -77,18 +77,20 @@ const AudioToggleButton = styled(Button)`
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
-  onTranscribeAudio: (audioFile: File) => void;
-  disabled: boolean;
-  audioEnabled: boolean;
-  onToggleAudio: () => void;
+  onTranscribeAudio?: (audioFile: File) => void;
+  disabled?: boolean;
+  audioEnabled?: boolean;
+  onToggleAudio?: () => void;
+  placeholder?: string;
 }
 
 export const MessageInput: React.FC<MessageInputProps> = ({
   onSendMessage,
   onTranscribeAudio,
-  disabled,
-  audioEnabled,
+  disabled = false,
+  audioEnabled = false,
   onToggleAudio,
+  placeholder = "Tapez votre message..."
 }) => {
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -125,7 +127,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
       mediaRecorder.onstop = () => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         const audioFile = new File([audioBlob], 'audio.wav', { type: 'audio/wav' });
-        onTranscribeAudio(audioFile);
+        onTranscribeAudio?.(audioFile);
         stream.getTracks().forEach(track => track.stop());
       };
 
@@ -156,7 +158,7 @@ export const MessageInput: React.FC<MessageInputProps> = ({
     <InputContainer>
       <TextInput
         type="text"
-        placeholder="Écrivez votre message ici..."
+        placeholder={placeholder}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress}

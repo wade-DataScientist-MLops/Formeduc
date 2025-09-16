@@ -1,6 +1,7 @@
 import React from 'react';
 import styled from 'styled-components';
-import { AgentCard, Agent } from './AgentCard';
+import { AgentCard } from './AgentCard';
+import { Agent } from '../../types/agent';
 import { useApp } from '../../context/AppContext';
 import { AgentType } from '../../types';
 
@@ -64,22 +65,32 @@ const agents: Agent[] = [
   {
     id: 'elavira',
     name: 'Elavira',
-    avatar: '/images/elavira-real.png',
+    role: 'Éducatrice Formeduc',
+    specialty: 'Secourisme et Formations',
     description: 'Votre éducatrice spécialisée en secourisme et formations Formeduc.',
-    capabilities: ['Formeduc Content', 'Secourisme', 'Pédagogie', 'Support'],
-    status: 'Active',
-    createdAt: '2024-09-01',
-    knowledgePacks: 3
+    prompt: 'Tu es Elavira, experte en formations de secourisme...',
+    model: 'llama3.2:1b',
+    avatar: '👩‍🏫',
+    color: '#88c0d0',
+    knowledgeBase: 'formeduc',
+    isActive: true,
+    createdAt: '2024-09-01T00:00:00.000Z',
+    updatedAt: '2024-09-01T00:00:00.000Z'
   },
   {
     id: 'solenys',
     name: 'Solenys',
-    avatar: '/images/solenys-banner.svg',
+    role: 'Professeur Québécois',
+    specialty: 'Enseignement PFEQ',
     description: 'Professeur académique pour les élèves du secondaire (PFEQ Québec).',
-    capabilities: ['PFEQ Curriculum', 'Mathématiques', 'Sciences', 'Français'],
-    status: 'Active',
-    createdAt: '2024-09-05',
-    knowledgePacks: 2
+    prompt: 'Tu es Solenys, professeur québécois...',
+    model: 'llama3.2:1b',
+    avatar: '🤖',
+    color: '#f093fb',
+    knowledgeBase: 'pfeq',
+    isActive: true,
+    createdAt: '2024-09-05T00:00:00.000Z',
+    updatedAt: '2024-09-05T00:00:00.000Z'
   }
 ];
 
@@ -111,6 +122,11 @@ export const AgentsDashboard: React.FC = () => {
           <AgentCard
             key={agent.id}
             agent={agent}
+            isSelected={false}
+            onSelect={() => {}}
+            onUpdate={() => {}}
+            onDelete={() => {}}
+            onToggleActive={() => {}}
             onChatClick={() => handleChatClick(agent.id)}
           />
         ))}

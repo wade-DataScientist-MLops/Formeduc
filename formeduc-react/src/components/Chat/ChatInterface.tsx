@@ -5,12 +5,10 @@ import { chatAPI } from '../../services/api';
 import { Message, Conversation } from '../../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
-import { AgentSelector } from './AgentSelector';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { AssistantShowcase } from './AssistantShowcase';
 import { SolenysShowcase } from './SolenysShowcase';
 import { ChatHistorySidebar } from './ChatHistorySidebar';
-import { AgentManager } from '../Agents/AgentManager';
 
 const ChatContainer = styled.div`
   display: flex;
@@ -287,7 +285,7 @@ export const ChatInterface: React.FC = () => {
       {state.sidebar_open && (
         <ChatHistorySidebar
           conversations={state.conversations}
-          activeConversationId={state.active_conversation_id}
+          activeConversationId={state.active_conversation_id || undefined}
           onConversationSelect={handleConversationSelect}
           onNewChat={handleNewChat}
         />
@@ -297,7 +295,6 @@ export const ChatInterface: React.FC = () => {
         <ChatHeader>
           <HeaderLeft>
             <Title>Messagerie intelligente 💬</Title>
-            <AgentSelector />
           </HeaderLeft>
           <HeaderRight>
             <UserInfo>Connecté en tant que <strong>{state.logged_in_user}</strong></UserInfo>

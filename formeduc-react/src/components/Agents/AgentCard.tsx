@@ -211,6 +211,7 @@ interface AgentCardProps {
   onUpdate: (agent: UpdateAgentRequest) => void;
   onDelete: (agentId: string) => void;
   onToggleActive: (agentId: string) => void;
+  onChatClick?: () => void;
 }
 
 export const AgentCard: React.FC<AgentCardProps> = ({
@@ -219,7 +220,8 @@ export const AgentCard: React.FC<AgentCardProps> = ({
   onSelect,
   onUpdate,
   onDelete,
-  onToggleActive
+  onToggleActive,
+  onChatClick
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
 

@@ -52,4 +52,5 @@ export interface CreateAgentRequest {
 
 export interface UpdateAgentRequest extends Partial<CreateAgentRequest> {
   id: string;
+  isActive?: boolean;
 }

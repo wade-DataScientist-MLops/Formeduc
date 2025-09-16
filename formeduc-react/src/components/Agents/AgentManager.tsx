@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { Agent, CreateAgentRequest, UpdateAgentRequest } from '../../types/agent';
 import { AgentCreator } from './AgentCreator';
 import { AgentCard } from './AgentCard';
+import { agentsAPI } from '../../services/api';
 
 const Container = styled.div`
   padding: 20px;
@@ -100,51 +101,64 @@ export const AgentManager: React.FC<AgentManagerProps> = ({
     loadAgents();
   }, []);
 
+  // Fonction pour convertir les données du backend vers le frontend
+  const convertBackendToFrontend = (backendAgent: any): Agent => ({
+    id: backendAgent.id,
+    name: backendAgent.name,
+    role: backendAgent.role,
+    specialty: backendAgent.specialty,
+    description: backendAgent.description,
+    prompt: backendAgent.prompt,
+    model: backendAgent.model,
+    avatar: backendAgent.avatar,
+    color: backendAgent.color,
+    knowledgeBase: backendAgent.knowledge_base,
+    isActive: backendAgent.is_active,
+    createdAt: backendAgent.created_at,
+    updatedAt: backendAgent.updated_at
+  });
+
   const loadAgents = async () => {
     try {
       setLoading(true);
-      // TODO: Remplacer par l'appel API réel
-      const response = await fetch('/api/agents');
-      if (response.ok) {
-        const agentsData = await response.json();
-        setAgents(agentsData);
-      } else {
-        // Données par défaut pour le développement
-        setAgents([
-          {
-            id: 'agent-001',
-            name: 'Elavira',
-            role: 'Experte Formations',
-            specialty: 'Formations & Secourisme',
-            description: 'Professionnelle de la santé et de l\'éducation, Elavira vous accompagne dans vos formations de secourisme avec expertise et bienveillance.',
-            prompt: 'Tu es Elavira, experte en formations de secourisme...',
-            model: 'llama3.2:1b',
-            avatar: '👩‍🏫',
-            color: '#88c0d0',
-            knowledgeBase: 'formeduc',
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          },
-          {
-            id: 'agent-002',
-            name: 'Solenys',
-            role: 'Professeur Québécois',
-            specialty: 'Enseignement PFEQ',
-            description: 'Professeur spécialisé dans l\'enseignement secondaire selon le programme PFEQ du Québec.',
-            prompt: 'Tu es Solenys, professeur québécois...',
-            model: 'llama3.2:1b',
-            avatar: '🤖',
-            color: '#f093fb',
-            knowledgeBase: 'pfeq',
-            isActive: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          }
-        ]);
-      }
+      const agentsData = await agentsAPI.getAgents();
+      const convertedAgents = agentsData.map(convertBackendToFrontend);
+      setAgents(convertedAgents);
     } catch (error) {
       console.error('Erreur lors du chargement des agents:', error);
+      // Données par défaut pour le développement en cas d'erreur
+      setAgents([
+        {
+          id: 'agent-001',
+          name: 'Elavira',
+          role: 'Experte Formations',
+          specialty: 'Formations & Secourisme',
+          description: 'Professionnelle de la santé et de l\'éducation, Elavira vous accompagne dans vos formations de secourisme avec expertise et bienveillance.',
+          prompt: 'Tu es Elavira, experte en formations de secourisme...',
+          model: 'llama3.2:1b',
+          avatar: '👩‍🏫',
+          color: '#88c0d0',
+          knowledgeBase: 'formeduc',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          id: 'agent-002',
+          name: 'Solenys',
+          role: 'Professeur Québécois',
+          specialty: 'Enseignement PFEQ',
+          description: 'Professeur spécialisé dans l\'enseignement secondaire selon le programme PFEQ du Québec.',
+          prompt: 'Tu es Solenys, professeur québécois...',
+          model: 'llama3.2:1b',
+          avatar: '🤖',
+          color: '#f093fb',
+          knowledgeBase: 'pfeq',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ]);
     } finally {
       setLoading(false);
     }
@@ -152,29 +166,23 @@ export const AgentManager: React.FC<AgentManagerProps> = ({
 
   const handleCreateAgent = async (agentData: CreateAgentRequest) => {
     try {
-      const newAgent: Agent = {
-        ...agentData,
-        id: `agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+      // Convertir les noms de champs du frontend vers le backend
+      const backendData = {
+        name: agentData.name,
+        role: agentData.role,
+        specialty: agentData.specialty,
+        description: agentData.description,
+        prompt: agentData.prompt,
+        model: agentData.model,
+        avatar: agentData.avatar,
+        color: agentData.color,
+        knowledge_base: agentData.knowledgeBase
       };
-
-      // TODO: Remplacer par l'appel API réel
-      const response = await fetch('/api/agents', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newAgent),
-      });
-
-      if (response.ok) {
-        setAgents(prev => [...prev, newAgent]);
-        setIsCreatorOpen(false);
-      } else {
-        throw new Error('Erreur lors de la création de l\'agent');
-      }
+      
+      const createdAgent = await agentsAPI.createAgent(backendData);
+      const convertedAgent = convertBackendToFrontend(createdAgent);
+      setAgents(prev => [...prev, convertedAgent]);
+      setIsCreatorOpen(false);
     } catch (error) {
       console.error('Erreur lors de la création de l\'agent:', error);
       alert('Erreur lors de la création de l\'agent');
@@ -183,24 +191,24 @@ export const AgentManager: React.FC<AgentManagerProps> = ({
 
   const handleUpdateAgent = async (agentData: UpdateAgentRequest) => {
     try {
-      // TODO: Remplacer par l'appel API réel
-      const response = await fetch(`/api/agents/${agentData.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(agentData),
-      });
-
-      if (response.ok) {
-        setAgents(prev => prev.map(agent => 
-          agent.id === agentData.id 
-            ? { ...agent, ...agentData, updatedAt: new Date().toISOString() }
-            : agent
-        ));
-      } else {
-        throw new Error('Erreur lors de la mise à jour de l\'agent');
-      }
+      // Convertir les noms de champs du frontend vers le backend
+      const backendData: any = {};
+      if (agentData.name) backendData.name = agentData.name;
+      if (agentData.role) backendData.role = agentData.role;
+      if (agentData.specialty) backendData.specialty = agentData.specialty;
+      if (agentData.description) backendData.description = agentData.description;
+      if (agentData.prompt) backendData.prompt = agentData.prompt;
+      if (agentData.model) backendData.model = agentData.model;
+      if (agentData.avatar) backendData.avatar = agentData.avatar;
+      if (agentData.color) backendData.color = agentData.color;
+      if (agentData.knowledgeBase) backendData.knowledge_base = agentData.knowledgeBase;
+      if (agentData.isActive !== undefined) backendData.is_active = agentData.isActive;
+      
+      const updatedAgent = await agentsAPI.updateAgent(agentData.id, backendData);
+      const convertedAgent = convertBackendToFrontend(updatedAgent);
+      setAgents(prev => prev.map(agent => 
+        agent.id === agentData.id ? convertedAgent : agent
+      ));
     } catch (error) {
       console.error('Erreur lors de la mise à jour de l\'agent:', error);
       alert('Erreur lors de la mise à jour de l\'agent');
@@ -213,16 +221,8 @@ export const AgentManager: React.FC<AgentManagerProps> = ({
     }
 
     try {
-      // TODO: Remplacer par l'appel API réel
-      const response = await fetch(`/api/agents/${agentId}`, {
-        method: 'DELETE',
-      });
-
-      if (response.ok) {
-        setAgents(prev => prev.filter(agent => agent.id !== agentId));
-      } else {
-        throw new Error('Erreur lors de la suppression de l\'agent');
-      }
+      await agentsAPI.deleteAgent(agentId);
+      setAgents(prev => prev.filter(agent => agent.id !== agentId));
     } catch (error) {
       console.error('Erreur lors de la suppression de l\'agent:', error);
       alert('Erreur lors de la suppression de l\'agent');

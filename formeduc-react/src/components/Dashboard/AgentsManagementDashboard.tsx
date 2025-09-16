@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
 import { AgentType } from '../../types';
@@ -240,7 +240,6 @@ const agents = [
 
 export const AgentsManagementDashboard: React.FC = () => {
   const { dispatch } = useApp();
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
   const handleAgentSelect = (agentId: string) => {
     dispatch({ type: 'SET_SELECTED_AGENT', payload: agentId as AgentType });

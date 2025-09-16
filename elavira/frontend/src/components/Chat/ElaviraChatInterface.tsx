@@ -373,7 +373,7 @@ export const ElaviraChatInterface: React.FC = () => {
       {sidebarOpen && (
         <ChatHistorySidebar
           conversations={conversations}
-          activeConversationId={activeConversationId}
+          activeConversationId={activeConversationId || undefined}
           onConversationSelect={handleConversationSelect}
           onNewChat={handleNewChat}
         />
