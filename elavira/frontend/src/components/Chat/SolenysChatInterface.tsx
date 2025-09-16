@@ -397,21 +397,22 @@ export const SolenysChatInterface: React.FC = () => {
   };
 
   return (
-    <ChatContainer>
-      <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
-        ☰
-      </ToggleSidebarButton>
-      
-      {sidebarOpen && (
-        <ChatHistorySidebar
-          conversations={conversations}
-          activeConversationId={activeConversationId || undefined}
-          onConversationSelect={handleConversationSelect}
-          onNewChat={handleNewChat}
-        />
-      )}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <ChatContainer>
+        <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
+          ☰
+        </ToggleSidebarButton>
+        
+        {sidebarOpen && (
+          <ChatHistorySidebar
+            conversations={conversations}
+            activeConversationId={activeConversationId || undefined}
+            onConversationSelect={handleConversationSelect}
+            onNewChat={handleNewChat}
+          />
+        )}
 
-      <MainContent>
+        <MainContent>
         <ChatHeader>
           <BackButton onClick={handleBackToAgents}>
             ← Retour aux agents
@@ -490,5 +491,6 @@ export const SolenysChatInterface: React.FC = () => {
         </InputContainer>
       </MainContent>
     </ChatContainer>
+    </div>
   );
 };
