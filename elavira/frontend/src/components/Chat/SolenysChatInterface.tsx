@@ -396,8 +396,8 @@ export const SolenysChatInterface: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-      <ChatContainer style={{ height: '100%', position: 'relative' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', marginTop: '20px' }}>
+      <ChatContainer style={{ height: 'calc(100% - 20px)', position: 'relative' }}>
         <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
           ☰
         </ToggleSidebarButton>
