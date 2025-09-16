@@ -364,8 +364,8 @@ export const ElaviraChatInterface: React.FC = () => {
   };
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', marginTop: '80px' }}>
-      <ChatContainer style={{ height: 'calc(100% - 80px)', position: 'relative' }}>
+    <div style={{ height: 'calc(100vh - 64px - 64px)', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <ChatContainer style={{ height: '100%', position: 'relative' }}>
         <ToggleSidebarButton onClick={() => setSidebarOpen(!sidebarOpen)}>
           ☰
         </ToggleSidebarButton>
