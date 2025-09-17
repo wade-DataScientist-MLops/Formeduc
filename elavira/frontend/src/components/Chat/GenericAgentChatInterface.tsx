@@ -293,17 +293,39 @@ export const GenericAgentChatInterface: React.FC<GenericAgentChatInterfaceProps>
     setIsThinking(true);
 
     try {
-      const response = await chatAPI.sendMessage({
-        text: text.trim(),
-        user_id: state.logged_in_user || 'Guest',
-        agent: agentId
+      const response = await fetch('http://104.254.182.118:8000/chat/send_message/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text: text.trim(),
+          agent: agentId
+        }),
       });
 
-      setMessages(prev => [...prev, response]);
+      if (response.ok) {
+        const data = await response.json();
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.text || 'Réponse vide',
+          user_id: `${agentName} Assistant`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          text: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
+          user_id: `${agentName} Assistant`,
+          timestamp: new Date().toISOString()
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } catch (error) {
       console.error('Erreur lors de l\'envoi du message:', error);
       const errorMessage: Message = {
-        id: Date.now().toString(),
+        id: (Date.now() + 1).toString(),
         text: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer.',
         user_id: `${agentName} Assistant`,
         timestamp: new Date().toISOString()
