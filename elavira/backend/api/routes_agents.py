@@ -43,6 +43,7 @@ async def get_agent(
     return agent
 
 @router.post("/agents", response_model=AgentResponse)
+@router.post("/agents/create", response_model=AgentResponse)
 async def create_agent(
     agent_data: AgentCreate,
     db: Session = Depends(get_db),

@@ -14,8 +14,16 @@ class AgentBase(BaseModel):
     color: str
     knowledge_base: str
 
-class AgentCreate(AgentBase):
-    pass
+class AgentCreate(BaseModel):
+    name: str
+    role: str
+    description: str
+    prompt: str
+    model: str
+    specialty: Optional[str] = "Assistant"
+    avatar: Optional[str] = "🤖"
+    color: Optional[str] = "#3b82f6"
+    knowledge_base: Optional[str] = "general"
 
 class AgentUpdate(BaseModel):
     name: Optional[str] = None
