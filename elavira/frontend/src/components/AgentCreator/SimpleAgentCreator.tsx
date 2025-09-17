@@ -116,7 +116,11 @@ const SimpleAgentCreator: React.FC<SimpleAgentCreatorProps> = ({ isOpen, onClose
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...formData,
+          name: formData.name,
+          role: formData.role,
+          description: formData.description,
+          model: formData.model,
+          prompt: formData.systemPrompt,
           timeout: 30000,
           temperature: 0.6,
           maxTokens: 400,

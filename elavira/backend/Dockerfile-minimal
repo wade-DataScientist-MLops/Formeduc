@@ -1,27 +1,16 @@
 FROM python:3.11-slim
 
-# Variables d'environnement
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
+WORKDIR /app
 
-# Installer les dépendances système minimales
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Installer seulement les dépendances essentielles
+RUN pip install --no-cache-dir fastapi uvicorn sqlalchemy psycopg2-binary pydantic
 
-# Copier les requirements minimaux
-COPY requirements-minimal.txt .
+# Copier seulement les fichiers nécessaires
+COPY main.py .
+COPY api/ ./api/
+COPY db/ ./db/
+COPY core/ ./core/
 
-# Installer Python packages (sans cache)
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-minimal.txt
-
-# Copier le code
-COPY . .
-
-# Port
 EXPOSE 8000
 
-# Commande
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

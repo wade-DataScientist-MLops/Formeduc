@@ -326,7 +326,13 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.name,
+          role: formData.role,
+          description: formData.description,
+          model: formData.model,
+          prompt: formData.systemPrompt
+        }),
       });
 
       console.log('Réponse API:', response.status, response.statusText);
