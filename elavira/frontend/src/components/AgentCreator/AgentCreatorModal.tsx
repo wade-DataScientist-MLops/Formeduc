@@ -321,7 +321,7 @@ const AgentCreatorModal: React.FC<AgentCreatorModalProps> = ({ isOpen, onClose, 
       console.log('Données du formulaire:', formData);
       
       // Créer l'agent via l'API
-      const response = await fetch('http://104.254.182.118:8000/api/agents/create', {
+      const response = await fetch('http://104.254.182.118:8000/api/agents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

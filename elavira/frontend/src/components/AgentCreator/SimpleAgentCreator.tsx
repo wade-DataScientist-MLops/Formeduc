@@ -110,7 +110,7 @@ const SimpleAgentCreator: React.FC<SimpleAgentCreatorProps> = ({ isOpen, onClose
       alert('handleSubmit appelé !'); // Test immédiat
       console.log('SimpleAgentCreator - Données du formulaire:', formData);
       
-      const response = await fetch('http://104.254.182.118:8000/api/agents/create', {
+      const response = await fetch('http://104.254.182.118:8000/api/agents', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
