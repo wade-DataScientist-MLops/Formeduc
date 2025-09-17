@@ -22,7 +22,7 @@ type AppAction =
   | { type: 'LOGOUT' };
 
 const initialState: AppState = {
-  page: 'auth',
+  page: 'home',
   messages: [],
   access_token: localStorage.getItem('access_token'),
   logged_in_user: localStorage.getItem('logged_in_user'),

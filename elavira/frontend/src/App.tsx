@@ -7,6 +7,7 @@ import { AgentChatRouter } from './components/Chat/AgentChatRouter';
 import { AgentsManagementDashboard } from './components/Dashboard/AgentsManagementDashboard';
 import { MainLayout } from './components/Layout/MainLayout';
 import { LogsPage } from './components/Logs/LogsPage';
+import { HomePage } from './components/Dashboard/HomePage';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -173,6 +174,8 @@ function AppContent() {
     switch (state.page) {
       case 'auth':
         return <AuthWithCarousel />;
+      case 'home':
+        return <HomePage />;
       case 'agents':
         return (
           <MainLayout>
@@ -192,11 +195,7 @@ function AppContent() {
           </MainLayout>
         );
       default:
-        return (
-          <MainLayout>
-            <AgentsManagementDashboard />
-          </MainLayout>
-        );
+        return <HomePage />;
     }
   };
 

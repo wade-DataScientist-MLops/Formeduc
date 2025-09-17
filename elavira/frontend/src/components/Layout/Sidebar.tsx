@@ -120,7 +120,7 @@ export const Sidebar: React.FC = () => {
   const { state, dispatch } = useApp();
 
   const navigationItems = [
-    { id: 'dashboard', icon: '📊', text: 'Dashboard' },
+    { id: 'home', icon: '🏠', text: 'Accueil' },
     { id: 'agents', icon: '🤖', text: 'Agents' },
     { id: 'chat', icon: '💬', text: 'Chat' },
     { id: 'multi-agents', icon: '👥', text: 'Multi-Agents' },
@@ -131,23 +131,24 @@ export const Sidebar: React.FC = () => {
   ];
 
   const handleNavClick = (itemId: string) => {
-    if (itemId === 'agents') {
+    if (itemId === 'home') {
+      dispatch({ type: 'SET_PAGE', payload: 'home' });
+    } else if (itemId === 'agents') {
       dispatch({ type: 'SET_PAGE', payload: 'agents' });
     } else if (itemId === 'chat') {
       dispatch({ type: 'SET_PAGE', payload: 'chat' });
     } else if (itemId === 'logs') {
       dispatch({ type: 'SET_PAGE', payload: 'logs' });
-    } else if (itemId === 'dashboard') {
-      dispatch({ type: 'SET_PAGE', payload: 'agents' }); // Pour l'instant, dashboard = agents
     }
     // Les autres pages ne sont pas encore implémentées
   };
 
   const getCurrentPage = () => {
+    if (state.page === 'home') return 'home';
     if (state.page === 'agents') return 'agents';
     if (state.page === 'chat') return 'chat';
     if (state.page === 'logs') return 'logs';
-    return 'agents'; // Par défaut
+    return 'home'; // Par défaut
   };
 
   return (
