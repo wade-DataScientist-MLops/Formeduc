@@ -420,12 +420,26 @@ export const HomePage: React.FC = () => {
           </StatsContainer>
           
           <CTAButtons>
-            <PrimaryButton onClick={() => {
-              console.log('Button clicked!');
-              handleTryNow();
-            }}>
+            <button 
+              onClick={() => {
+                console.log('Button clicked!');
+                handleTryNow();
+              }}
+              style={{
+                background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '16px 32px',
+                borderRadius: '50px',
+                fontSize: '1.1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 8px 25px rgba(255, 107, 107, 0.3)'
+              }}
+            >
               {state.logged_in_user ? 'Essayer gratuitement' : 'Se connecter'}
-            </PrimaryButton>
+            </button>
             <SecondaryButton onClick={handleCreateAgent}>
               {state.logged_in_user ? 'Créer un agent' : 'Découvrir'}
             </SecondaryButton>
