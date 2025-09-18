@@ -7,12 +7,13 @@ interface AppContextType {
 }
 
 type AppAction =
-  | { type: 'SET_PAGE'; payload: 'auth' | 'chat' | 'agents' | 'register' | 'login' | 'logs' }
+  | { type: 'SET_PAGE'; payload: 'auth' | 'chat' | 'agents' | 'register' | 'login' | 'logs' | 'home' }
   | { type: 'SET_MESSAGES'; payload: Message[] }
   | { type: 'ADD_MESSAGE'; payload: Message }
   | { type: 'SET_ACCESS_TOKEN'; payload: string | null }
   | { type: 'SET_LOGGED_IN_USER'; payload: string | null }
   | { type: 'SET_SELECTED_AGENT'; payload: AgentType }
+  | { type: 'SET_SELECTED_AGENT_ID'; payload: string }
   | { type: 'SET_TRANSCRIBING'; payload: boolean }
   | { type: 'SET_THINKING'; payload: boolean }
   | { type: 'SET_LAST_SUGGESTED_PROMPTS'; payload: string[] }
@@ -48,6 +49,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_LOGGED_IN_USER':
       return { ...state, logged_in_user: action.payload };
     case 'SET_SELECTED_AGENT':
+      return { ...state, selected_agent_id: action.payload };
+    case 'SET_SELECTED_AGENT_ID':
       return { ...state, selected_agent_id: action.payload };
     case 'SET_TRANSCRIBING':
       return { ...state, transcribing: action.payload };

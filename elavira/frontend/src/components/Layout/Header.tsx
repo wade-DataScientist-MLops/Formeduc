@@ -172,7 +172,8 @@ const MobileMenuButton = styled.button`
 
 export const Header: React.FC = () => {
   const { state, dispatch } = useApp();
-  const { logged_in_user, current_page } = state;
+  const { logged_in_user } = state;
+  const current_page = state.page;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {

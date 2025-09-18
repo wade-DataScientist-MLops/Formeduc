@@ -32,16 +32,17 @@ export interface TranscribeResponse {
 export type AgentType = 'agent-001' | 'agent-002' | 'elavira' | 'solenys';
 
 export interface AppState {
-  page: 'auth' | 'chat' | 'agents' | 'register' | 'login' | 'logs';
+  page: 'auth' | 'chat' | 'agents' | 'register' | 'login' | 'logs' | 'home';
   messages: Message[];
   access_token: string | null;
   logged_in_user: string | null;
-  selected_agent_id: AgentType;
+  selected_agent_id: AgentType | string;
   transcribing: boolean;
   thinking: boolean;
   last_suggested_prompts: string[];
   display_suggestions: boolean;
   message_input: string;
   audio_enabled: boolean;
+  current_page?: string;
 }
 
