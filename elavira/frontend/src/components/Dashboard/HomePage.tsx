@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { useApp } from '../../context/AppContext';
+import { TestButtons } from './TestButtons';
 
 const HomeContainer = styled.div`
   min-height: 100vh;
@@ -373,8 +374,6 @@ export const HomePage: React.FC = () => {
     // Rediriger vers la page de connexion si pas connecté
     if (!state.logged_in_user) {
       console.log('Redirecting to auth page');
-      // Test direct avec window.location
-      window.location.href = '/?page=auth';
       dispatch({ type: 'SET_PAGE', payload: 'auth' });
       return;
     }
@@ -388,6 +387,7 @@ export const HomePage: React.FC = () => {
 
   return (
     <HomeContainer>
+      <TestButtons />
       <HeroSection>
         <HeroContent>
           <Badge>
@@ -421,9 +421,14 @@ export const HomePage: React.FC = () => {
           
           <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '80px' }}>
             <button 
-              onClick={() => {
-                console.log('Button clicked!');
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Primary button clicked!');
+                console.log('Event:', e);
+                console.log('State before:', state);
                 handleTryNow();
+                console.log('State after:', state);
               }}
               style={{
                 background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%)',
@@ -441,9 +446,14 @@ export const HomePage: React.FC = () => {
               {state.logged_in_user ? 'Essayer gratuitement' : 'Se connecter'}
             </button>
             <button 
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('Secondary button clicked!');
+                console.log('Event:', e);
+                console.log('State before:', state);
                 handleCreateAgent();
+                console.log('State after:', state);
               }}
               style={{
                 background: 'rgba(255, 255, 255, 0.1)',
