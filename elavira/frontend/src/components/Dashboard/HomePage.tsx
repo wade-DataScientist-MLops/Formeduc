@@ -366,8 +366,13 @@ export const HomePage: React.FC = () => {
   };
 
   const handleTryNow = () => {
+    console.log('handleTryNow called');
+    console.log('logged_in_user:', state.logged_in_user);
+    console.log('state:', state);
+    
     // Rediriger vers la page de connexion si pas connecté
     if (!state.logged_in_user) {
+      console.log('Redirecting to auth page');
       dispatch({ type: 'SET_PAGE', payload: 'auth' });
       return;
     }
