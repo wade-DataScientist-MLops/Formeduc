@@ -373,6 +373,8 @@ export const HomePage: React.FC = () => {
     // Rediriger vers la page de connexion si pas connecté
     if (!state.logged_in_user) {
       console.log('Redirecting to auth page');
+      // Test direct avec window.location
+      window.location.href = '/?page=auth';
       dispatch({ type: 'SET_PAGE', payload: 'auth' });
       return;
     }
@@ -418,7 +420,10 @@ export const HomePage: React.FC = () => {
           </StatsContainer>
           
           <CTAButtons>
-            <PrimaryButton onClick={handleTryNow}>
+            <PrimaryButton onClick={() => {
+              console.log('Button clicked!');
+              handleTryNow();
+            }}>
               {state.logged_in_user ? 'Essayer gratuitement' : 'Se connecter'}
             </PrimaryButton>
             <SecondaryButton onClick={handleCreateAgent}>
