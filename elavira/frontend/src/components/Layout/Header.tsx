@@ -180,7 +180,7 @@ export const Header: React.FC = () => {
     dispatch({ type: 'LOGOUT' });
   };
 
-  const handlePageChange = (page: string) => {
+  const handlePageChange = (page: 'auth' | 'chat' | 'agents' | 'register' | 'login' | 'logs' | 'home') => {
     dispatch({ type: 'SET_PAGE', payload: page });
     setIsMobileMenuOpen(false);
   };
