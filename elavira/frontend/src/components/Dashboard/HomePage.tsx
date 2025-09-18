@@ -419,7 +419,7 @@ export const HomePage: React.FC = () => {
             </StatItem>
           </StatsContainer>
           
-          <CTAButtons>
+          <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '80px' }}>
             <button 
               onClick={() => {
                 console.log('Button clicked!');
@@ -440,10 +440,27 @@ export const HomePage: React.FC = () => {
             >
               {state.logged_in_user ? 'Essayer gratuitement' : 'Se connecter'}
             </button>
-            <SecondaryButton onClick={handleCreateAgent}>
+            <button 
+              onClick={() => {
+                console.log('Secondary button clicked!');
+                handleCreateAgent();
+              }}
+              style={{
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: 'white',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                padding: '14px 30px',
+                borderRadius: '50px',
+                fontSize: '1.1rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                backdropFilter: 'blur(10px)'
+              }}
+            >
               {state.logged_in_user ? 'Créer un agent' : 'Découvrir'}
-            </SecondaryButton>
-          </CTAButtons>
+            </button>
+          </div>
         </HeroContent>
       </HeroSection>
 
