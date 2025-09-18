@@ -7,7 +7,7 @@ import { AgentChatRouter } from './components/Chat/AgentChatRouter';
 import { AgentsManagementDashboard } from './components/Dashboard/AgentsManagementDashboard';
 import { MainLayout } from './components/Layout/MainLayout';
 import { LogsPage } from './components/Logs/LogsPage';
-import { HomePage } from './components/Dashboard/HomePage';
+import { LimovaHomePage } from './components/Dashboard/LimovaHomePage';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -171,12 +171,9 @@ function AppContent() {
   }
 
   const renderPage = () => {
-    // Toujours afficher la page d'accueil par défaut
-    if (state.page === 'home' || !state.logged_in_user) {
-      return <HomePage />;
-    }
-    
     switch (state.page) {
+      case 'home':
+        return <LimovaHomePage />;
       case 'auth':
         return <AuthWithCarousel />;
       case 'agents':
@@ -198,7 +195,7 @@ function AppContent() {
           </MainLayout>
         );
       default:
-        return <HomePage />;
+        return <LimovaHomePage />;
     }
   };
 
