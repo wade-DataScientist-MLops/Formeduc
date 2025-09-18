@@ -171,11 +171,14 @@ function AppContent() {
   }
 
   const renderPage = () => {
+    // Toujours afficher la page d'accueil par défaut
+    if (state.page === 'home' || !state.logged_in_user) {
+      return <HomePage />;
+    }
+    
     switch (state.page) {
       case 'auth':
         return <AuthWithCarousel />;
-      case 'home':
-        return <HomePage />;
       case 'agents':
         return (
           <MainLayout>

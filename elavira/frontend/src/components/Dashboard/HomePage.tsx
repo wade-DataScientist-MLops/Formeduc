@@ -356,10 +356,22 @@ export const HomePage: React.FC = () => {
   };
 
   const handleCreateAgent = () => {
+    // Rediriger vers la page de connexion si pas connecté
+    if (!state.logged_in_user) {
+      dispatch({ type: 'SET_PAGE', payload: 'auth' });
+      return;
+    }
+    
     dispatch({ type: 'SET_PAGE', payload: 'agents' });
   };
 
   const handleTryNow = () => {
+    // Rediriger vers la page de connexion si pas connecté
+    if (!state.logged_in_user) {
+      dispatch({ type: 'SET_PAGE', payload: 'auth' });
+      return;
+    }
+    
     if (agents.length > 0) {
       handleAgentClick(agents[0].id);
     } else {
@@ -402,10 +414,10 @@ export const HomePage: React.FC = () => {
           
           <CTAButtons>
             <PrimaryButton onClick={handleTryNow}>
-              Essayer gratuitement
+              {state.logged_in_user ? 'Essayer gratuitement' : 'Se connecter'}
             </PrimaryButton>
             <SecondaryButton onClick={handleCreateAgent}>
-              Créer un agent
+              {state.logged_in_user ? 'Créer un agent' : 'Découvrir'}
             </SecondaryButton>
           </CTAButtons>
         </HeroContent>
